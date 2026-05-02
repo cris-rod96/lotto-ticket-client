@@ -12,9 +12,11 @@
   --font-sans: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono Variable', monospace;
 
-  --color-luck-green-dark: #052c22;
   --color-luck-green-medium: #064e3b;
   --color-luck-gold: #fbbf24;
   --color-luck-gold-dark: #b45309;
   --color-luck-emerald: #10b981;
+  --color-luck-green-dark: #021a14;
+  --color-luck-green-bright: #10b981;
+  --color-luck-gold-muted: rgba(251, 191, 36, 0.1);
 }
