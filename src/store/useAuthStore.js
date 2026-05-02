@@ -6,11 +6,13 @@ export const useAuthStore = create(
     (set) => ({
       token: null,
       user: null,
+      esAdministrador: false,
 
       login: (data) =>
         set({
           token: data.token,
           user: data.usuario,
+          esAdministrador: data.usuario.Role.nombre === 'ADMINISTRADOR',
         }),
       updateUser: (newData) =>
         set((state) => ({
@@ -28,6 +30,7 @@ export const useAuthStore = create(
       partialize: (state) => ({
         token: state.token,
         user: state.user,
+        esAdministrador: state.esAdministrador,
       }),
     }
   )

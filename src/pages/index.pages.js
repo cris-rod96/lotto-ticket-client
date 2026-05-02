@@ -1,3 +1,4 @@
+import Dashboard from './dashboard/Dashboard.jsx'
 import Login from './login/Login.jsx'
 
-export { Login }
+export { Dashboard, Login }
