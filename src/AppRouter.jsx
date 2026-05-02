@@ -1,5 +1,5 @@
+import { Login } from '@/pages/index.pages'
 import { Navigate, Route, Routes } from 'react-router-dom'
-import { Login } from './pages/index.pages'
 
 const AppRouter = () => {
   return (

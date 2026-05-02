@@ -1,11 +1,80 @@
+import { authAPI } from '@/api/index.api'
+import { useAuthStore } from '@/store/useAuthStore'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { FiArrowRight } from 'react-icons/fi'
 import { LuEye, LuEyeOff, LuLock, LuShieldCheck, LuUser } from 'react-icons/lu'
+import Swal from 'sweetalert2'
 
 const Login = () => {
+  const [credenciales, setCredenciales] = useState({
+    alias: '',
+    clave: '',
+  })
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+
+  const login = useAuthStore((store) => store.login)
+
+  const toastLuck = Swal.mixin({
+    customClass: {
+      // Backdrop es el fondo detrás de la alerta
+      container: 'backdrop-blur-sm',
+      // El panel principal
+      popup:
+        'rounded-[2.5rem] border-2 border-luck-gold bg-luck-green-dark text-white shadow-[0_0_50px_rgba(0,0,0,0.8)] p-8',
+      title: 'text-luck-gold font-black uppercase tracking-tighter text-2xl mb-4',
+      htmlContainer: 'text-gray-300 font-bold text-sm uppercase tracking-widest leading-relaxed',
+      confirmButton:
+        'bg-gradient-to-r from-luck-gold to-luck-gold-dark text-luck-green-dark px-12 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-lg shadow-luck-gold/20',
+    },
+    // CRITICO: Esto quita los estilos horribles por defecto de Swal
+    buttonsStyling: false,
+  })
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setCredenciales((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    if (!credenciales.clave || !credenciales.alias) {
+      return toastLuck.fire({
+        icon: 'warning',
+        title: 'Acceso denegado',
+        text: 'Usuario y clave son obligatorias',
+        iconColor: '#fbbf24', // El color luck-gold
+        confirmButtonText: 'ENTENDIDO',
+      })
+    }
+
+    setIsLoading(true)
+    try {
+      const resp = await authAPI.iniciarSesion(credenciales)
+      login(resp.data.info)
+
+      toastLuck
+        .fire({
+          icon: 'success',
+          title: '¡Acceso Concedido!',
+          text: `Bienvenido, ${resp.data?.info?.usuario?.nombresCompletos}`,
+          iconColor: '#fbbf24',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+        .then(() => {
+          // Navegar al inicio
+        })
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-luck-green-dark flex items-center justify-center p-4 relative overflow-hidden font-sans">
@@ -89,7 +158,7 @@ const Login = () => {
               </h1>
             </div>
 
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleLogin}>
               <div className="space-y-2">
                 <div className="relative group">
                   <LuUser
@@ -98,8 +167,12 @@ const Login = () => {
                   />
                   <input
                     type="text"
+                    name="alias"
+                    defaultValue={credenciales.alias}
+                    autoComplete="off"
                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-luck-gold/20 focus:bg-white/10 transition-all"
                     placeholder="Usuario"
+                    onChange={handleChange}
                   />
                 </div>
               </div>
@@ -112,11 +185,13 @@ const Login = () => {
                   />
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    name="clave"
+                    onChange={handleChange}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-12 text-white focus:outline-none focus:ring-2 focus:ring-luck-gold/20 focus:bg-white/10 transition-all"
                     placeholder="Contraseña"
                   />
                   <button
-                    type="button"
+                    type="submit"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-luck-gold"
                   >
@@ -126,11 +201,26 @@ const Login = () => {
               </div>
 
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full bg-gradient-to-r from-luck-gold via-yellow-500 to-luck-gold-dark text-luck-green-dark font-display font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(251,191,36,0.4)] flex items-center justify-center gap-3"
+                disabled={isLoading} // Evita múltiples clics
+                whileHover={!isLoading ? { scale: 1.02 } : {}}
+                whileTap={!isLoading ? { scale: 0.98 } : {}}
+                className={`w-full font-display font-black py-4 rounded-2xl flex items-center justify-center gap-3 transition-all ${
+                  isLoading
+                    ? 'bg-luck-green-medium text-white/50 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-luck-gold via-yellow-500 to-luck-gold-dark text-luck-green-dark shadow-[0_0_20px_rgba(251,191,36,0.4)]'
+                }`}
               >
-                ACCEDER AHORA <FiArrowRight size={20} />
+                {isLoading ? (
+                  <>
+                    {/* Spinner animado con Tailwind */}
+                    <div className="w-5 h-5 border-3 border-white/20 border-t-white rounded-full animate-spin" />
+                    VERIFICANDO...
+                  </>
+                ) : (
+                  <>
+                    ACCEDER AHORA <FiArrowRight size={20} />
+                  </>
+                )}
               </motion.button>
             </form>
 
