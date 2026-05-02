@@ -12,7 +12,9 @@
   --font-sans: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono Variable', monospace;
 
-  /* Puedes agregar colores temáticos para "El Golpe de la Suerte" aquí también */
-  --color-luck-gold: #ffd700;
-  --color-luck-green: #008000;
+  --color-luck-green-dark: #052c22;
+  --color-luck-green-medium: #064e3b;
+  --color-luck-gold: #fbbf24;
+  --color-luck-gold-dark: #b45309;
+  --color-luck-emerald: #10b981;
 }
