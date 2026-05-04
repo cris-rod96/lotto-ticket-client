@@ -1,3 +1,4 @@
 import authAPI from './auth/auth.api'
 import cajaAPI from './caja/caja.api'
-export { authAPI, cajaAPI }
+import catalogoAPI from './catalogo/catalogo.api'
+export { authAPI, cajaAPI, catalogoAPI }
