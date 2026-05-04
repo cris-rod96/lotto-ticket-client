@@ -6,6 +6,7 @@ import {
   LuChevronLeft,
   LuDice5,
   LuLayoutDashboard,
+  LuLibrary,
   LuLogOut,
   LuSettings,
   LuShieldCheck,
@@ -26,10 +27,12 @@ const Sidebar = () => {
   const menuItems = [
     { title: 'Dashboard', icon: <LuLayoutDashboard />, path: '/dashboard' },
     { title: 'Ventas de Tickets', icon: <LuTicket />, path: '/tickets' },
+    { title: 'Catálogo', icon: <LuLibrary />, path: '/catalogo' },
+
     { title: 'Gestión de Sorteos', icon: <LuDice5 />, path: '/sorteos' },
     { title: 'Resultados de Sorteos', icon: <LuTrophy />, path: '/resultados' },
     { title: 'Gestión de Cifras', icon: <LuBinary />, path: '/cifras' },
-    { title: 'Control de Caja', icon: <LuWallet />, path: '/caja' },
+    { title: 'Control de Caja', icon: <LuWallet />, path: '/cajas' },
     { title: 'Movimientos Diarios', icon: <LuArrowLeftRight />, path: '/movimientos' },
     { title: 'Reportes y Estadísticas', icon: <LuTrendingUp />, path: '/reportes' },
     { title: 'Puntos de Venta', icon: <LuStore />, path: '/puntos-venta' },
@@ -79,7 +82,7 @@ const Sidebar = () => {
       </div>
 
       {/* Navegación - Corrección de bug de texto y scroll */}
-      <nav className="flex-1 px-3 mt-4 space-y-1.5 overflow-y-auto overflow-x-hidden custom-sidebar-scroll">
+      <nav className="flex-1 px-3 mt-4 space-y-1.5 overflow-y-auto overflow-x-hidden scrollbar-hide">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path
           return (

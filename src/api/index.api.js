@@ -1,3 +1,3 @@
 import authAPI from './auth/auth.api'
-
-export { authAPI }
+import cajaAPI from './caja/caja.api'
+export { authAPI, cajaAPI }

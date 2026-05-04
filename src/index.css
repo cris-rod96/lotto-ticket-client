@@ -20,3 +20,16 @@
   --color-luck-green-bright: #10b981;
   --color-luck-gold-muted: rgba(251, 191, 36, 0.1);
 }
+
+@layer utilities {
+  /* Ocultar scrollbar para Chrome, Safari y Opera */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Ocultar scrollbar para IE, Edge y Firefox */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}

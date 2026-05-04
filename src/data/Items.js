@@ -2,6 +2,7 @@ import {
   LuArrowLeftRight,
   LuBinary,
   LuDice5,
+  LuLibrary,
   LuSettings,
   LuShieldCheck,
   LuStore,
@@ -13,7 +14,6 @@ import {
 } from 'react-icons/lu'
 
 export const DASHBOARD_ITEMS = [
-  // --- SECCIÓN OPERATIVA ---
   {
     label: 'Ventas de Tickets',
     path: '/tickets',
@@ -21,6 +21,17 @@ export const DASHBOARD_ITEMS = [
     desc: 'Tickets emitidos hoy',
     value: '1,284',
     stats: '+12% vs ayer',
+    soloAdmin: false, // Disponible para todos
+  },
+
+  {
+    label: 'Catálogo de Juegos', // <-- NUEVA OPCIÓN
+    path: '/catalogo',
+    icon: LuLibrary,
+    desc: 'Tipos de sorteos y loterías',
+    value: '06',
+    stats: 'EC / AR activos',
+    soloAdmin: true, // Por lo general, solo el admin define los productos
   },
   {
     label: 'Gestión de Sorteos',
@@ -29,6 +40,7 @@ export const DASHBOARD_ITEMS = [
     desc: 'Sorteos programados',
     value: '08',
     stats: 'Próximo: 19:00',
+    soloAdmin: false,
   },
   {
     label: 'Resultados',
@@ -37,6 +49,7 @@ export const DASHBOARD_ITEMS = [
     desc: 'Premios entregados',
     value: '$4,250',
     stats: '15 ganadores',
+    soloAdmin: false,
   },
   {
     label: 'Cifras',
@@ -45,16 +58,16 @@ export const DASHBOARD_ITEMS = [
     desc: 'Números bloqueados',
     value: '12',
     stats: 'Cifras calientes',
+    soloAdmin: false,
   },
-
-  // --- SECCIÓN FINANCIERA Y PUNTOS ---
   {
-    label: 'Caja',
-    path: '/caja',
+    label: 'Cajas',
+    path: '/cajas',
     icon: LuWallet,
     desc: 'Saldo actual en caja',
     value: '$2,840.50',
     stats: 'Caja Abierta',
+    soloAdmin: false,
   },
   {
     label: 'Movimientos',
@@ -63,6 +76,7 @@ export const DASHBOARD_ITEMS = [
     desc: 'Transacciones hoy',
     value: '452',
     stats: 'Ver historial',
+    soloAdmin: false,
   },
   {
     label: 'Puntos de Venta',
@@ -71,6 +85,7 @@ export const DASHBOARD_ITEMS = [
     desc: 'Terminales activas',
     value: '24/26',
     stats: '2 desconectadas',
+    soloAdmin: true, // SOLO ADMIN
   },
   {
     label: 'Estadísticas',
@@ -79,9 +94,8 @@ export const DASHBOARD_ITEMS = [
     desc: 'Rendimiento global',
     value: '94%',
     stats: 'Óptimo',
+    soloAdmin: true, // SOLO ADMIN
   },
-
-  // --- SECCIÓN ADMINISTRATIVA ---
   {
     label: 'Usuarios',
     path: '/usuarios',
@@ -89,6 +103,7 @@ export const DASHBOARD_ITEMS = [
     desc: 'Personal registrado',
     value: '18',
     stats: '4 en línea',
+    soloAdmin: true, // SOLO ADMIN
   },
   {
     label: 'Roles y Permisos',
@@ -97,13 +112,15 @@ export const DASHBOARD_ITEMS = [
     desc: 'Niveles de acceso',
     value: '05',
     stats: 'Seguridad activa',
+    soloAdmin: true, // SOLO ADMIN
   },
   {
     label: 'Configuración',
-    path: '/config',
+    path: '/configuracion',
     icon: LuSettings,
     desc: 'Ajustes del sistema',
     value: 'SISTEMA',
     stats: 'v2.4.0',
+    soloAdmin: true, // SOLO ADMIN
   },
 ]
