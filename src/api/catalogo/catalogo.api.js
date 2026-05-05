@@ -2,19 +2,19 @@ import { instance } from '../base.api'
 const model = 'catalogos'
 
 const catalogoAPI = {
-  listarTodos: () => {
+  listarTodos: async () => {
     return instance.get(`/${model}/listar/todos`)
   },
 
-  agregar: (data) => {
+  agregar: async (data) => {
     return instance.post(`/${model}/agregar`, data)
   },
 
-  actualizar: (id, data) => {
+  actualizar: async (id, data) => {
     return instance.patch(`/${model}/actualizar/${id}`, data)
   },
 
-  eliminar: (id) => {
+  eliminar: async (id) => {
     return instance.delete(`/${model}/eliminar/${id}`)
   },
 }
