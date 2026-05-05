@@ -19,6 +19,7 @@ import {
   Roles,
   Sorteos,
   SorteosVendedor,
+  Suertes,
   Tickets,
   TicketsVendedor,
   Usuarios,
@@ -57,6 +58,7 @@ const AppRouter = () => {
               {/* El admin también puede ver tickets y catálogo general */}
               <Route path="/tickets" element={<Tickets />} />
               <Route path="/catalogo" element={<Catalogo />} />
+              <Route path="/suertes" element={<Suertes />} />
             </>
           )}
 

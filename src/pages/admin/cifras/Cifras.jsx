@@ -1,6 +1,7 @@
+import { cifraAPI } from '@/api/index.api'
 import CifraModal from '@/components/CifraModal' // El modal que crearemos abajo
 import Title from '@/components/Titlte'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { LuPencil, LuPlus, LuSearch, LuTrash2 } from 'react-icons/lu'
 
 const Cifras = () => {
@@ -9,10 +10,7 @@ const Cifras = () => {
   const [searchTerm, setSearchTerm] = useState('')
 
   // Simulación de datos basada en tu modelo de Sequelize
-  const [cifras, setCifras] = useState([
-    { id: '1', cantidad: 2, activo: true, cupoMaximoPorNumero: 500.0, valorMinimoTicket: 1.0 },
-    { id: '2', cantidad: 3, activo: false, cupoMaximoPorNumero: 1000.0, valorMinimoTicket: 0.5 },
-  ])
+  const [cifras, setCifras] = useState([])
 
   const handleEdit = (cifra) => {
     setSelectedCifra(cifra)
@@ -26,6 +24,19 @@ const Cifras = () => {
   }
 
   const filteredCifras = cifras.filter((c) => c.cantidad.toString().includes(searchTerm))
+
+  const fetchData = async () => {
+    try {
+      const resp = await cifraAPI.listarTodas()
+      setCifras(resp.data?.cifras || [])
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
 
   return (
     <div className="w-full pb-10">
@@ -118,6 +129,7 @@ const Cifras = () => {
           isOpen={showModal}
           onClose={() => setShowModal(false)}
           initialData={selectedCifra}
+          fetchData={fetchData}
         />
       )}
     </div>

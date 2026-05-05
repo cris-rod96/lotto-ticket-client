@@ -2,19 +2,19 @@ import { instance } from '../base.api.js'
 const model = 'cifras'
 
 const cifraAPI = {
-  listarTodas: () => {
+  listarTodas: async () => {
     return instance.get(`/${model}/listar/todas`)
   },
 
-  agregar: (data) => {
+  agregar: async (data) => {
     return instance.post(`/${model}/agregar`, data)
   },
 
-  actualizarCupo: (id, data) => {
+  actualizarCupo: async (id, data) => {
     return instance.patch(`/${model}/actualizar/cupo-maximo/${id}`, data)
   },
 
-  eliminar: (id) => {
+  eliminar: async (id) => {
     return instance.delete(`/${model}/eliminar/${id}`)
   },
 }

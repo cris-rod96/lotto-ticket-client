@@ -1,7 +1,8 @@
+import { sorteoAPI } from '@/api/index.api'
 import SorteoModal from '@/components/SorteoModal'
 import Title from '@/components/Titlte'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { LuCalendar, LuClock, LuGlobe, LuPencil, LuPlus, LuSearch, LuTrash2 } from 'react-icons/lu'
 
 // Variantes para la cascada de la tabla
@@ -29,31 +30,40 @@ const Sorteos = () => {
   const [searchTerm, setSearchTerm] = useState('')
 
   const [sorteos, setSorteos] = useState([
-    {
-      id: '1',
-      numero: '2540',
-      jornada: 'Nocturna',
-      fechaSorteo: '2026-05-04',
-      horaSorteo: '21:00',
-      juego: 'Lotto',
-      pais: 'Ecuador',
-      cifras: 2,
-      estado: 'Abierto',
-      montoRecaudado: 450.5,
-    },
-    {
-      id: '2',
-      numero: '1102',
-      jornada: 'Matutina',
-      fechaSorteo: '2026-05-05',
-      horaSorteo: '11:00',
-      juego: 'Quini 6',
-      pais: 'Argentina',
-      cifras: 3,
-      estado: 'Abierto',
-      montoRecaudado: 120.0,
-    },
+    // {
+    //   id: '1',
+    //   numero: '2540',
+    //   jornada: 'Nocturna',
+    //   fechaSorteo: '2026-05-04',
+    //   horaSorteo: '21:00',
+    //   juego: 'Lotto',
+    //   pais: 'Ecuador',
+    //   cifras: 2,
+    //   estado: 'Abierto',
+    //   montoRecaudado: 450.5,
+    // },
+    // {
+    //   id: '2',
+    //   numero: '1102',
+    //   jornada: 'Matutina',
+    //   fechaSorteo: '2026-05-05',
+    //   horaSorteo: '11:00',
+    //   juego: 'Quini 6',
+    //   pais: 'Argentina',
+    //   cifras: 3,
+    //   estado: 'Abierto',
+    //   montoRecaudado: 120.0,
+    // },
   ])
+
+  const fetchData = async () => {
+    try {
+      const resp = await sorteoAPI.listarTodos()
+      console.log(resp)
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   const handleEdit = (sorteo) => {
     setSelectedSorteo(sorteo)
@@ -63,6 +73,9 @@ const Sorteos = () => {
   const filteredSorteos = sorteos.filter(
     (s) => s.numero.includes(searchTerm) || s.juego.toLowerCase().includes(searchTerm.toLowerCase())
   )
+  useEffect(() => {
+    fetchData()
+  }, [])
 
   return (
     <motion.div initial="hidden" animate="visible" className="w-full pb-10">

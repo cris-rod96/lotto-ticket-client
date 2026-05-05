@@ -33,7 +33,7 @@ const Catalogo = () => {
 
   // Lógica de Paginación
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 7
+  const itemsPerPage = 3
 
   const fetchData = async () => {
     try {

@@ -4,6 +4,7 @@ import {
   LuArrowLeftRight,
   LuBinary,
   LuChevronLeft,
+  LuClover,
   LuDice5,
   LuLayoutDashboard,
   LuLibrary,
@@ -26,18 +27,19 @@ const Sidebar = () => {
 
   const menuItems = [
     { title: 'Dashboard', icon: <LuLayoutDashboard />, path: '/dashboard' },
-    { title: 'Ventas de Tickets', icon: <LuTicket />, path: '/tickets' },
-    { title: 'Catálogo', icon: <LuLibrary />, path: '/catalogo' },
+    { title: 'Venta de Tickets', icon: <LuTicket />, path: '/tickets' },
+    { title: 'Gestión de Suertes', icon: <LuClover />, path: '/suertes' },
 
+    { title: 'Catálogo de Juegos', icon: <LuLibrary />, path: '/catalogo' },
     { title: 'Gestión de Sorteos', icon: <LuDice5 />, path: '/sorteos' },
     { title: 'Resultados de Sorteos', icon: <LuTrophy />, path: '/resultados' },
     { title: 'Gestión de Cifras', icon: <LuBinary />, path: '/cifras' },
-    { title: 'Control de Caja', icon: <LuWallet />, path: '/cajas' },
-    { title: 'Movimientos Diarios', icon: <LuArrowLeftRight />, path: '/movimientos' },
-    { title: 'Reportes y Estadísticas', icon: <LuTrendingUp />, path: '/reportes' },
+    { title: 'Gestión de Cajas', icon: <LuWallet />, path: '/cajas' },
+    { title: 'Movimientos', icon: <LuArrowLeftRight />, path: '/movimientos' },
+    { title: 'Reportes', icon: <LuTrendingUp />, path: '/reportes' },
     { title: 'Puntos de Venta', icon: <LuStore />, path: '/puntos-venta' },
-    { title: 'Usuarios del Sistema', icon: <LuUsers />, path: '/usuarios' },
-    { title: 'Roles y Permisos', icon: <LuShieldCheck />, path: '/roles' },
+    { title: 'Gestión de Usuarios', icon: <LuUsers />, path: '/usuarios' },
+    { title: 'Gestión de Roles', icon: <LuShieldCheck />, path: '/roles' },
     { title: 'Configuración', icon: <LuSettings />, path: '/config' },
   ]
 

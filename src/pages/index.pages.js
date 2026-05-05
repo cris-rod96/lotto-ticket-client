@@ -10,6 +10,7 @@ import {
   Resultados,
   Roles,
   Sorteos,
+  Suertes,
   Tickets,
   Usuarios,
 } from './admin/index.admin.js'
@@ -37,6 +38,7 @@ export {
   Roles,
   Sorteos,
   SorteosVendedor,
+  Suertes,
   Tickets,
   TicketsVendedor,
   Usuarios,

@@ -9,6 +9,7 @@ import Reportes from './reportes/Reportes'
 import Resultados from './resultados/Resultados'
 import Roles from './roles/Roles'
 import Sorteos from './sorteos/Sorteos'
+import Suertes from './suertes/Suertes'
 import Tickets from './tickets/Tickets'
 import Usuarios from './usuarios/Usuarios'
 
@@ -24,6 +25,7 @@ export {
   Resultados,
   Roles,
   Sorteos,
+  Suertes,
   Tickets,
   Usuarios,
 }

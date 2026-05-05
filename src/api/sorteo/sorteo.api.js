@@ -2,15 +2,15 @@ import { instance } from '../base.api'
 const model = 'sorteos'
 
 const sorteoAPI = {
-  listarTodos: () => {
+  listarTodos: async () => {
     return instance.get(`/${model}/listar/todos`)
   },
 
-  crear: (data) => {
+  crear: async (data) => {
     return instance.post(`/${model}/crear`, data)
   },
 
-  actualizar: (id, data) => {
+  actualizar: async (id, data) => {
     return instance.patch(`/${model}/actualizar-sorteo/${id}`, data)
   },
 }
