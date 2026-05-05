@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { FiArrowRight } from 'react-icons/fi'
 import { LuEye, LuEyeOff, LuLock, LuShieldCheck, LuUser } from 'react-icons/lu'
+import { useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 
 const Login = () => {
@@ -15,6 +16,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
 
   const login = useAuthStore((store) => store.login)
+  const navigate = useNavigate()
 
   const toastLuck = Swal.mixin({
     customClass: {
@@ -68,6 +70,7 @@ const Login = () => {
         })
         .then(() => {
           // Navegar al inicio
+          navigate('/dashboard')
         })
     } catch (error) {
       console.log(error)

@@ -13,114 +13,110 @@ import {
   LuWallet,
 } from 'react-icons/lu'
 
-export const DASHBOARD_ITEMS = [
+export const ADMIN_DASHBOARD_ITEMS = [
   {
     label: 'Ventas de Tickets',
     path: '/tickets',
     icon: LuTicket,
-    desc: 'Tickets emitidos hoy',
-    value: '1,284',
-    stats: '+12% vs ayer',
-    soloAdmin: false, // Disponible para todos
-  },
-
-  {
-    label: 'Catálogo de Juegos', // <-- NUEVA OPCIÓN
-    path: '/catalogo',
-    icon: LuLibrary,
-    desc: 'Tipos de sorteos y loterías',
-    value: '06',
-    stats: 'EC / AR activos',
-    soloAdmin: true, // Por lo general, solo el admin define los productos
+    desc: 'Monitoreo de ventas globales',
   },
   {
     label: 'Gestión de Sorteos',
     path: '/sorteos',
     icon: LuDice5,
-    desc: 'Sorteos programados',
-    value: '08',
-    stats: 'Próximo: 19:00',
-    soloAdmin: false,
+    desc: 'Configurar sorteos y premios',
   },
   {
     label: 'Resultados',
     path: '/resultados',
     icon: LuTrophy,
-    desc: 'Premios entregados',
-    value: '$4,250',
-    stats: '15 ganadores',
-    soloAdmin: false,
+    desc: 'Historial de ganadores',
   },
   {
     label: 'Cifras',
     path: '/cifras',
     icon: LuBinary,
-    desc: 'Números bloqueados',
-    value: '12',
-    stats: 'Cifras calientes',
-    soloAdmin: false,
+    desc: 'Control de números bloqueados',
   },
   {
-    label: 'Cajas',
+    label: 'Auditoría de Cajas',
     path: '/cajas',
     icon: LuWallet,
-    desc: 'Saldo actual en caja',
-    value: '$2,840.50',
-    stats: 'Caja Abierta',
-    soloAdmin: false,
+    desc: 'Flujo de caja de terminales',
   },
   {
     label: 'Movimientos',
     path: '/movimientos',
     icon: LuArrowLeftRight,
-    desc: 'Transacciones hoy',
-    value: '452',
-    stats: 'Ver historial',
-    soloAdmin: false,
+    desc: 'Auditoría de transacciones',
+  },
+  {
+    label: 'Catálogo',
+    path: '/catalogo',
+    icon: LuLibrary,
+    desc: 'Configuración de juegos',
   },
   {
     label: 'Puntos de Venta',
     path: '/puntos-venta',
     icon: LuStore,
-    desc: 'Terminales activas',
-    value: '24/26',
-    stats: '2 desconectadas',
-    soloAdmin: true, // SOLO ADMIN
+    desc: 'Gestión de terminales',
   },
   {
-    label: 'Estadísticas',
+    label: 'Reportes Globales',
     path: '/reportes',
     icon: LuTrendingUp,
-    desc: 'Rendimiento global',
-    value: '94%',
-    stats: 'Óptimo',
-    soloAdmin: true, // SOLO ADMIN
+    desc: 'Analítica de rendimiento',
   },
   {
     label: 'Usuarios',
     path: '/usuarios',
     icon: LuUsers,
-    desc: 'Personal registrado',
-    value: '18',
-    stats: '4 en línea',
-    soloAdmin: true, // SOLO ADMIN
+    desc: 'Gestión de personal',
   },
   {
-    label: 'Roles y Permisos',
+    label: 'Roles',
     path: '/roles',
     icon: LuShieldCheck,
-    desc: 'Niveles de acceso',
-    value: '05',
-    stats: 'Seguridad activa',
-    soloAdmin: true, // SOLO ADMIN
+    desc: 'Seguridad y permisos',
   },
   {
     label: 'Configuración',
     path: '/configuracion',
     icon: LuSettings,
-    desc: 'Ajustes del sistema',
-    value: 'SISTEMA',
-    stats: 'v2.4.0',
-    soloAdmin: true, // SOLO ADMIN
+    desc: 'Ajustes de plataforma',
+  },
+]
+
+export const VENDEDOR_DASHBOARD_ITEMS = [
+  {
+    label: 'Vender Ticket',
+    path: '/tickets', // Tu AppRouter cargará TicketsVendedor
+    icon: LuTicket,
+    desc: 'Emitir nueva apuesta',
+  },
+  {
+    label: 'Mis Sorteos',
+    path: '/mis-sorteos',
+    icon: LuDice5,
+    desc: 'Ver sorteos activos hoy',
+  },
+  {
+    label: 'Mi Caja',
+    path: '/mi-caja',
+    icon: LuWallet,
+    desc: 'Balance y cierre de turno',
+  },
+  {
+    label: 'Movimientos',
+    path: '/movimientos',
+    icon: LuArrowLeftRight,
+    desc: 'Mis ventas recientes',
+  },
+  {
+    label: 'Resultados',
+    path: '/resultados',
+    icon: LuTrophy,
+    desc: 'Consultar números ganadores',
   },
 ]
