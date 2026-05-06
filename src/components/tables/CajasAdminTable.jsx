@@ -224,7 +224,7 @@ const CajasAdminTable = ({ currentData, currentPage, totalPages, setCurrentPage,
                   </thead>
                   <tbody className="divide-y divide-white/[0.03]">
                     {selectedCaja.Movimientos?.map((mov) => {
-                      const isIngreso = mov.tipoMovimiento === 'Ingreso'
+                      const isIngreso = mov.tipo === 'Ingreso'
                       const isVirtual = mov.descripcion
                         ?.toUpperCase()
                         .match(/(BANCO|TRANSFERENCIA|CHEQUE|BANCARIO)/)

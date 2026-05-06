@@ -13,6 +13,10 @@ const sorteoAPI = {
   actualizar: async (id, data) => {
     return instance.patch(`/${model}/actualizar-sorteo/${id}`, data)
   },
+
+  listarAbiertos: async () => {
+    return instance.get(`/${model}/listar/abiertos`)
+  },
 }
 
 export default sorteoAPI

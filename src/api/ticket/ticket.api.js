@@ -14,6 +14,14 @@ const ticketAPI = {
   eliminar: (id) => {
     return instance.delete(`/${model}/eliminar/${id}`)
   },
+
+  verificarCupo: (SorteoId, numero, monto) => {
+    return instance.post(`/${model}/verificar-cupo`, {
+      SorteoId,
+      numero,
+      monto,
+    })
+  },
 }
 
 export default ticketAPI
