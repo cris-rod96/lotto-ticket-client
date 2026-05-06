@@ -17,6 +17,10 @@ const puntosVentaAPI = {
   eliminar: (id) => {
     return instance.delete(`/${model}/eliminar/${id}`)
   },
+
+  restaurar: (id) => {
+    return instance.patch(`/${model}/restaurar/${id}`)
+  },
 }
 
 export default puntosVentaAPI
