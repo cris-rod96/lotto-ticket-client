@@ -38,7 +38,7 @@ const Sidebar = () => {
     { title: 'Puntos de Venta', icon: <LuStore />, path: '/puntos-venta' },
     { title: 'Gestión de Usuarios', icon: <LuUsers />, path: '/usuarios' },
     { title: 'Gestión de Roles', icon: <LuShieldCheck />, path: '/roles' },
-    { title: 'Configuración', icon: <LuSettings />, path: '/config' },
+    { title: 'Configuración', icon: <LuSettings />, path: '/configuracion' },
   ]
 
   return (

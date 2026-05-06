@@ -20,9 +20,7 @@ const Login = () => {
 
   const toastLuck = Swal.mixin({
     customClass: {
-      // Backdrop es el fondo detrás de la alerta
       container: 'backdrop-blur-sm',
-      // El panel principal
       popup:
         'rounded-[2.5rem] border-2 border-luck-gold bg-luck-green-dark text-white shadow-[0_0_50px_rgba(0,0,0,0.8)] p-8',
       title: 'text-luck-gold font-black uppercase tracking-tighter text-2xl mb-4',
@@ -30,7 +28,6 @@ const Login = () => {
       confirmButton:
         'bg-gradient-to-r from-luck-gold to-luck-gold-dark text-luck-green-dark px-12 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-lg shadow-luck-gold/20',
     },
-    // CRITICO: Esto quita los estilos horribles por defecto de Swal
     buttonsStyling: false,
   })
 
@@ -49,7 +46,7 @@ const Login = () => {
         icon: 'warning',
         title: 'Acceso denegado',
         text: 'Usuario y clave son obligatorias',
-        iconColor: '#fbbf24', // El color luck-gold
+        iconColor: '#fbbf24',
         confirmButtonText: 'ENTENDIDO',
       })
     }
@@ -69,11 +66,18 @@ const Login = () => {
           showConfirmButton: false,
         })
         .then(() => {
-          // Navegar al inicio
           navigate('/dashboard')
         })
     } catch (error) {
-      console.log(error)
+      // FIX: Ahora sí mostramos el error que viene del backend
+      const mensajeError = error.response?.data?.message || 'Error de conexión con el servidor'
+      toastLuck.fire({
+        icon: 'error',
+        title: 'Error de Acceso',
+        text: mensajeError,
+        iconColor: '#ef4444',
+        confirmButtonText: 'REINTENTAR',
+      })
     } finally {
       setIsLoading(false)
     }
@@ -83,16 +87,14 @@ const Login = () => {
     <div className="min-h-screen bg-luck-green-dark flex items-center justify-center p-4 relative overflow-hidden font-sans">
       {/* --- FONDO MEJORADO --- */}
       <div className="absolute inset-0 z-0">
-        {/* Capa 1: Grid tecnológico sutil */}
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`,
-            size: '40px 40px',
+            backgroundSize: '40px 40px',
           }}
         />
 
-        {/* Capa 2: Orbes de luz con movimiento errático */}
         <motion.div
           animate={{
             x: [0, 50, -20, 0],
@@ -113,7 +115,6 @@ const Login = () => {
           className="absolute bottom-1/4 -right-20 w-[250px] h-[250px] sm:w-[450px] sm:h-[450px] bg-luck-gold/10 rounded-full blur-[100px]"
         />
 
-        {/* Capa 3: "Partículas" de brillo (Tréboles de luz) */}
         {[...Array(6)].map((_, i) => (
           <motion.div
             key={i}
@@ -141,7 +142,6 @@ const Login = () => {
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 w-full max-w-sm sm:max-w-md"
       >
-        {/* Tarjeta con borde iluminado */}
         <div className="group relative">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-luck-gold/20 to-luck-green-bright/20 rounded-[2.5rem] blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
 
@@ -171,7 +171,7 @@ const Login = () => {
                   <input
                     type="text"
                     name="alias"
-                    defaultValue={credenciales.alias}
+                    value={credenciales.alias} // Cambiado a value para control total
                     autoComplete="off"
                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-luck-gold/20 focus:bg-white/10 transition-all"
                     placeholder="Usuario"
@@ -189,12 +189,14 @@ const Login = () => {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     name="clave"
+                    value={credenciales.clave} // Cambiado a value
                     onChange={handleChange}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-12 text-white focus:outline-none focus:ring-2 focus:ring-luck-gold/20 focus:bg-white/10 transition-all"
                     placeholder="Contraseña"
                   />
+                  {/* FIX: Agregado type="button" para evitar el submit */}
                   <button
-                    type="submit"
+                    type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-luck-gold"
                   >
@@ -204,7 +206,8 @@ const Login = () => {
               </div>
 
               <motion.button
-                disabled={isLoading} // Evita múltiples clics
+                type="submit"
+                disabled={isLoading}
                 whileHover={!isLoading ? { scale: 1.02 } : {}}
                 whileTap={!isLoading ? { scale: 0.98 } : {}}
                 className={`w-full font-display font-black py-4 rounded-2xl flex items-center justify-center gap-3 transition-all ${
@@ -215,8 +218,7 @@ const Login = () => {
               >
                 {isLoading ? (
                   <>
-                    {/* Spinner animado con Tailwind */}
-                    <div className="w-5 h-5 border-3 border-white/20 border-t-white rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                     VERIFICANDO...
                   </>
                 ) : (

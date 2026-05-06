@@ -6,8 +6,7 @@ const usuarioAPI = {
   agregar: async (data) => instance.post(`/${model}/agregar`, data),
   actualizarInformacion: async (id, data) =>
     instance.patch(`/${model}/actualizar/informacion/${id}`, data),
-  actualizarClave: async (id, clave) =>
-    instance.patch(`/${model}/actualizar/clave/${id}`, { clave }),
+  actualizarClave: async (id, data) => instance.patch(`/${model}/actualizar/clave/${id}`, data),
   eliminar: async (id) => instance.delete(`/${model}/eliminar/${id}`),
 
   restaurar: async (id) => instance.patch(`/${model}/restaurar/${id}`),
