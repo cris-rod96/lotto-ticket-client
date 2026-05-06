@@ -1,7 +1,6 @@
 import { useAuthStore } from '@/store/useAuthStore'
 import { useState } from 'react'
 import {
-  LuArrowLeftRight,
   LuBinary,
   LuChevronLeft,
   LuClover,
@@ -35,7 +34,6 @@ const Sidebar = () => {
     { title: 'Resultados de Sorteos', icon: <LuTrophy />, path: '/resultados' },
     { title: 'Gestión de Cifras', icon: <LuBinary />, path: '/cifras' },
     { title: 'Gestión de Cajas', icon: <LuWallet />, path: '/cajas' },
-    { title: 'Movimientos', icon: <LuArrowLeftRight />, path: '/movimientos' },
     { title: 'Reportes', icon: <LuTrendingUp />, path: '/reportes' },
     { title: 'Puntos de Venta', icon: <LuStore />, path: '/puntos-venta' },
     { title: 'Gestión de Usuarios', icon: <LuUsers />, path: '/usuarios' },

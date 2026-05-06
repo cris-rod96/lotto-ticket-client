@@ -44,12 +44,7 @@ export const ADMIN_DASHBOARD_ITEMS = [
     icon: LuWallet,
     desc: 'Flujo de caja de terminales',
   },
-  {
-    label: 'Movimientos',
-    path: '/movimientos',
-    icon: LuArrowLeftRight,
-    desc: 'Auditoría de transacciones',
-  },
+
   {
     label: 'Catálogo',
     path: '/catalogo',

@@ -12,7 +12,6 @@ import {
   DashboardAdmin,
   DashboardVendedor,
   Login,
-  Movimientos,
   PuntosVentas,
   Reportes,
   Resultados,
@@ -68,7 +67,6 @@ const AppRouter = () => {
               <Route path="/tickets" element={<TicketsVendedor />} />
               <Route path="/mis-sorteos" element={<SorteosVendedor />} />
               <Route path="/mi-caja" element={<CajasVendedor />} />
-              <Route path="/movimientos" element={<Movimientos />} />
               <Route path="/resultados" element={<Resultados />} />
             </>
           )}

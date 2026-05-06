@@ -3,7 +3,6 @@ import Catalogo from './catalogo/Catalogo'
 import Cifras from './cifras/Cifras'
 import Configuracion from './configuracion/Configuracion'
 import DashboardAdmin from './dashboard/Dashboard'
-import Movimientos from './movimientos/Movimientos'
 import PuntosVentas from './puntos-venta/PuntosVentas'
 import Reportes from './reportes/Reportes'
 import Resultados from './resultados/Resultados'
@@ -19,7 +18,6 @@ export {
   Cifras,
   Configuracion,
   DashboardAdmin,
-  Movimientos,
   PuntosVentas,
   Reportes,
   Resultados,
