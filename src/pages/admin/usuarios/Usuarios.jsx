@@ -289,7 +289,7 @@ const Usuarios = () => {
                 ))
               ) : (
                 <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <td colSpan="7" className="p-32 text-center">
+                  <td colSpan="6" className="p-32 text-center">
                     <div className="flex flex-col items-center justify-center opacity-20">
                       <LuInbox size={60} className="mb-4 text-luck-gold" />
                       <p className="text-xs font-black uppercase tracking-[0.4em] text-white">
