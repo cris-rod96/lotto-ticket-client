@@ -18,7 +18,6 @@ const CajasAdminTable = ({ currentData, currentPage, totalPages, setCurrentPage,
   const [showModal, setShowModal] = useState(false)
 
   const handleVerDetalle = (caja) => {
-    console.log(caja)
     setSelectedCaja(caja)
     setShowModal(true)
   }

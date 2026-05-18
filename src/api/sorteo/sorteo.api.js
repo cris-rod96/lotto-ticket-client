@@ -17,6 +17,10 @@ const sorteoAPI = {
   listarAbiertos: async () => {
     return instance.get(`/${model}/listar/abiertos`)
   },
+
+  listarCerrados: async () => {
+    return instance.get(`/${model}/listar/cerrados`)
+  },
 }
 
 export default sorteoAPI

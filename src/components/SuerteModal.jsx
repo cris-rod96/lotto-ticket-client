@@ -4,7 +4,15 @@ import { LuClover, LuDollarSign } from 'react-icons/lu'
 import Swal from 'sweetalert2'
 import Modal from './Modal'
 
-const SuerteModal = ({ isOpen, onClose, initialData, cifras, fetchData, selectedSuerte }) => {
+const SuerteModal = ({
+  isOpen,
+  onClose,
+  initialData,
+  cifras,
+  fetchData,
+  selectedSuerte,
+  selectedPuntoId,
+}) => {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     descripcion: '',
@@ -14,27 +22,55 @@ const SuerteModal = ({ isOpen, onClose, initialData, cifras, fetchData, selected
   })
 
   useEffect(() => {
-    if (initialData) setFormData(initialData)
-    else setFormData({ descripcion: '', premio: '', CifraId: '', activo: true })
+    if (initialData) {
+      // Al editar, mapeamos los datos para que el input de premio muestre el valor correcto
+      setFormData({
+        descripcion: initialData.descripcion || '',
+        premio: initialData.premio || '', // Este viene del map que hicimos en el componente padre
+        CifraId: initialData.CifraId || '',
+        activo: initialData.activo ?? true,
+      })
+    } else {
+      setFormData({ descripcion: '', premio: '', CifraId: '', activo: true })
+    }
   }, [initialData, isOpen])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Validación de seguridad
+    if (!selectedPuntoId && selectedSuerte) {
+      return Swal.fire({
+        icon: 'warning',
+        title: 'Punto de Venta no seleccionado',
+        text: 'Debes seleccionar un punto de venta para asignar el premio.',
+      })
+    }
+
     setLoading(true)
     try {
+      // Preparamos el payload incluyendo el ID del punto de venta
+      const payload = {
+        ...formData,
+        PuntoVentaId: selectedPuntoId,
+      }
+
       if (selectedSuerte) {
-        await suerteAPI.actualizarPremio(selectedSuerte.id, formData)
+        // En tu backend, esta ruta ahora debería buscar/actualizar en DetallesSuerte
+        await suerteAPI.actualizarPremio(selectedSuerte.id, payload)
         Swal.fire({
           icon: 'success',
-          title: 'Suerte actualizada',
-          text: 'Se actualizó la suerte correctamente',
+          title: 'Configuración actualizada',
+          text: 'Se actualizó el premio para este punto de venta correctamente',
         })
       } else {
-        await suerteAPI.agregar(formData)
+        // Al agregar una nueva suerte maestra, el backend debería encargarse de
+        // crear los DetallesSuerte por defecto para los puntos existentes si así lo decides
+        await suerteAPI.agregar(payload)
         Swal.fire({
           icon: 'success',
           title: 'Suerte agregada',
-          text: 'Se agreagó la suerte correctamente',
+          text: 'Se agregó la nueva suerte al catálogo correctamente',
         })
       }
 
@@ -59,7 +95,7 @@ const SuerteModal = ({ isOpen, onClose, initialData, cifras, fetchData, selected
     'CUARTA SUERTE',
     'QUINTA SUERTE',
     'SEXTA SUERTE',
-    'SÉPTIMA SUERTE',
+    'SEPTIMA SUERTE',
     'OCTAVA SUERTE',
   ]
 
@@ -67,17 +103,27 @@ const SuerteModal = ({ isOpen, onClose, initialData, cifras, fetchData, selected
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      titulo={initialData ? 'EDITAR CONFIGURACIÓN' : 'NUEVA CONFIGURACIÓN'}
+      titulo={initialData ? 'EDITAR PREMIO LOCAL' : 'NUEVA SUERTE MAESTRA'}
       icon={LuClover}
     >
       <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Aviso de Punto de Venta actual */}
+        {selectedPuntoId && (
+          <div className="bg-luck-gold/5 border border-luck-gold/20 p-3 rounded-xl text-center">
+            <p className="text-[9px] font-black uppercase text-luck-gold tracking-[0.2em]">
+              Editando premios para el punto de venta seleccionado
+            </p>
+          </div>
+        )}
+
         <div className="space-y-1.5">
           <label className="text-[10px] font-black uppercase text-zinc-600 tracking-widest ml-1">
             Nivel de Suerte
           </label>
           <select
             required
-            className="w-full bg-zinc-900 border border-white/5 rounded-xl p-4 text-sm text-white focus:border-luck-gold/30 outline-none"
+            disabled={!!initialData} // No permitimos cambiar la descripción al editar, solo el premio
+            className="w-full bg-zinc-900 border border-white/5 rounded-xl p-4 text-sm text-white focus:border-luck-gold/30 outline-none disabled:opacity-50"
             value={formData.descripcion}
             onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
           >
@@ -97,7 +143,8 @@ const SuerteModal = ({ isOpen, onClose, initialData, cifras, fetchData, selected
             </label>
             <select
               required
-              className="w-full bg-zinc-900 border border-white/5 rounded-xl p-4 text-sm text-white focus:border-luck-gold/30 outline-none"
+              disabled={!!initialData} // No permitimos cambiar la cifra al editar
+              className="w-full bg-zinc-900 border border-white/5 rounded-xl p-4 text-sm text-white focus:border-luck-gold/30 outline-none disabled:opacity-50"
               value={formData.CifraId}
               onChange={(e) => setFormData({ ...formData, CifraId: e.target.value })}
             >
@@ -112,7 +159,7 @@ const SuerteModal = ({ isOpen, onClose, initialData, cifras, fetchData, selected
 
           <div className="space-y-1.5">
             <label className="text-[10px] font-black uppercase text-zinc-600 tracking-widest ml-1">
-              Monto del Premio
+              Monto del Premio ($)
             </label>
             <div className="relative">
               <LuDollarSign

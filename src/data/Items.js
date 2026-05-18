@@ -15,7 +15,7 @@ import {
 
 export const ADMIN_DASHBOARD_ITEMS = [
   {
-    label: 'Ventas de Tickets',
+    label: 'Gestión de Tickets',
     path: '/tickets',
     icon: LuTicket,
     desc: 'Monitoreo de ventas globales',

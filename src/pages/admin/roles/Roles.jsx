@@ -17,6 +17,7 @@ import { rolAPI } from '@/api/index.api'
 import RolModal from '@/components/RolModal'
 import Title from '@/components/Titlte'
 
+// Variantes de animación consistentes
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
@@ -30,20 +31,30 @@ const rowVariants = {
 
 const Roles = () => {
   const [roles, setRoles] = useState([])
+  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [selectedRol, setSelectedRol] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
 
-  // PAGINACIÓN
+  // ⬇️ PAGINACIÓN
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 5
 
   const fetchData = async () => {
+    setLoading(true)
     try {
       const resp = await rolAPI.listarTodos()
       setRoles(resp.data?.roles || [])
     } catch (error) {
-      Swal.fire('Error', 'No se pudo cargar la información de roles', 'error')
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo cargar la información de roles',
+        icon: 'error',
+        background: '#111615',
+        color: '#fff',
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -74,23 +85,37 @@ const Roles = () => {
   const handleDeleteRol = async (rol) => {
     const result = await Swal.fire({
       title: '¿Eliminar Rol?',
-      text: `Vas a eliminar el rol: ${rol.nombre}. Asegúrate de que no haya usuarios asignados.`,
+      text: `Vas a eliminar el rol: ${rol.nombre}. Esta acción es irreversible.`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#EAB308',
+      background: '#111615',
+      color: '#fff',
     })
 
     if (!result.isConfirmed) return
 
     try {
       await rolAPI.eliminar(rol.id)
-      Swal.fire('Eliminado', 'El rol ha sido eliminado correctamente.', 'success')
+      Swal.fire({
+        title: 'Eliminado',
+        text: 'El rol ha sido removido correctamente.',
+        icon: 'success',
+        background: '#111615',
+        color: '#fff',
+      })
       fetchData()
     } catch (error) {
       const msg = error.response?.data?.message || 'No se pudo eliminar el rol'
-      Swal.fire('Error', msg, 'error')
+      Swal.fire({
+        title: 'Error',
+        text: msg,
+        icon: 'error',
+        background: '#111615',
+        color: '#fff',
+      })
     }
   }
 
@@ -117,9 +142,9 @@ const Roles = () => {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8"
+        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 flex flex-col md:flex-row justify-between items-center gap-4"
       >
-        <div className="relative">
+        <div className="relative w-full md:w-1/2">
           <LuSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
           <input
             type="text"
@@ -129,6 +154,11 @@ const Roles = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        <div className="px-4">
+          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+            {filteredRoles.length} Roles Definidos
+          </span>
+        </div>
       </motion.div>
 
       {/* Tabla */}
@@ -136,105 +166,142 @@ const Roles = () => {
         variants={containerVariants}
         className="bg-[#111615] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
       >
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-white/[0.02] text-zinc-500 uppercase text-[11px] font-bold tracking-[0.15em]">
-              <th className="p-7">Identificador / Nombre</th>
-              <th className="p-7 text-center">Usuarios Asignados</th>
-              <th className="p-7 text-right pr-10">Acciones</th>
-            </tr>
-          </thead>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-white/[0.02] text-zinc-500 uppercase text-[11px] font-bold tracking-[0.15em]">
+                <th className="p-7 pl-10">Identificador / Nombre</th>
+                <th className="p-7 text-center">Usuarios Asignados</th>
+                <th className="p-7 text-right pr-10">Acciones</th>
+              </tr>
+            </thead>
 
-          <tbody className="divide-y divide-white/[0.03]">
-            <AnimatePresence mode="popLayout" initial={false}>
-              {currentData.length > 0 ? (
-                currentData.map((rol) => (
-                  <motion.tr
-                    key={rol.id}
-                    variants={rowVariants}
-                    layout
-                    className="group hover:bg-white/[0.01] transition-colors"
-                  >
-                    <td className="p-7">
-                      <div className="flex items-center gap-4">
-                        <motion.div
-                          whileHover={{ scale: 1.1 }}
-                          className="w-12 h-12 rounded-2xl bg-luck-gold/10 border border-luck-gold/20 flex items-center justify-center text-luck-gold"
-                        >
-                          <LuShieldCheck size={22} />
-                        </motion.div>
-                        <div className="flex flex-col">
-                          <span className="text-white font-black text-lg tracking-tight uppercase">
-                            {rol.nombre}
-                          </span>
-                          <span className="text-[10px] text-zinc-600 font-mono italic">
-                            ID: {rol.id.split('-')[0]}...
+            <tbody className="divide-y divide-white/[0.03]">
+              <AnimatePresence mode="popLayout" initial={false}>
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan="3"
+                      className="p-20 text-center animate-pulse text-zinc-500 font-black italic"
+                    >
+                      CARGANDO...
+                    </td>
+                  </tr>
+                ) : currentData.length > 0 ? (
+                  currentData.map((rol) => (
+                    <motion.tr
+                      key={rol.id}
+                      variants={rowVariants}
+                      layout
+                      className="group hover:bg-white/[0.01] transition-colors"
+                    >
+                      <td className="p-7 pl-10">
+                        <div className="flex items-center gap-4">
+                          <motion.div
+                            whileHover={{ scale: 1.1 }}
+                            className="w-12 h-12 rounded-2xl bg-luck-gold/10 border border-luck-gold/20 flex items-center justify-center text-luck-gold"
+                          >
+                            <LuShieldCheck size={22} />
+                          </motion.div>
+                          <div className="flex flex-col">
+                            <span className="text-white font-black text-lg tracking-tight uppercase">
+                              {rol.nombre}
+                            </span>
+                            <span className="text-[10px] text-zinc-600 font-mono italic">
+                              ID: {rol.id.split('-')[0]}...
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="p-7 text-center">
+                        <div className="flex items-center justify-center gap-2 text-zinc-300 bg-white/5 w-fit mx-auto px-4 py-2 rounded-xl border border-white/5">
+                          <LuUsers size={14} className="text-luck-gold" />
+                          <span className="font-mono text-xs font-bold">
+                            {rol.Usuarios?.length || 0}
                           </span>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td className="p-7 text-center">
-                      <div className="flex items-center justify-center gap-2 text-zinc-300 bg-white/5 w-fit mx-auto px-4 py-1.5 rounded-full border border-white/5">
-                        <LuUsers size={14} className="text-luck-gold" />
-                        <span className="font-mono text-xs">{rol.Usuarios?.length || 0}</span>
-                      </div>
-                    </td>
-
-                    <td className="p-7 pr-10">
-                      <div className="flex justify-end gap-3">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          onClick={() => handleEdit(rol)}
-                          className="p-3 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-luck-gold transition-colors"
-                        >
-                          <LuPencil size={18} />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          onClick={() => handleDeleteRol(rol)}
-                          className="p-3 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-red-500 transition-colors"
-                        >
-                          <LuTrash2 size={18} />
-                        </motion.button>
+                      <td className="p-7 pr-10">
+                        <div className="flex justify-end gap-3">
+                          <motion.button
+                            whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.05)' }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleEdit(rol)}
+                            className="p-3 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-luck-gold transition-colors"
+                          >
+                            <LuPencil size={18} />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.1, backgroundColor: 'rgba(239,68,68,0.1)' }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleDeleteRol(rol)}
+                            className="p-3 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-red-500 transition-colors"
+                          >
+                            <LuTrash2 size={18} />
+                          </motion.button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))
+                ) : (
+                  <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <td colSpan="3" className="p-32 text-center">
+                      <div className="flex flex-col items-center justify-center opacity-20">
+                        <LuInbox size={60} className="mb-4 text-luck-gold" />
+                        <p className="text-xs font-black uppercase tracking-[0.4em] text-white">
+                          No se encontraron roles
+                        </p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-2">
+                          Prueba con otro término o crea uno nuevo
+                        </p>
                       </div>
                     </td>
                   </motion.tr>
-                ))
-              ) : (
-                <tr className="p-32 text-center">
-                  <td colSpan="3" className="p-32 text-center">
-                    <LuInbox size={60} className="mx-auto mb-4 opacity-20 text-luck-gold" />
-                    <p className="uppercase tracking-widest text-xs text-zinc-600">
-                      No se encontraron roles
-                    </p>
-                  </td>
-                </tr>
-              )}
-            </AnimatePresence>
-          </tbody>
-        </table>
+                )}
+              </AnimatePresence>
+            </tbody>
+          </table>
+        </div>
 
-        {/* PAGINACIÓN */}
+        {/* PAGINACIÓN COMPLETA */}
         {totalPages > 1 && (
           <div className="p-6 border-t border-white/5 bg-white/[0.01] flex justify-between items-center">
             <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
               Página {currentPage} de {totalPages}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="p-2 bg-zinc-900 rounded-lg text-zinc-500 hover:text-luck-gold disabled:opacity-20"
+                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all"
               >
-                <LuChevronLeft size={18} />
+                <LuChevronLeft size={20} />
               </button>
+
+              <div className="flex gap-1">
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${
+                      currentPage === i + 1
+                        ? 'bg-luck-gold text-black'
+                        : 'text-zinc-500 hover:bg-white/5'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
-                className="p-2 bg-zinc-900 rounded-lg text-zinc-500 hover:text-luck-gold disabled:opacity-20"
+                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all"
               >
-                <LuChevronRight size={18} />
+                <LuChevronRight size={20} />
               </button>
             </div>
           </div>

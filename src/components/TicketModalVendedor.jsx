@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { LuBanknote, LuCreditCard, LuLoader, LuPlus, LuTicket, LuTrash2, LuX } from 'react-icons/lu'
 import Swal from 'sweetalert2'
 
-const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData }) => {
-  const [puntoVentaId, setPuntoVentaId] = useState('')
+const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData }) => {
+  // El punto de venta ya viene directo desde el usuario logueado
+  const puntoVentaId = usuario?.PuntoVentaId
+
   const [sorteoId, setSorteoId] = useState('')
   const [jugadas, setJugadas] = useState([])
   const [tempNumero, setTempNumero] = useState('')
@@ -14,7 +16,7 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
   const [loading, setLoading] = useState(false)
   const [caja, setCaja] = useState(null)
 
-  // --- LO NUEVO: ESTADOS DE PAGO ---
+  // Estados de pago
   const [metodoPago, setMetodoPago] = useState('Efectivo')
   const [referenciaPago, setReferenciaPago] = useState('')
 
@@ -25,17 +27,22 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
 
   const numCifras = sorteoSeleccionado?.Cifra?.cantidad || 2
 
+  // Carga automática de la caja asignada al vendedor al abrir el modal
   useEffect(() => {
-    if (puntoVentaId) {
+    if (isOpen && puntoVentaId) {
       cajaAPI
         .obtenerCajaAbierta(puntoVentaId)
         .then((res) => {
           const { caja: cajaAbierta } = res.data
           setCaja(cajaAbierta)
+          setError('')
         })
-        .catch(() => setCaja(null))
+        .catch(() => {
+          setCaja(null)
+          setError('TU PUNTO DE VENTA NO TIENE UNA CAJA ABIERTA EN ESTE TURNO')
+        })
     }
-  }, [puntoVentaId])
+  }, [isOpen, puntoVentaId])
 
   useEffect(() => {
     setTempNumero('')
@@ -76,10 +83,9 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
 
   const emitirTicket = async () => {
     if (jugadas.length === 0) return
-    if (!puntoVentaId) return setError('SELECCIONE PUNTO DE VENTA')
-    if (!caja?.id) return setError('NO HAY UNA CAJA ABIERTA')
+    if (!puntoVentaId) return setError('ERROR DE CONFIGURACIÓN: SIN SUCURSAL ASIGNADA')
+    if (!caja?.id) return setError('OPERACIÓN DETENIDA: NO HAY UNA CAJA ABIERTA')
 
-    // VALIDACIÓN DE REFERENCIA OBLIGATORIA
     if (metodoPago === 'Transferencia' && !referenciaPago) {
       return setError('DEBE INGRESAR LA REFERENCIA DE PAGO')
     }
@@ -92,7 +98,6 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
         UsuarioId: usuario?.id,
         CajaId: caja?.id,
         detalles: jugadas.map((j) => ({ numeroJugado: j.numero, montoApostado: j.monto })),
-        // --- LO NUEVO EN EL PAYLOAD ---
         metodoPago,
         referenciaPago: metodoPago === 'Transferencia' ? referenciaPago : null,
       }
@@ -103,13 +108,14 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
           title: 'ÉXITO',
           text: 'Ticket generado correctamente',
           icon: 'success',
-          background: '#111615',
-          color: '#fff',
+          background: '#ffffff',
+          color: '#111615',
           confirmButtonColor: '#EAB308',
+          customClass: { popup: 'rounded-[2rem] border border-black/5' },
         })
         setJugadas([])
-        setReferenciaPago('') // Reset referencia
-        setMetodoPago('Efectivo') // Volver a efectivo
+        setReferenciaPago('')
+        setMetodoPago('Efectivo')
         onClose()
         if (fetchData) fetchData()
       }
@@ -146,10 +152,10 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
             </div>
             <div>
               <h2 className="text-lg font-black text-white uppercase italic tracking-tight">
-                Emisión de Ticket
+                Nueva Emisión de Ticket
               </h2>
-              <p className="text-zinc-600 text-[9px] font-bold uppercase tracking-[0.2em]">
-                Punto de Venta Autorizado
+              <p className="text-luck-gold text-[9px] font-bold uppercase tracking-[0.2em]">
+                Punto de Venta: {usuario?.PuntoVenta?.nombre || 'Mi Sucursal'}
               </p>
             </div>
           </div>
@@ -165,27 +171,23 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
           {/* PANEL IZQUIERDO: CONFIGURACIÓN */}
           <div className="col-span-12 lg:col-span-5 p-8 border-r border-white/5 flex flex-col gap-6 overflow-y-auto custom-scroll-minimal">
             <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-1">
-                  Punto de Venta
-                </label>
-                <select
-                  disabled={jugadas.length > 0}
-                  className="w-full bg-zinc-900/50 border border-white/5 rounded-xl p-3.5 text-xs text-white focus:border-luck-gold/40 outline-none transition-all cursor-pointer"
-                  value={puntoVentaId}
-                  onChange={(e) => setPuntoVentaId(e.target.value)}
-                >
-                  <option value="" disabled>
-                    SELECCIONAR UBICACIÓN...
-                  </option>
-                  {puntosVenta.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nombre.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
+              {/* Información fija de su caja actual */}
+              <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex justify-between items-center">
+                <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">
+                  Estado de Terminal:
+                </span>
+                <div className="flex items-center gap-2">
+                  {/* Un pequeño círculo indicador para darle un toque más Pro */}
+                  <div
+                    className={`w-2 h-2 rounded-full animate-pulse ${caja?.id ? 'bg-emerald-500' : 'bg-red-500'}`}
+                  />
+                  <span
+                    className={`text-[10px] font-black uppercase tracking-widest ${caja?.id ? 'text-emerald-500' : 'text-red-500'}`}
+                  >
+                    {caja?.id ? 'Caja Abierta / Activa' : 'Caja Cerrada / Inactiva'}
+                  </span>
+                </div>
               </div>
-
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-1">
                   Sorteo Disponible
@@ -207,7 +209,7 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
                 </select>
               </div>
 
-              {/* --- NUEVO: SELECTOR DE MÉTODO DE PAGO --- */}
+              {/* METODOS DE PAGO */}
               <div className="space-y-2 pt-2">
                 <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-1">
                   Método de Pago
@@ -236,7 +238,7 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
                 </div>
               </div>
 
-              {/* --- NUEVO: CAMPO DE REFERENCIA CONDICIONAL --- */}
+              {/* CAMPO REFERENCIA DIGITAL */}
               <AnimatePresence>
                 {metodoPago === 'Transferencia' && (
                   <motion.div
@@ -307,8 +309,8 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
 
               <button
                 onClick={agregarJugada}
-                disabled={loading}
-                className="w-full bg-luck-gold hover:bg-yellow-500 text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-luck-gold/10"
+                disabled={loading || !caja?.id}
+                className="w-full bg-luck-gold hover:bg-yellow-500 text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-luck-gold/10 disabled:opacity-20"
               >
                 {loading ? (
                   <LuLoader className="animate-spin" size={18} />
@@ -373,7 +375,7 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
               </AnimatePresence>
             </div>
 
-            {/* FOOTER: TOTAL Y ACCIÓN */}
+            {/* FOOTER: TOTAL Y EMISIÓN */}
             <div className="mt-6 p-6 bg-zinc-900/50 border border-white/5 rounded-[2rem]">
               <div className="flex justify-between items-end mb-6">
                 <div>
@@ -395,12 +397,12 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
                         : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
                     }`}
                   >
-                    {metodoPago === 'Transferencia' ? 'Pago Digital' : 'Sistema Online'}
+                    {metodoPago === 'Transferencia' ? 'Pago Digital' : 'Terminal Online'}
                   </div>
                 </div>
               </div>
               <button
-                disabled={jugadas.length === 0 || loading}
+                disabled={jugadas.length === 0 || loading || !caja?.id}
                 onClick={emitirTicket}
                 className="w-full bg-white hover:bg-zinc-200 text-black font-black py-4 rounded-2xl uppercase text-[10px] tracking-[0.2em] transition-all disabled:opacity-20 active:scale-[0.98] flex items-center justify-center gap-2 shadow-xl"
               >
@@ -415,4 +417,4 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
   )
 }
 
-export default TicketModal
+export default TicketModalVendedor

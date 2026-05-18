@@ -1,29 +1,42 @@
-import { cifraAPI, suerteAPI } from '@/api/index.api'
+import { cifraAPI, puntosVentaAPI, suerteAPI } from '@/api/index.api' // Asegúrate de tener puntosVentaAPI
 import SuerteModal from '@/components/SuerteModal'
 import Title from '@/components/Titlte'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
-import { LuClover, LuLayers, LuPencil, LuPlus } from 'react-icons/lu'
+import { LuClover, LuLayers, LuPencil, LuPlus, LuStore } from 'react-icons/lu'
 
 const Suertes = () => {
   const [showModal, setShowModal] = useState(false)
   const [selectedSuerte, setSelectedSuerte] = useState(null)
   const [suertes, setSuertes] = useState([])
   const [cifras, setCifras] = useState([])
+  const [puntosVenta, setPuntosVenta] = useState([])
 
-  // Estado para el filtro de cifras (por defecto 2)
+  // Estado para el punto de venta seleccionado (ID)
+  const [selectedPuntoId, setSelectedPuntoId] = useState('')
   const [activeTab, setActiveTab] = useState(2)
 
   const fetchData = async () => {
     try {
-      const [respSuertes, respCifras] = await Promise.all([
+      // Ahora traemos también los puntos de venta
+      const [respSuertes, respCifras, respPuntos] = await Promise.all([
         suerteAPI.listarTodas(),
         cifraAPI.listarTodas(),
+        puntosVentaAPI.listarTodos(), // Nueva API para obtener locales
       ])
+
       setSuertes(respSuertes.data?.suertes || [])
-      // Ordenamos las cifras de menor a mayor para las pestañas
+
       const sortedCifras = (respCifras.data?.cifras || []).sort((a, b) => a.cantidad - b.cantidad)
       setCifras(sortedCifras)
+
+      const puntos = respPuntos.data?.puntosVentas || []
+      setPuntosVenta(puntos)
+
+      // Por defecto seleccionamos el primero si existe
+      if (puntos.length > 0 && !selectedPuntoId) {
+        setSelectedPuntoId(puntos[0].id)
+      }
     } catch (error) {
       console.error(error)
     }
@@ -33,10 +46,20 @@ const Suertes = () => {
     fetchData()
   }, [])
 
-  // Filtrado por la pestaña activa
+  // LÓGICA FILTRADO: Filtra por cifras y extrae el premio del Punto de Venta seleccionado
   const filteredSuertes = useMemo(() => {
-    return suertes.filter((s) => s.Cifra?.cantidad === activeTab)
-  }, [suertes, activeTab])
+    return suertes
+      .filter((s) => s.Cifra?.cantidad === activeTab)
+      .map((s) => {
+        // Buscamos el detalle que corresponde al punto de venta seleccionado
+        const detalle = s.DetallesSuertes?.find((d) => d.PuntoVentaId === selectedPuntoId)
+        return {
+          ...s,
+          // El premio ahora viene del detalle, si no hay, ponemos 0
+          premio: detalle ? detalle.premio : '0.00',
+        }
+      })
+  }, [suertes, activeTab, selectedPuntoId])
 
   const handleEdit = (suerte) => {
     setSelectedSuerte(suerte)
@@ -45,22 +68,49 @@ const Suertes = () => {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full pb-10">
-      <div className="flex justify-between items-center mb-10">
+      <div className="flex justify-between items-end mb-10">
         <Title
           titulo="Configuración de Suertes"
-          descripcion="Premios y niveles de victoria segmentados por cifras"
+          descripcion="Gestiona los premios personalizados por cada punto de venta"
         />
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => {
-            setSelectedSuerte(null)
-            setShowModal(true)
-          }}
-          className="bg-luck-gold text-black font-black py-3.5 px-6 rounded-2xl flex items-center gap-2 uppercase text-sm shadow-lg shadow-luck-gold/10"
-        >
-          <LuPlus size={20} strokeWidth={3} /> Nueva Suerte
-        </motion.button>
+
+        <div className="flex items-center gap-4">
+          {/* SELECTOR DE PUNTO DE VENTA */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">
+              Punto de Venta
+            </label>
+            <div className="relative">
+              <LuStore
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold"
+                size={18}
+              />
+              <select
+                value={selectedPuntoId}
+                onChange={(e) => setSelectedPuntoId(e.target.value)}
+                className="bg-zinc-950 border border-white/10 text-white text-xs font-bold rounded-2xl py-3.5 pl-12 pr-10 appearance-none focus:outline-none focus:border-luck-gold/50 transition-all cursor-pointer"
+              >
+                {puntosVenta.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              setSelectedSuerte(null)
+              setShowModal(true)
+            }}
+            className="bg-luck-gold text-black font-black py-3.5 px-6 rounded-2xl flex items-center gap-2 uppercase text-sm shadow-lg shadow-luck-gold/10 self-end"
+          >
+            <LuPlus size={20} strokeWidth={3} /> Nueva Suerte
+          </motion.button>
+        </div>
       </div>
 
       {/* Pestañas de Cifras */}
@@ -80,13 +130,13 @@ const Suertes = () => {
         ))}
       </div>
 
-      {/* Tabla con AnimatePresence para cambios suaves entre pestañas */}
+      {/* Tabla con Premios por Punto de Venta */}
       <div className="bg-[#111615] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-white/[0.02] text-zinc-500 uppercase text-[11px] font-bold tracking-[0.15em]">
               <th className="p-7 pl-10">Nivel de Suerte</th>
-              <th className="p-7 text-center">Monto Premio</th>
+              <th className="p-7 text-center">Premio en este Punto</th>
               <th className="p-7 text-center">Estado</th>
               <th className="p-7 text-right pr-10">Acciones</th>
             </tr>
@@ -144,11 +194,10 @@ const Suertes = () => {
                         />
                       </div>
                       <h3 className="text-white font-black uppercase tracking-[0.3em] text-xs mb-2">
-                        Sin suertes para {activeTab} cifras
+                        Sin configuración de premios
                       </h3>
                       <p className="text-zinc-600 text-[10px] font-bold uppercase tracking-widest max-w-[250px] mx-auto leading-relaxed">
-                        Aún no has configurado los premios para esta categoría. Haz clic en "Nueva
-                        Suerte" para comenzar.
+                        No se encontraron premios para el punto de venta y categoría seleccionados.
                       </p>
                     </div>
                   </td>
@@ -166,6 +215,7 @@ const Suertes = () => {
         cifras={cifras}
         fetchData={fetchData}
         selectedSuerte={selectedSuerte}
+        selectedPuntoId={selectedPuntoId} // Pasamos el punto seleccionado al modal para guardar
       />
     </motion.div>
   )

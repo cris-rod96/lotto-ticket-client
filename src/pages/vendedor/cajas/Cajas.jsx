@@ -1,104 +1,98 @@
-import { motion } from 'framer-motion'
-import { useEffect, useMemo, useState } from 'react'
-
-// Componentes propios
-import CajaOperacionesModal from '@/components/CajaOperacionesModal'
-
-// Hooks y API
 import { cajaAPI } from '@/api/index.api'
 import CajasVendedorHeader from '@/components/headers/CajasVendedorHeader'
 import CajasVendedorStats from '@/components/stats/CajasVendedorStats'
 import CajasVendedorTable from '@/components/tables/CajasVendedorTable'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useCajaStore } from '@/store/useCajaStore'
+import { motion } from 'framer-motion'
+import { useEffect, useMemo, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 
-const CajasVendedor = () => {
-  // 1. ESTADOS Y CONTEXTOS
+const Cajas = () => {
   const { user } = useAuthStore()
-  const { setIsLoading, setLoadingMsg } = useOutletContext()
-  const { isCajaAbierta, cajas, setCaja, setCajas, caja } = useCajaStore()
+  const { setIsLoading } = useOutletContext()
+  const { cajas, setCaja, setCajas, caja } = useCajaStore()
 
-  const [modalType, setModalType] = useState(null)
-
-  // Lógica de Paginación
+  const [filtroVista, setFiltroVista] = useState('movimientos')
+  const [cajaSeleccionada, setCajaSeleccionada] = useState(null)
+  const [soloMisMovimientos, setSoloMisMovimientos] = useState(false) // FILTRO EXTRA
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 5
+  const itemsPerPage = 6
 
-  const formatter = new Intl.NumberFormat('es-EC', {
-    style: 'currency',
-    currency: 'USD',
-  })
+  const formatter = new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' })
 
-  // 2. CARGA DE DATOS ÚNICA PARA EL VENDEDOR
   useEffect(() => {
-    const cargarDatosFinancieros = async () => {
+    const cargarDatos = async () => {
       if (!user?.PuntoVentaId) return
-
       setIsLoading(true)
-      setLoadingMsg('Sincronizando terminal de cobro...')
-
       try {
         const [respHistorial, respActual] = await Promise.all([
           cajaAPI.listarPorPuntoVenta(user.PuntoVentaId),
           cajaAPI.obtenerCajaAbierta(user.PuntoVentaId),
         ])
-
         setCajas(respHistorial.data.cajas || [])
-        setCaja(respActual.data.caja || null)
+        const activa = respActual.data.caja || null
+        setCaja(activa)
+        if (activa) setCajaSeleccionada(activa)
       } catch (error) {
-        console.error('Error cargando datos de caja:', error)
+        console.error(error)
       } finally {
         setIsLoading(false)
       }
     }
+    cargarDatos()
+  }, [user?.PuntoVentaId])
 
-    cargarDatosFinancieros()
-  }, [user?.PuntoVentaId, setCaja, setCajas, setIsLoading, setLoadingMsg])
+  const dataAMostrar = useMemo(() => {
+    if (filtroVista === 'movimientos') {
+      let movimientos = cajaSeleccionada?.Movimientos || []
+      // Si el toggle está activo, filtramos, si no, mostramos TODO
+      if (soloMisMovimientos) {
+        return movimientos.filter((m) => m.UsuarioId === user?.id)
+      }
+      return movimientos
+    }
+    return cajas
+  }, [filtroVista, cajaSeleccionada, cajas, soloMisMovimientos, user?.id])
 
-  // 3. CÁLCULOS DE PAGINACIÓN
-  const totalPages = Math.ceil(cajas.length / itemsPerPage)
   const currentData = useMemo(() => {
-    const firstPageIndex = (currentPage - 1) * itemsPerPage
-    const lastPageIndex = firstPageIndex + itemsPerPage
-    return cajas.slice(firstPageIndex, lastPageIndex)
-  }, [currentPage, cajas])
+    const start = (currentPage - 1) * itemsPerPage
+    return dataAMostrar.slice(start, start + itemsPerPage)
+  }, [currentPage, dataAMostrar])
 
   return (
-    <div className="w-full pb-10">
-      {/* CABECERA */}
-      <CajasVendedorHeader isCajaAbierta={isCajaAbierta} onOpenModal={setModalType} />
+    <div className="w-full pb-10 px-4">
+      <CajasVendedorHeader
+        usuario={user}
+        filtroVista={filtroVista}
+        setFiltroVista={(v) => {
+          setFiltroVista(v)
+          setCurrentPage(1)
+        }}
+      />
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        {/* TARJETAS DE ESTADO */}
-        <CajasVendedorStats
-          user={user}
-          isCajaAbierta={isCajaAbierta}
-          caja={caja}
-          formatter={formatter}
-        />
+        <CajasVendedorStats user={user} caja={caja} formatter={formatter} />
 
-        {/* TABLA DE HISTORIAL */}
         <CajasVendedorTable
+          tipoVista={filtroVista}
           data={currentData}
-          totalRecords={cajas.length}
           currentPage={currentPage}
-          totalPages={totalPages}
+          totalPages={Math.ceil(dataAMostrar.length / itemsPerPage)}
           onPageChange={setCurrentPage}
           formatter={formatter}
+          // Props de filtrado
+          soloMisMovimientos={soloMisMovimientos}
+          setSoloMisMovimientos={setSoloMisMovimientos}
+          userId={user?.id}
+          onSelectCaja={(c) => {
+            setCajaSeleccionada(c)
+            setFiltroVista('movimientos')
+          }}
         />
       </motion.div>
-
-      {modalType && (
-        <CajaOperacionesModal
-          type={modalType}
-          onClose={() => setModalType(null)}
-          puntoVentaId={user?.PuntoVentaId}
-          cajaActiva={caja}
-        />
-      )}
     </div>
   )
 }
 
-export default CajasVendedor
+export default Cajas

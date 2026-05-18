@@ -3,24 +3,32 @@ import { instance } from '../base.api'
 const model = 'tickets'
 
 const ticketAPI = {
-  listarTodos: () => {
+  listarTodos: async () => {
     return instance.get(`/${model}/listar/todos`)
   },
 
-  vender: (data) => {
+  listarPorPuntoDeVenta: async (id) => {
+    return instance.get(`/${model}/listar/punto-de-venta/${id}`)
+  },
+
+  vender: async (data) => {
     return instance.post(`/${model}/vender`, data)
   },
 
-  eliminar: (id) => {
+  eliminar: async (id) => {
     return instance.delete(`/${model}/eliminar/${id}`)
   },
 
-  verificarCupo: (SorteoId, numero, monto) => {
+  verificarCupo: async (SorteoId, numero, monto) => {
     return instance.post(`/${model}/verificar-cupo`, {
       SorteoId,
       numero,
       monto,
     })
+  },
+
+  pagarTicket: async (TicketId, UsuarioId, CajaId) => {
+    return instance.patch(`/${model}/pagar-ticket`, { TicketId, UsuarioId, CajaId })
   },
 }
 
