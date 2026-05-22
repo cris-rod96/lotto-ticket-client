@@ -1,24 +1,10 @@
-import { cajaAPI } from '@/api/index.api'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { LuCircleCheck, LuDollarSign, LuX } from 'react-icons/lu'
 
-const ModalPagoTicketVendedor = ({ isOpen, onClose, ticket, usuario, onConfirm }) => {
-  const [caja, setCaja] = useState(null)
-  const [loading, setLoading] = useState(false)
-
+const ModalPagoTicketVendedor = ({ isOpen, onClose, ticket, usuario, onConfirm, caja }) => {
   useEffect(() => {
-    if (isOpen && usuario?.PuntoVentaId) {
-      setLoading(true)
-      // Solo consultamos la caja activa para obtener su ID y procesar el pago
-      cajaAPI
-        .obtenerCajaAbierta(usuario.PuntoVentaId)
-        .then((res) => setCaja(res.data.caja))
-        .catch(() => setCaja(null))
-        .finally(() => setLoading(false))
-    }
+    console.log(caja)
   }, [isOpen, usuario])
-
-  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
@@ -71,22 +57,16 @@ const ModalPagoTicketVendedor = ({ isOpen, onClose, ticket, usuario, onConfirm }
 
           {/* Botón de Acción Directa */}
           <button
-            disabled={loading || !caja?.id}
+            disabled={!caja?.id}
             onClick={() => onConfirm(ticket.id, usuario.PuntoVentaId, caja.id)}
             className="w-full bg-luck-gold hover:bg-yellow-500 disabled:opacity-20 text-black font-black py-5 rounded-2xl flex items-center justify-center gap-3 uppercase text-[11px] italic tracking-widest transition-all shadow-lg shadow-luck-gold/10 active:scale-95"
           >
-            {loading ? (
-              <span className="animate-pulse">Sincronizando...</span>
-            ) : (
-              <>
-                <LuCircleCheck size={20} strokeWidth={3} />
-                Registrar Desembolso
-              </>
-            )}
+            <LuCircleCheck size={20} strokeWidth={3} />
+            Registrar Desembolso
           </button>
 
           {/* Mensaje de error solo si la base de datos no encuentra caja alguna para esa sucursal */}
-          {!caja?.id && !loading && (
+          {!caja?.id && (
             <p className="text-[9px] text-red-500 font-black uppercase text-center">
               Error de sistema: No se detectó una caja activa para este punto.
             </p>

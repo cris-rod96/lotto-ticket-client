@@ -41,10 +41,11 @@ const Tickets = () => {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false)
   const [ticketToPay, setTicketToPay] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [resultFilter, setResultFilter] = useState('Todos')
 
   // Datos fijos del vendedor autenticado
   const { user } = useAuthStore()
-  const { setCaja } = useCajaStore()
+  const { setCaja, caja } = useCajaStore()
 
   const [sorteos, setSorteos] = useState([])
   const [suertes, setSuertes] = useState([])
@@ -181,30 +182,6 @@ const Tickets = () => {
     }
   }
 
-  /* LÓGICA ANTERIOR (COMENTADA POR SEGURIDAD)
-  const handlePrintTicket = async (ticket) => {
-    try {
-      const doc = <TicketTemplate ticket={ticket} suertes={suertes} />
-      const blob = await pdf(doc).toBlob()
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `ticket-${ticket.codigo}.pdf`
-      link.click()
-      URL.revokeObjectURL(url)
-    } catch (error) {
-      Swal.fire({
-        title: 'Error de impresión',
-        icon: 'error',
-        background: '#ffffff',
-        color: '#111615',
-        confirmButtonColor: '#ef4444',
-        customClass: { popup: 'rounded-[2rem] border border-black/5' },
-      })
-    }
-  }
-  */
-
   /**
    * NUEVA LÓGICA DE IMPRESIÓN COMPROBANTE (IFRAME)
    */
@@ -252,54 +229,18 @@ const Tickets = () => {
     }
   }
 
-  /* LÓGICA ANTERIOR COMPROBANTE (COMENTADA POR SEGURIDAD)
-  const handlePrintComprobante = async (ticket) => {
-    try {
-      Swal.fire({
-        title: 'GENERANDO COMPROBANTE...',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
-        background: '#ffffff',
-        color: '#111615',
-        customClass: { popup: 'rounded-[2rem]' },
-      })
-
-      const doc = <ComprobantePagoTemplate ticket={ticket} />
-      const blob = await pdf(doc).toBlob()
-      const url = URL.createObjectURL(blob)
-
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `comprobante-pago-${ticket.codigo}.pdf`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
-      URL.revokeObjectURL(url)
-      Swal.close() 
-    } catch (error) {
-      console.error('Error al generar comprobante:', error)
-      Swal.fire({
-        title: 'Error de impresión',
-        text: 'No se pudo generar el comprobante de pago',
-        icon: 'error',
-        background: '#ffffff',
-        color: '#111615',
-        confirmButtonColor: '#ef4444',
-        customClass: { popup: 'rounded-[2rem]' },
-      })
-    }
-  }
-  */
-
   const filtered = useMemo(() => {
-    return tickets.filter(
-      (t) =>
+    return tickets.filter((t) => {
+      const matchesSearch =
         t.codigo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.Sorteo?.Catalogo?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.Cliente?.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [tickets, searchTerm])
+
+      const matchesResult = resultFilter === 'Todos' || t.resultado === resultFilter
+
+      return matchesSearch && matchesResult
+    })
+  }, [tickets, searchTerm, resultFilter])
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage)
 
@@ -310,7 +251,7 @@ const Tickets = () => {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm])
+  }, [searchTerm, resultFilter])
 
   return (
     <motion.div initial="hidden" animate="visible" className="w-full pb-10">
@@ -344,10 +285,33 @@ const Tickets = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="px-6 py-2 bg-white/[0.02] border border-white/5 rounded-xl">
-          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">
-            {filtered.length} Tickets Emitidos
-          </span>
+
+        {/* Grupo de filtros y contador a la derecha */}
+        <div className="flex items-center gap-4 w-full md:w-auto justify-end">
+          <select
+            value={resultFilter}
+            onChange={(e) => setResultFilter(e.target.value)}
+            className="bg-black/40 border border-white/5 text-zinc-300 rounded-2xl py-4 px-5 text-xs font-bold focus:outline-none focus:border-luck-gold/30 transition-all cursor-pointer uppercase tracking-wider"
+          >
+            <option value="Todos" className="bg-[#111615] text-white">
+              Todos los resultados
+            </option>
+            <option value="Pendiente" className="bg-[#111615] text-white">
+              Pendiente
+            </option>
+            <option value="Ganador" className="bg-[#111615] text-white">
+              Ganador
+            </option>
+            <option value="No Ganador" className="bg-[#111615] text-white">
+              No Ganador
+            </option>
+          </select>
+
+          <div className="px-6 py-4 bg-white/[0.02] border border-white/5 rounded-2xl whitespace-nowrap">
+            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">
+              {filtered.length} Tickets
+            </span>
+          </div>
         </div>
       </motion.div>
 
@@ -500,7 +464,7 @@ const Tickets = () => {
                       <div className="flex flex-col items-center justify-center opacity-10">
                         <LuInbox size={60} className="mb-4 text-white" />
                         <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white">
-                          No registras ventas aún
+                          No se encontraron tickets
                         </p>
                       </div>
                     </td>
@@ -541,7 +505,7 @@ const Tickets = () => {
               </div>
               <button
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
+                onClick={() => setCurrentPage((p) => p - 1)}
                 className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all"
               >
                 <LuChevronRight size={18} />
@@ -550,22 +514,26 @@ const Tickets = () => {
           </div>
         )}
       </motion.div>
+      {showModal && (
+        <TicketModalVendedor
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          sorteos={sorteos}
+          usuario={user}
+          fetchData={fetchData}
+        />
+      )}
 
-      <TicketModalVendedor
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        sorteos={sorteos}
-        usuario={user}
-        fetchData={fetchData}
-      />
-
-      <ModalPagoTicketVendedor
-        isOpen={isPayModalOpen}
-        onClose={() => setIsPayModalOpen(false)}
-        ticket={ticketToPay}
-        usuario={user}
-        onConfirm={handleConfirmarPagoReal}
-      />
+      {isPayModalOpen && (
+        <ModalPagoTicketVendedor
+          isOpen={isPayModalOpen}
+          onClose={() => setIsPayModalOpen(false)}
+          ticket={ticketToPay}
+          usuario={user}
+          onConfirm={handleConfirmarPagoReal}
+          caja={caja}
+        />
+      )}
     </motion.div>
   )
 }
