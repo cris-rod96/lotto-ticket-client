@@ -45,7 +45,9 @@ const Tickets = () => {
 
   // Datos fijos del vendedor autenticado
   const { user } = useAuthStore()
-  const { setCaja, caja } = useCajaStore()
+  const caja = useCajaStore((state) => state.caja)
+  console.log(caja)
+  const setCaja = useCajaStore((state) => state.setCaja)
 
   const [sorteos, setSorteos] = useState([])
   const [suertes, setSuertes] = useState([])
@@ -68,7 +70,6 @@ const Tickets = () => {
       setSuertes(respSuertes.data.suertes || [])
       setTickets(respTickets.data.tickets || [])
     } catch (error) {
-      console.error('Error al cargar datos del punto de venta:', error)
       Swal.fire({
         title: 'Error',
         text: 'No se pudo sincronizar tus ventas del día',
@@ -524,7 +525,7 @@ const Tickets = () => {
         />
       )}
 
-      {isPayModalOpen && (
+      {isPayModalOpen && caja && (
         <ModalPagoTicketVendedor
           isOpen={isPayModalOpen}
           onClose={() => setIsPayModalOpen(false)}

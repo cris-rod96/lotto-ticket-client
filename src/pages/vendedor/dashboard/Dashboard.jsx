@@ -27,7 +27,7 @@ const itemVariants = {
 const DashboardVendedor = () => {
   const token = useAuthStore((store) => store.token)
   const user = useAuthStore((state) => state.user)
-  const { setCaja } = useCajaStore()
+  const { setCaja, setCajas } = useCajaStore()
   const { setIsLoading, setLoadingMsg, isLoading } = useOutletContext()
   const [stats, setStats] = useState({})
 
@@ -38,19 +38,24 @@ const DashboardVendedor = () => {
 
       try {
         // Solo pedimos lo que el vendedor necesita ver
-        const [respTicket, respSorteo, respCaja, respMovimientos] = await Promise.all([
-          ticketAPI.listarTodos(), // El backend debería filtrar por usuario/punto en el token
-          sorteoAPI.listarTodos(),
-          cajaAPI.listarPorPuntoVenta(user.PuntoVentaId),
-          movimientoAPI.listarPorPuntoVenta(user.PuntoVentaId),
-        ])
+        const [respTicket, respSorteo, respCaja, respCajaAbierta, respMovimientos] =
+          await Promise.all([
+            ticketAPI.listarTodos(), // El backend debería filtrar por usuario/punto en el token
+            sorteoAPI.listarTodos(),
+            cajaAPI.listarPorPuntoVenta(user.PuntoVentaId),
+            cajaAPI.obtenerCajaAbierta(user.PuntoVentaId),
+            movimientoAPI.listarPorPuntoVenta(user.PuntoVentaId),
+          ])
 
         const tickets = respTicket.data.tickets || []
         const sorteos = respSorteo.data.sorteos || []
         const movimientos = respMovimientos.data.movimientos || []
+        const cajas = respCaja.data.cajas || []
+
+        setCajas(cajas)
 
         // Sincronizar estado de caja local
-        const cajaActiva = respCaja.data?.caja
+        const cajaActiva = respCajaAbierta.data?.caja
         if (cajaActiva) setCaja(cajaActiva)
 
         const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })

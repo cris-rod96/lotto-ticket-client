@@ -1,11 +1,6 @@
-import { useEffect } from 'react'
 import { LuCircleCheck, LuDollarSign, LuX } from 'react-icons/lu'
 
 const ModalPagoTicketVendedor = ({ isOpen, onClose, ticket, usuario, onConfirm, caja }) => {
-  useEffect(() => {
-    console.log(caja)
-  }, [isOpen, usuario])
-
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
       <div className="bg-[#0c0d0d] border border-white/10 w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
