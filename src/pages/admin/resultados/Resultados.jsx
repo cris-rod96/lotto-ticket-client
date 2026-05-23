@@ -1,6 +1,6 @@
 import { resultadoAPI } from '@/api/index.api'
 import DetalleResultadoModal from '@/components/DetalleResultadoModal'
-import FlyerResultadosModal from '@/components/FlyerResultadosModal' // Nuevo componente Modal
+import FlyerResultadosModal from '@/components/FlyerResultadosModal'
 import ResultadoModal from '@/components/ResultadoModal'
 import Title from '@/components/Titlte'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -8,12 +8,13 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   LuChevronLeft,
   LuChevronRight,
+  LuClock,
   LuEye,
   LuFileText,
+  LuFilter,
   LuImage,
   LuInbox,
   LuPlus,
-  LuSearch,
   LuTrendingDown,
   LuTrendingUp,
   LuTrophy,
@@ -40,7 +41,11 @@ const Resultados = () => {
   const [showFlyerModal, setShowFlyerModal] = useState(false)
   const [selectedResultado, setSelectedResultado] = useState(null)
   const [groupedFlyerData, setGroupedFlyerData] = useState(null)
-  const [searchTerm, setSearchTerm] = useState('')
+
+  // NUEVOS ESTADOS PARA FILTROS SELECTORES
+  const [jornadaFilter, setJornadaFilter] = useState('Todos')
+  const [utilidadFilter, setUtilidadFilter] = useState('Todos')
+
   const [resultados, setResultados] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -64,19 +69,21 @@ const Resultados = () => {
     fetchData()
   }, [])
 
-  // Filtrado de resultados
+  // Filtrado de resultados mediante puros selects de alto contraste
   const filteredResults = useMemo(() => {
     return resultados.filter((r) => {
-      const nombreSorteo = r.Sorteo?.Catalogo?.nombre || ''
-      const jornada = r.Sorteo?.jornada || ''
-      const numero = r.Sorteo?.numero || ''
-      return (
-        nombreSorteo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        jornada.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        numero.toString().includes(searchTerm)
-      )
+      const jornadaSorteo = r.Sorteo?.jornada || ''
+      const utilidadNeta = parseFloat(r.Sorteo?.utilidadNeta || 0)
+
+      const matchesJornada = jornadaFilter === 'Todos' || jornadaSorteo === jornadaFilter
+
+      let matchesUtilidad = true
+      if (utilidadFilter === 'Positiva') matchesUtilidad = utilidadNeta >= 0
+      if (utilidadFilter === 'Negativa') matchesUtilidad = utilidadNeta < 0
+
+      return matchesJornada && matchesUtilidad
     })
-  }, [resultados, searchTerm])
+  }, [resultados, jornadaFilter, utilidadFilter])
 
   // Paginación computada
   const totalPages = Math.ceil(filteredResults.length / itemsPerPage)
@@ -85,10 +92,10 @@ const Resultados = () => {
     return filteredResults.slice(start, start + itemsPerPage)
   }, [filteredResults, currentPage])
 
-  // Resetear página al buscar
+  // Resetear página automáticamente al cambiar los filtros
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm])
+  }, [jornadaFilter, utilidadFilter])
 
   const handleOpenDetalle = (resultado) => {
     setSelectedResultado(resultado)
@@ -97,21 +104,16 @@ const Resultados = () => {
 
   const handleGenerarReporteGanadores = async (resultado) => {
     try {
-      // Notificar al usuario o cambiar el icono a un loader si deseas
       console.log('Generando PDF...')
-
-      // Generar el blob del documento
       const doc = <ReporteGanadoresPDF data={resultado} />
       const blob = await pdf(doc).toBlob()
 
-      // Crear un link de descarga y dispararlo
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
       link.download = `Reporte_Ganadores_${resultado.Sorteo?.Catalogo?.nombre}_${resultado.Sorteo?.numero}.pdf`
       link.click()
 
-      // Limpiar memoria
       URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Error al generar el PDF:', error)
@@ -157,25 +159,58 @@ const Resultados = () => {
         </motion.button>
       </div>
 
-      {/* BARRA DE BÚSQUEDA */}
+      {/* BARRA DE FILTROS SELECTS DE ALTO CONTRASTE */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-6 shadow-xl flex flex-col md:flex-row justify-between items-center gap-4"
+        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-6 shadow-xl flex flex-col sm:flex-row items-center gap-4"
       >
-        <div className="relative w-full md:w-1/2">
-          <LuSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-          <input
-            type="text"
-            placeholder="Buscar sorteo por nombre, jornada o número..."
-            className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-white focus:outline-none focus:border-luck-gold/50 transition-all placeholder:text-zinc-600 text-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        {/* SELECT 1: JORNADAS CORREGIDAS */}
+        <div className="relative w-full sm:w-64">
+          <LuClock className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
+          <select
+            value={jornadaFilter}
+            onChange={(e) => setJornadaFilter(e.target.value)}
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
+          >
+            <option value="Todos" className="bg-[#1a1f1e] text-white">
+              Todas las jornadas
+            </option>
+            <option value="Matutina" className="bg-[#1a1f1e] text-white">
+              Matutina
+            </option>
+            <option value="Vespertina" className="bg-[#1a1f1e] text-white">
+              Vespertina
+            </option>
+            <option value="Nocturna" className="bg-[#1a1f1e] text-white">
+              Nocturna
+            </option>
+          </select>
         </div>
-        <div className="px-4">
+
+        {/* SELECT 2: RENDIMIENTO / UTILIDAD NETA */}
+        <div className="relative w-full sm:w-64">
+          <LuFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
+          <select
+            value={utilidadFilter}
+            onChange={(e) => setUtilidadFilter(e.target.value)}
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
+          >
+            <option value="Todos" className="bg-[#1a1f1e] text-white">
+              Todas las utilidades
+            </option>
+            <option value="Positiva" className="bg-[#1a1f1e] text-white">
+              Ganancia (Positiva)
+            </option>
+            <option value="Negativa" className="bg-[#1a1f1e] text-white">
+              Pérdida (Negativa)
+            </option>
+          </select>
+        </div>
+
+        <div className="ml-auto px-4 hidden sm:block">
           <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-            {filteredResults.length} Registros Encontrados
+            {filteredResults.length} Registros Filtrados
           </span>
         </div>
       </motion.div>
@@ -296,7 +331,7 @@ const Resultados = () => {
                           No se encontraron registros
                         </p>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-2">
-                          Prueba con otro término de búsqueda
+                          Prueba cambiando los selectores de filtro
                         </p>
                       </div>
                     </td>
@@ -340,7 +375,7 @@ const Resultados = () => {
 
               <button
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
+                onClick={() => setCurrentPage((p) => p - 1)}
                 className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all"
               >
                 <LuChevronRight size={20} />

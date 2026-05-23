@@ -1,10 +1,21 @@
-import { cajaAPI, ticketAPI } from '@/api/index.api'
+import { pdf } from '@react-pdf/renderer'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { LuBanknote, LuCreditCard, LuLoader, LuPlus, LuTicket, LuTrash2, LuX } from 'react-icons/lu'
 import Swal from 'sweetalert2'
 
-const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData }) => {
+import { cajaAPI, ticketAPI } from '@/api/index.api'
+import TicketTemplate from '@/templates/TicketTemplate'
+
+const TicketModal = ({
+  isOpen,
+  onClose,
+  puntosVenta,
+  sorteos,
+  usuario,
+  fetchData,
+  suertes = [],
+}) => {
   const [puntoVentaId, setPuntoVentaId] = useState('')
   const [sorteoId, setSorteoId] = useState('')
   const [jugadas, setJugadas] = useState([])
@@ -14,7 +25,7 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
   const [loading, setLoading] = useState(false)
   const [caja, setCaja] = useState(null)
 
-  // --- LO NUEVO: ESTADOS DE PAGO ---
+  // ESTADOS DE PAGO
   const [metodoPago, setMetodoPago] = useState('Efectivo')
   const [referenciaPago, setReferenciaPago] = useState('')
 
@@ -25,6 +36,7 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
 
   const numCifras = sorteoSeleccionado?.Cifra?.cantidad || 2
 
+  // Carga reactiva de caja basada en el Punto de Venta seleccionado por el Admin
   useEffect(() => {
     if (puntoVentaId) {
       cajaAPI
@@ -32,8 +44,14 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
         .then((res) => {
           const { caja: cajaAbierta } = res.data
           setCaja(cajaAbierta)
+          setError('')
         })
-        .catch(() => setCaja(null))
+        .catch(() => {
+          setCaja(null)
+          setError('EL PUNTO DE VENTA SELECCIONADO NO TIENE UNA CAJA ABIERTA')
+        })
+    } else {
+      setCaja(null)
     }
   }, [puntoVentaId])
 
@@ -74,12 +92,51 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
     }
   }
 
+  /**
+   * LÓGICA DE IMPRESIÓN AUTOMÁTICA TRANSFERIDA DEL VENDEDOR
+   */
+  const handlePrintAutomatico = async (ticketCreado) => {
+    try {
+      const suertesParaImprimir = suertes && suertes.length > 0 ? suertes : []
+
+      const doc = <TicketTemplate ticket={ticketCreado} suertes={suertesParaImprimir} />
+      const blob = await pdf(doc).toBlob()
+      const url = URL.createObjectURL(blob)
+
+      const iframe = document.createElement('iframe')
+      iframe.style.position = 'fixed'
+      iframe.style.right = '0'
+      iframe.style.bottom = '0'
+      iframe.style.width = '0'
+      iframe.style.height = '0'
+      iframe.style.border = '0'
+      iframe.src = url
+
+      document.body.appendChild(iframe)
+
+      setTimeout(() => {
+        try {
+          iframe.contentWindow.focus()
+          iframe.contentWindow.print()
+        } catch (printError) {
+          console.error('Fallo al invocar print() en el iframe:', printError)
+        }
+
+        setTimeout(() => {
+          document.body.removeChild(iframe)
+          URL.revokeObjectURL(url)
+        }, 3000)
+      }, 600)
+    } catch (error) {
+      console.error('Error en la generación del búfer de impresión:', error)
+    }
+  }
+
   const emitirTicket = async () => {
     if (jugadas.length === 0) return
     if (!puntoVentaId) return setError('SELECCIONE PUNTO DE VENTA')
     if (!caja?.id) return setError('NO HAY UNA CAJA ABIERTA')
 
-    // VALIDACIÓN DE REFERENCIA OBLIGATORIA
     if (metodoPago === 'Transferencia' && !referenciaPago) {
       return setError('DEBE INGRESAR LA REFERENCIA DE PAGO')
     }
@@ -92,13 +149,19 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
         UsuarioId: usuario?.id,
         CajaId: caja?.id,
         detalles: jugadas.map((j) => ({ numeroJugado: j.numero, montoApostado: j.monto })),
-        // --- LO NUEVO EN EL PAYLOAD ---
         metodoPago,
         referenciaPago: metodoPago === 'Transferencia' ? referenciaPago : null,
       }
 
       const response = await ticketAPI.vender(payload)
       if (response.status === 201) {
+        const ticketCreado = response.data?.data?.ticket
+
+        // IMPRESIÓN INMEDIATA POST-VENTA
+        if (ticketCreado) {
+          await handlePrintAutomatico(ticketCreado)
+        }
+
         Swal.fire({
           title: 'ÉXITO',
           text: 'Ticket generado correctamente',
@@ -108,8 +171,8 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
           confirmButtonColor: '#EAB308',
         })
         setJugadas([])
-        setReferenciaPago('') // Reset referencia
-        setMetodoPago('Efectivo') // Volver a efectivo
+        setReferenciaPago('')
+        setMetodoPago('Efectivo')
         onClose()
         if (fetchData) fetchData()
       }
@@ -146,7 +209,7 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
             </div>
             <div>
               <h2 className="text-lg font-black text-white uppercase italic tracking-tight">
-                Emisión de Ticket
+                Emisión de Ticket (Admin)
               </h2>
               <p className="text-zinc-600 text-[9px] font-bold uppercase tracking-[0.2em]">
                 Punto de Venta Autorizado
@@ -165,6 +228,23 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
           {/* PANEL IZQUIERDO: CONFIGURACIÓN */}
           <div className="col-span-12 lg:col-span-5 p-8 border-r border-white/5 flex flex-col gap-6 overflow-y-auto custom-scroll-minimal">
             <div className="space-y-4">
+              {/* Indicador de Estado de Terminal Dinámico */}
+              <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex justify-between items-center">
+                <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">
+                  Estado de Terminal:
+                </span>
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-2 h-2 rounded-full ${caja?.id ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}
+                  />
+                  <span
+                    className={`text-[10px] font-black uppercase tracking-widest ${caja?.id ? 'text-emerald-500' : 'text-red-500'}`}
+                  >
+                    {caja?.id ? 'Caja Abierta / Activa' : 'Caja Cerrada / Inactiva'}
+                  </span>
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-1">
                   Punto de Venta
@@ -207,7 +287,7 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
                 </select>
               </div>
 
-              {/* --- NUEVO: SELECTOR DE MÉTODO DE PAGO --- */}
+              {/* MÉTODOS DE PAGO */}
               <div className="space-y-2 pt-2">
                 <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-1">
                   Método de Pago
@@ -236,7 +316,7 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
                 </div>
               </div>
 
-              {/* --- NUEVO: CAMPO DE REFERENCIA CONDICIONAL --- */}
+              {/* REFERENCIA DIGITAL CONDICIONAL */}
               <AnimatePresence>
                 {metodoPago === 'Transferencia' && (
                   <motion.div
@@ -307,8 +387,8 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
 
               <button
                 onClick={agregarJugada}
-                disabled={loading}
-                className="w-full bg-luck-gold hover:bg-yellow-500 text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-luck-gold/10"
+                disabled={loading || !caja?.id}
+                className="w-full bg-luck-gold hover:bg-yellow-500 text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-luck-gold/10 disabled:opacity-20"
               >
                 {loading ? (
                   <LuLoader className="animate-spin" size={18} />
@@ -400,7 +480,7 @@ const TicketModal = ({ isOpen, onClose, puntosVenta, sorteos, usuario, fetchData
                 </div>
               </div>
               <button
-                disabled={jugadas.length === 0 || loading}
+                disabled={jugadas.length === 0 || loading || !caja?.id}
                 onClick={emitirTicket}
                 className="w-full bg-white hover:bg-zinc-200 text-black font-black py-4 rounded-2xl uppercase text-[10px] tracking-[0.2em] transition-all disabled:opacity-20 active:scale-[0.98] flex items-center justify-center gap-2 shadow-xl"
               >

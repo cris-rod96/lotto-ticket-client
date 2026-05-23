@@ -3,12 +3,12 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   LuChevronLeft,
   LuChevronRight,
+  LuFilter,
   LuInbox,
   LuMapPin,
   LuPencil,
   LuPlus,
   LuRefreshCw,
-  LuSearch,
   LuStore,
   LuTicket,
   LuTrash2,
@@ -38,7 +38,11 @@ const PuntosVenta = () => {
   const [puntos, setPuntos] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [selectedPunto, setSelectedPunto] = useState(null)
-  const [searchTerm, setSearchTerm] = useState('')
+
+  // NUEVOS ESTADOS DE FILTROS SELECTORES
+  const [locationFilter, setLocationFilter] = useState('Todos')
+  const [statusFilter, setStatusFilter] = useState('Todos')
+
   const [loading, setLoading] = useState(true)
 
   // PAGINACIÓN
@@ -71,13 +75,24 @@ const PuntosVenta = () => {
     fetchData()
   }, [])
 
+  // Extraer ubicaciones únicas dinámicamente para el selector
+  const uniqueLocations = useMemo(() => {
+    const locs = puntos.map((p) => p.ubicacion).filter(Boolean)
+    return [...new Set(locs)]
+  }, [puntos])
+
+  // Filtrado múltiple combinado basado en selects de alto contraste
   const filteredPuntos = useMemo(() => {
-    return puntos.filter(
-      (p) =>
-        p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.ubicacion.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [puntos, searchTerm])
+    return puntos.filter((p) => {
+      const matchesLocation = locationFilter === 'Todos' || p.ubicacion === locationFilter
+
+      let matchesStatus = true
+      if (statusFilter === 'Activos') matchesStatus = p.activo === true
+      if (statusFilter === 'Inactivos') matchesStatus = p.activo === false
+
+      return matchesLocation && matchesStatus
+    })
+  }, [puntos, locationFilter, statusFilter])
 
   const totalPages = Math.ceil(filteredPuntos.length / itemsPerPage)
 
@@ -86,9 +101,10 @@ const PuntosVenta = () => {
     return filteredPuntos.slice(start, start + itemsPerPage)
   }, [filteredPuntos, currentPage])
 
+  // Resetear página automáticamente al cambiar los selectores
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm])
+  }, [locationFilter, statusFilter])
 
   const handleEdit = (punto) => {
     setSelectedPunto(punto)
@@ -182,25 +198,54 @@ const PuntosVenta = () => {
         </motion.button>
       </div>
 
-      {/* Buscador */}
+      {/* BARRA DE FILTROS SELECTS DE ALTO CONTRASTE */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 flex flex-col md:flex-row justify-between items-center gap-4"
+        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 flex flex-col sm:flex-row items-center gap-4"
       >
-        <div className="relative w-full md:w-1/2">
-          <LuSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-          <input
-            type="text"
-            placeholder="Buscar por nombre o ubicación..."
-            className="w-full bg-zinc-950/40 border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-white focus:outline-none focus:border-luck-gold/40 transition-all placeholder:text-zinc-600 text-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        {/* SELECT 1: POR UBICACIÓN DINÁMICA */}
+        <div className="relative w-full sm:w-64">
+          <LuMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
+          <select
+            value={locationFilter}
+            onChange={(e) => setLocationFilter(e.target.value)}
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
+          >
+            <option value="Todos" className="bg-[#1a1f1e] text-white">
+              Todas las ubicaciones
+            </option>
+            {uniqueLocations.map((loc, idx) => (
+              <option key={idx} value={loc} className="bg-[#1a1f1e] text-white">
+                {loc}
+              </option>
+            ))}
+          </select>
         </div>
-        <div className="px-4">
+
+        {/* SELECT 2: POR ESTADO OPERATIVO */}
+        <div className="relative w-full sm:w-64">
+          <LuFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
+          >
+            <option value="Todos" className="bg-[#1a1f1e] text-white">
+              Todos los estados
+            </option>
+            <option value="Activos" className="bg-[#1a1f1e] text-white">
+              Activos
+            </option>
+            <option value="Inactivos" className="bg-[#1a1f1e] text-white">
+              Inactivos
+            </option>
+          </select>
+        </div>
+
+        <div className="ml-auto px-4 hidden sm:block">
           <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-            {filteredPuntos.length} Puntos Encontrados
+            {filteredPuntos.length} Puntos Filtrados
           </span>
         </div>
       </motion.div>
@@ -343,7 +388,7 @@ const PuntosVenta = () => {
                           No se encontraron puntos de venta
                         </p>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-2">
-                          Prueba con otro término o crea uno nuevo
+                          Prueba cambiando los selectores de filtro
                         </p>
                       </div>
                     </td>
@@ -387,7 +432,7 @@ const PuntosVenta = () => {
 
               <button
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
+                onClick={() => setCurrentPage((p) => p - 1)}
                 className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all"
               >
                 <LuChevronRight size={20} />

@@ -1,10 +1,18 @@
 import { useEffect, useState } from 'react'
-import { LuCircleCheck, LuDollarSign, LuStore, LuX } from 'react-icons/lu'
+import { LuCircleCheck, LuDollarSign, LuLoader, LuStore, LuX } from 'react-icons/lu'
 
-const ModalPagoTicket = ({ isOpen, onClose, ticket, puntosVenta, onConfirm }) => {
+const ModalPagoTicket = ({
+  isOpen,
+  onClose,
+  ticket,
+  puntosVenta,
+  onConfirm,
+  handlePrintComprobante,
+}) => {
   const [puntoVentaId, setPuntoVentaId] = useState('')
   const [cajaId, setCajaId] = useState('')
   const [cajasDisponibles, setCajasDisponibles] = useState([])
+  const [loading, setLoading] = useState(false)
 
   // Al abrir el modal, pre-seleccionamos el PV donde se vendió el ticket
   useEffect(() => {
@@ -23,6 +31,25 @@ const ModalPagoTicket = ({ isOpen, onClose, ticket, puntosVenta, onConfirm }) =>
     }
   }, [puntoVentaId, puntosVenta])
 
+  // Función añadida para ejecutar el pago e imprimir de inmediato
+  const handleExecutePayment = async () => {
+    if (!cajaId || !puntoVentaId || !ticket?.id) return
+
+    setLoading(true)
+    try {
+      const data = await onConfirm(ticket.id, puntoVentaId, cajaId)
+
+      // Si el pago se procesó bien y retorna el ticket, disparamos la impresión
+      if (data && data.ticket) {
+        await handlePrintComprobante(data.ticket)
+      }
+    } catch (err) {
+      console.error('Error en el flujo de confirmación e impresión:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (!isOpen) return null
 
   return (
@@ -30,12 +57,16 @@ const ModalPagoTicket = ({ isOpen, onClose, ticket, puntosVenta, onConfirm }) =>
       <div className="bg-[#1a1f1e] border border-white/10 w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h3 className="text-white font-black italic text-xl uppercase italic">Procesar Pago</h3>
+            <h3 className="text-white font-black italic text-xl uppercase">Procesar Pago</h3>
             <p className="text-zinc-500 text-xs font-bold uppercase mt-1">
               Ticket: #{ticket.codigo}
             </p>
           </div>
-          <button onClick={onClose} className="text-zinc-500 hover:text-white">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="text-zinc-500 hover:text-white disabled:opacity-20"
+          >
             <LuX size={24} />
           </button>
         </div>
@@ -59,6 +90,7 @@ const ModalPagoTicket = ({ isOpen, onClose, ticket, puntosVenta, onConfirm }) =>
             <div className="relative">
               <LuStore className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" />
               <select
+                disabled={loading}
                 value={puntoVentaId}
                 onChange={(e) => setPuntoVentaId(e.target.value)}
                 className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white text-sm font-bold focus:outline-none focus:border-luck-gold/50 appearance-none"
@@ -80,6 +112,7 @@ const ModalPagoTicket = ({ isOpen, onClose, ticket, puntosVenta, onConfirm }) =>
             <div className="relative">
               <LuDollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" />
               <select
+                disabled={loading}
                 value={cajaId}
                 onChange={(e) => setCajaId(e.target.value)}
                 className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white text-sm font-bold focus:outline-none focus:border-luck-gold/50 appearance-none"
@@ -95,11 +128,16 @@ const ModalPagoTicket = ({ isOpen, onClose, ticket, puntosVenta, onConfirm }) =>
           </div>
 
           <button
-            disabled={!cajaId}
-            onClick={() => onConfirm(ticket.id, puntoVentaId, cajaId)}
+            disabled={!cajaId || loading}
+            onClick={handleExecutePayment}
             className="w-full bg-luck-gold disabled:opacity-30 text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 uppercase text-xs italic transition-all hover:scale-[1.02]"
           >
-            <LuCircleCheck size={18} strokeWidth={3} /> Confirmar Desembolso
+            {loading ? (
+              <LuLoader className="animate-spin" size={18} />
+            ) : (
+              <LuCircleCheck size={18} strokeWidth={3} />
+            )}
+            {loading ? 'Procesando...' : 'Confirmar Desembolso'}
           </button>
         </div>
       </div>

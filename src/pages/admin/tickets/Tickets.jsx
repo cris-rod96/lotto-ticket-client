@@ -6,10 +6,10 @@ import {
   LuCheck,
   LuChevronLeft,
   LuChevronRight,
+  LuFilter,
   LuInbox,
   LuPlus,
   LuReceipt,
-  LuSearch,
   LuStore,
   LuTicket,
   LuTrash2,
@@ -23,6 +23,7 @@ import TicketModal from '@/components/TicketModal'
 import Title from '@/components/Titlte'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useCajaStore } from '@/store/useCajaStore'
+import ComprobantePagoTemplate from '@/templates/ComprobanteTemplate'
 import TicketTemplate from '@/templates/TicketTemplate'
 
 const containerVariants = {
@@ -42,7 +43,11 @@ const Tickets = () => {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false)
   const [ticketToPay, setTicketToPay] = useState(null)
   const [selectedTicket, setSelectedTicket] = useState(null)
-  const [searchTerm, setSearchTerm] = useState('')
+
+  // ESTADOS DE FILTRADO CONTROLADO
+  const [filterPuntoVenta, setFilterPuntoVenta] = useState('Todos')
+  const [filterFecha, setFilterFecha] = useState('Todos')
+  const [filterEstado, setFilterEstado] = useState('Todos')
 
   const { user } = useAuthStore()
   const { caja, setCaja } = useCajaStore()
@@ -105,7 +110,7 @@ const Tickets = () => {
         setIsPayModalOpen(false)
         await Swal.fire({
           title: '¡PAGO EXITOSO!',
-          text: response.message,
+          text: response.data?.message || response.message || 'Cobro procesado con éxito.',
           icon: 'success',
           background: '#111615',
           color: '#ffffff',
@@ -114,7 +119,10 @@ const Tickets = () => {
         })
         setCaja(response.data.caja)
         fetchData()
+
+        return response.data
       }
+      return null
     } catch (error) {
       Swal.fire({
         title: 'ERROR EN PAGO',
@@ -125,22 +133,42 @@ const Tickets = () => {
         confirmButtonColor: '#ef4444',
         customClass: { popup: 'rounded-[2rem] border border-white/10' },
       })
+      return null
     }
   }
 
   const handlePrintTicket = async (ticket) => {
-    console.log(ticket)
-    console.log(suertes)
     try {
+      Swal.fire({
+        title: 'PREPARANDO TICKET...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+        background: '#111615',
+        color: '#fff',
+        customClass: { popup: 'rounded-[2rem]' },
+      })
+
       const doc = <TicketTemplate ticket={ticket} suertes={suertes} />
       const blob = await pdf(doc).toBlob()
       const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `ticket-${ticket.codigo}.pdf`
-      link.click()
-      URL.revokeObjectURL(url)
+
+      const iframe = document.createElement('iframe')
+      iframe.style.display = 'none'
+      iframe.src = url
+      document.body.appendChild(iframe)
+
+      iframe.onload = () => {
+        iframe.contentWindow.focus()
+        iframe.contentWindow.print()
+
+        setTimeout(() => {
+          document.body.removeChild(iframe)
+          URL.revokeObjectURL(url)
+        }, 2000)
+        Swal.close()
+      }
     } catch (error) {
+      console.error('Error al imprimir ticket:', error)
       Swal.fire({
         title: 'Error de impresión',
         icon: 'error',
@@ -150,19 +178,85 @@ const Tickets = () => {
     }
   }
 
-  const handlePrintComprobante = (ticket) => {
-    console.log('Imprimiendo Comprobante de Pago:', ticket.codigo)
-    // Aquí iría tu lógica de recibo de caja
+  const handlePrintComprobante = async (ticket) => {
+    try {
+      Swal.fire({
+        title: 'GENERANDO COMPROBANTE...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+        background: '#111615',
+        color: '#ffffff',
+        customClass: { popup: 'rounded-[2rem]' },
+      })
+
+      const doc = <ComprobantePagoTemplate ticket={ticket} />
+      const blob = await pdf(doc).toBlob()
+      const url = URL.createObjectURL(blob)
+
+      const iframe = document.createElement('iframe')
+      iframe.style.position = 'fixed'
+      iframe.style.right = '0'
+      iframe.style.bottom = '0'
+      iframe.style.width = '0'
+      iframe.style.height = '0'
+      iframe.style.border = '0'
+      iframe.src = url
+      document.body.appendChild(iframe)
+
+      iframe.onload = () => {
+        iframe.contentWindow.focus()
+        iframe.contentWindow.print()
+
+        setTimeout(() => {
+          document.body.removeChild(iframe)
+          URL.revokeObjectURL(url)
+        }, 3000)
+        Swal.close()
+      }
+    } catch (error) {
+      console.error('Error al generar comprobante:', error)
+      Swal.fire({
+        title: 'Error de impresión',
+        text: 'No se pudo generar el comprobante de pago',
+        icon: 'error',
+        background: '#111615',
+        color: '#ffffff',
+        confirmButtonColor: '#ef4444',
+        customClass: { popup: 'rounded-[2rem]' },
+      })
+    }
   }
 
+  // OBTENER FECHAS ÚNICAS DISPONIBLES EN LOS TICKETS PARA EL SELECT
+  const fechasDisponibles = useMemo(() => {
+    const fechas = tickets.map((t) => t.Sorteo?.fechaSorteo).filter((fecha) => !!fecha)
+    return [...new Set(fechas)].sort().reverse() // Ordenadas de más reciente a más antigua
+  }, [tickets])
+
+  // LÓGICA DE FILTRADO MULTI-CRITERIO
   const filtered = useMemo(() => {
-    return tickets.filter(
-      (t) =>
-        t.codigo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.Sorteo?.Catalogo?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.Cliente?.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [tickets, searchTerm])
+    return tickets.filter((t) => {
+      // 1. Filtro de Punto de Venta
+      const matchesPV = filterPuntoVenta === 'Todos' || t.PuntoVentaId === filterPuntoVenta
+
+      // 2. Filtro de Fecha del Sorteo
+      const matchesFecha = filterFecha === 'Todos' || t.Sorteo?.fechaSorteo === filterFecha
+
+      // 3. Filtro de Resultados y Estados Financieros
+      let matchesEstado = false
+      if (filterEstado === 'Todos') {
+        matchesEstado = true
+      } else if (filterEstado === 'Ganador_Pendiente') {
+        matchesEstado = t.resultado === 'Ganador' && t.estado === 'Pendiente'
+      } else if (filterEstado === 'Ganador_Pagado') {
+        matchesEstado = t.resultado === 'Ganador' && t.estado === 'Pagado'
+      } else {
+        matchesEstado = t.resultado === filterEstado
+      }
+
+      return matchesPV && matchesFecha && matchesEstado
+    })
+  }, [tickets, filterPuntoVenta, filterFecha, filterEstado])
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage)
 
@@ -173,7 +267,14 @@ const Tickets = () => {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm])
+  }, [filterPuntoVenta, filterFecha, filterEstado])
+
+  // FORMATEAR FECHAS EN EL SELECT DE FORMA VISUAL (DD/MM/YYYY)
+  const formatVisualFecha = (dateString) => {
+    if (!dateString) return ''
+    const [year, month, day] = dateString.split('-')
+    return `${day}/${month}/${year}`
+  }
 
   return (
     <motion.div initial="hidden" animate="visible" className="w-full pb-10">
@@ -195,26 +296,92 @@ const Tickets = () => {
         </motion.button>
       </div>
 
-      {/* Buscador Mejorado */}
+      {/* BLOQUE DE FILTROS AVANZADOS DE AUDITORÍA (CORREGIDO Y ESTILIZADO) */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 flex flex-col md:flex-row justify-between items-center gap-4"
+        className="bg-[#111615] border border-white/5 p-5 rounded-3xl mb-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end"
       >
-        <div className="relative w-full md:w-1/2">
-          <LuSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
-          <input
-            type="text"
-            placeholder="Buscar por código, sorteo o cliente..."
-            className="w-full bg-black/40 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-luck-gold/30 transition-all placeholder:text-zinc-600 text-xs font-bold"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        {/* Selector de Punto de Venta */}
+        <div className="flex flex-col gap-2">
+          <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider flex items-center gap-1">
+            <LuStore size={10} /> Sucursal / Punto de Venta
+          </label>
+          <select
+            value={filterPuntoVenta}
+            onChange={(e) => setFilterPuntoVenta(e.target.value)}
+            className="w-full bg-black/40 border border-white/5 text-white rounded-2xl py-3.5 px-4 text-xs font-medium focus:outline-none focus:border-luck-gold/30 transition-all cursor-pointer uppercase tracking-wide"
+          >
+            <option value="Todos" className="bg-[#111615]">
+              Todas las Sucursales
+            </option>
+            {puntosVenta.map((pv) => (
+              <option key={pv.id} value={pv.id} className="bg-[#111615]">
+                {pv.nombre}
+              </option>
+            ))}
+          </select>
         </div>
-        <div className="px-6 py-2 bg-white/[0.02] border border-white/5 rounded-xl">
-          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">
-            {filtered.length} Registros Encontrados
+
+        {/* CORREGIDO: Selector de Fecha con Estilo Coherente */}
+        <div className="flex flex-col gap-2">
+          <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider flex items-center gap-1">
+            <LuCalendar size={10} /> Fecha del Sorteo
+          </label>
+          <select
+            value={filterFecha}
+            onChange={(e) => setFilterFecha(e.target.value)}
+            className="w-full bg-black/40 border border-white/5 text-white rounded-2xl py-3.5 px-4 text-xs font-medium focus:outline-none focus:border-luck-gold/30 transition-all cursor-pointer uppercase tracking-wide"
+          >
+            <option value="Todos" className="bg-[#111615]">
+              Todas las Fechas
+            </option>
+            {fechasDisponibles.map((fecha) => (
+              <option key={fecha} value={fecha} className="bg-[#111615]">
+                {formatVisualFecha(fecha)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Selector de Estado / Resultados */}
+        <div className="flex flex-col gap-2">
+          <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider flex items-center gap-1">
+            <LuFilter size={10} /> Estado de Liquidación
+          </label>
+          <select
+            value={filterEstado}
+            onChange={(e) => setFilterEstado(e.target.value)}
+            className="w-full bg-black/40 border border-white/5 text-white rounded-2xl py-3.5 px-4 text-xs font-medium focus:outline-none focus:border-luck-gold/30 transition-all cursor-pointer uppercase tracking-wide"
+          >
+            <option value="Todos" className="bg-[#111615]">
+              Todos los resultados
+            </option>
+            <option value="Pendiente" className="bg-[#111615]">
+              Pendiente
+            </option>
+            <option value="Ganador_Pendiente" className="bg-[#111615]">
+              Ganadores por Pagar
+            </option>
+            <option value="Ganador_Pagado" className="bg-[#111615]">
+              Ganadores Ya Pagados
+            </option>
+            <option value="No Ganador" className="bg-[#111615]">
+              No Ganador
+            </option>
+          </select>
+        </div>
+
+        {/* CORREGIDO: Contador de Coincidencias Alineado de Forma Estética */}
+        <div className="flex flex-col gap-2">
+          <span className="text-[9px] font-black uppercase text-transparent tracking-wider hidden md:block select-none">
+            Espaciador
           </span>
+          <div className="w-full text-center px-6 py-3.5 bg-white/[0.02] border border-white/5 rounded-2xl whitespace-nowrap flex items-center justify-center">
+            <span className="text-[10px] font-black text-luck-gold uppercase tracking-[0.2em]">
+              {filtered.length} Coincidencias
+            </span>
+          </div>
         </div>
       </motion.div>
 
@@ -272,7 +439,8 @@ const Tickets = () => {
                             {ticket?.Sorteo?.jornada}
                           </span>
                           <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-mono">
-                            <LuCalendar size={12} /> {ticket?.Sorteo?.fechaSorteo}
+                            <LuCalendar size={12} />{' '}
+                            {formatVisualFecha(ticket?.Sorteo?.fechaSorteo)}
                           </div>
                         </div>
                       </td>
@@ -281,7 +449,9 @@ const Tickets = () => {
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2 text-zinc-300 font-bold text-[11px] uppercase">
                             <LuStore size={14} className="text-zinc-600" />
-                            {ticket?.PuntosVenta?.nombre || 'Matriz'}
+                            {ticket?.PuntosVentum?.nombre ||
+                              ticket?.PuntosVenta?.nombre ||
+                              'Matriz'}
                           </div>
                           <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-bold">
                             <LuUser size={12} /> {ticket?.Cliente?.nombre || 'Consumidor Final'}
@@ -388,7 +558,7 @@ const Tickets = () => {
           </table>
         </div>
 
-        {/* Paginación Mejorada con Números */}
+        {/* Paginación */}
         {totalPages > 1 && (
           <div className="p-8 border-t border-white/5 bg-black/[0.1] flex justify-between items-center">
             <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
@@ -429,22 +599,28 @@ const Tickets = () => {
         )}
       </motion.div>
 
-      <TicketModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        puntosVenta={puntosVenta}
-        sorteos={sorteos}
-        usuario={user}
-        fetchData={fetchData}
-      />
+      {showModal && (
+        <TicketModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          puntosVenta={puntosVenta}
+          sorteos={sorteos}
+          usuario={user}
+          fetchData={fetchData}
+          suertes={suertes}
+        />
+      )}
 
-      <ModalPagoTicket
-        isOpen={isPayModalOpen}
-        onClose={() => setIsPayModalOpen(false)}
-        ticket={ticketToPay}
-        puntosVenta={puntosVenta}
-        onConfirm={handleConfirmarPagoReal}
-      />
+      {isPayModalOpen && (
+        <ModalPagoTicket
+          isOpen={isPayModalOpen}
+          onClose={() => setIsPayModalOpen(false)}
+          ticket={ticketToPay}
+          puntosVenta={puntosVenta}
+          onConfirm={handleConfirmarPagoReal}
+          handlePrintComprobante={handlePrintComprobante}
+        />
+      )}
     </motion.div>
   )
 }

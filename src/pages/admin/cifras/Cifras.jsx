@@ -6,10 +6,11 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   LuChevronLeft,
   LuChevronRight,
+  LuFilter,
+  LuHash,
   LuInbox,
   LuPencil,
   LuPlus,
-  LuSearch,
   LuTrash2,
 } from 'react-icons/lu'
 import Swal from 'sweetalert2'
@@ -36,9 +37,12 @@ const rowVariants = {
 const Cifras = () => {
   const [showModal, setShowModal] = useState(false)
   const [selectedCifra, setSelectedCifra] = useState(null)
-  const [searchTerm, setSearchTerm] = useState('')
   const [cifras, setCifras] = useState([])
   const [loading, setLoading] = useState(true)
+
+  // NUEVOS ESTADOS DE FILTROS SELECTORES
+  const [digitsFilter, setDigitsFilter] = useState('Todos')
+  const [statusFilter, setStatusFilter] = useState('Todos')
 
   // --- LÓGICA DE PAGINACIÓN ---
   const [currentPage, setCurrentPage] = useState(1)
@@ -60,10 +64,24 @@ const Cifras = () => {
     fetchData()
   }, [])
 
-  // Filtrado de cifras
+  // Extraer cantidades únicas de cifras dinámicamente para el selector
+  const uniqueDigits = useMemo(() => {
+    const list = cifras.map((c) => c.cantidad).filter((val) => val !== undefined && val !== null)
+    return [...new Set(list)].sort((a, b) => a - b)
+  }, [cifras])
+
+  // Filtrado Combinado por Selectores de Alto Contraste
   const filteredCifras = useMemo(() => {
-    return cifras.filter((c) => c.cantidad.toString().includes(searchTerm))
-  }, [cifras, searchTerm])
+    return cifras.filter((c) => {
+      const matchesDigits = digitsFilter === 'Todos' || c.cantidad.toString() === digitsFilter
+
+      let matchesStatus = true
+      if (statusFilter === 'Activos') matchesStatus = c.activo === true
+      if (statusFilter === 'Inactivos') matchesStatus = c.activo === false
+
+      return matchesDigits && matchesStatus
+    })
+  }, [cifras, digitsFilter, statusFilter])
 
   // Paginación computada
   const totalPages = Math.ceil(filteredCifras.length / itemsPerPage)
@@ -72,10 +90,10 @@ const Cifras = () => {
     return filteredCifras.slice(start, start + itemsPerPage)
   }, [filteredCifras, currentPage])
 
-  // Resetear a página 1 al buscar
+  // Resetear automáticamente a la página 1 cuando cambia algún filtro selector
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm])
+  }, [digitsFilter, statusFilter])
 
   const handleEdit = (cifra) => {
     setSelectedCifra(cifra)
@@ -128,25 +146,54 @@ const Cifras = () => {
         </motion.button>
       </div>
 
-      {/* Barra de Filtros */}
+      {/* BARRA DE FILTROS SELECTS DE ALTO CONTRASTE */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 flex flex-col md:flex-row justify-between items-center gap-4"
+        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 flex flex-col sm:flex-row items-center gap-4"
       >
-        <div className="relative w-full md:w-1/2">
-          <LuSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-          <input
-            type="text"
-            placeholder="Buscar por cantidad de cifras (ej: 2)..."
-            className="w-full bg-zinc-950/40 border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-white focus:outline-none focus:border-luck-gold/40 transition-all placeholder:text-zinc-600 text-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        {/* SELECT 1: POR CANTIDAD DE CIFRAS DINÁMICAS */}
+        <div className="relative w-full sm:w-64">
+          <LuHash className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
+          <select
+            value={digitsFilter}
+            onChange={(e) => setDigitsFilter(e.target.value)}
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
+          >
+            <option value="Todos" className="bg-[#1a1f1e] text-white">
+              Todas las cifras
+            </option>
+            {uniqueDigits.map((digit, idx) => (
+              <option key={idx} value={digit.toString()} className="bg-[#1a1f1e] text-white">
+                {digit} Cifras
+              </option>
+            ))}
+          </select>
         </div>
-        <div className="px-4">
+
+        {/* SELECT 2: POR ESTADO OPERATIVO */}
+        <div className="relative w-full sm:w-64">
+          <LuFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
+          >
+            <option value="Todos" className="bg-[#1a1f1e] text-white">
+              Todos los estados
+            </option>
+            <option value="Activos" className="bg-[#1a1f1e] text-white">
+              Activos
+            </option>
+            <option value="Inactivos" className="bg-[#1a1f1e] text-white">
+              Inactivos
+            </option>
+          </select>
+        </div>
+
+        <div className="ml-auto px-4 hidden sm:block">
           <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-            {filteredCifras.length} Configuraciones Encontradas
+            {filteredCifras.length} Filtros Coincidentes
           </span>
         </div>
       </motion.div>
@@ -244,7 +291,7 @@ const Cifras = () => {
                           No hay configuraciones
                         </p>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-2">
-                          Prueba con otro término o crea una nueva
+                          Prueba cambiando los selectores de filtro
                         </p>
                       </div>
                     </td>
@@ -288,7 +335,7 @@ const Cifras = () => {
 
               <button
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
+                onClick={() => setCurrentPage((p) => p - 1)}
                 className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all"
               >
                 <LuChevronRight size={20} />

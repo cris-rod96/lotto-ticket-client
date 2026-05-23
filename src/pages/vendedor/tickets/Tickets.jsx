@@ -106,20 +106,27 @@ const Tickets = () => {
 
     try {
       const response = await ticketAPI.pagarTicket(ticketId, user.id, cajaId)
+
       if (response.status === 200) {
         setIsPayModalOpen(false)
+
         await Swal.fire({
           title: '¡PAGO EXITOSO!',
-          text: response.message,
+          text: response.data?.message || response.message || 'Se registró el cobro correctamente.',
           icon: 'success',
           background: '#ffffff',
           color: '#111615',
           confirmButtonColor: '#EAB308',
           customClass: { popup: 'rounded-[2rem] border border-black/5' },
         })
+
         setCaja(response.data.caja)
         fetchData()
+
+        // RETORNO CLAVE: Retornamos la respuesta con el ticket armado para el modal
+        return response.data
       }
+      return null
     } catch (error) {
       Swal.fire({
         title: 'ERROR EN PAGO',
@@ -130,6 +137,7 @@ const Tickets = () => {
         confirmButtonColor: '#ef4444',
         customClass: { popup: 'rounded-[2rem] border border-black/5' },
       })
+      return null
     }
   }
 
@@ -197,12 +205,19 @@ const Tickets = () => {
         customClass: { popup: 'rounded-[2rem]' },
       })
 
+      // Generamos el documento dinámico usando la data fresca que retornó el controlador
+      const { pdf } = await import('@react-pdf/renderer') // Import dinámico por si acaso, o lo dejas global
       const doc = <ComprobantePagoTemplate ticket={ticket} />
       const blob = await pdf(doc).toBlob()
       const url = URL.createObjectURL(blob)
 
       const iframe = document.createElement('iframe')
-      iframe.style.display = 'none'
+      iframe.style.position = 'fixed'
+      iframe.style.right = '0'
+      iframe.style.bottom = '0'
+      iframe.style.width = '0'
+      iframe.style.height = '0'
+      iframe.style.border = '0'
       iframe.src = url
       document.body.appendChild(iframe)
 
@@ -213,7 +228,7 @@ const Tickets = () => {
         setTimeout(() => {
           document.body.removeChild(iframe)
           URL.revokeObjectURL(url)
-        }, 2000)
+        }, 3000)
         Swal.close()
       }
     } catch (error) {
@@ -237,7 +252,16 @@ const Tickets = () => {
         t.Sorteo?.Catalogo?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.Cliente?.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
 
-      const matchesResult = resultFilter === 'Todos' || t.resultado === resultFilter
+      let matchesResult = false
+      if (resultFilter === 'Todos') {
+        matchesResult = true
+      } else if (resultFilter === 'Ganador_Pendiente') {
+        matchesResult = t.resultado === 'Ganador' && t.estado === 'Pendiente'
+      } else if (resultFilter === 'Ganador_Pagado') {
+        matchesResult = t.resultado === 'Ganador' && t.estado === 'Pagado'
+      } else {
+        matchesResult = t.resultado === resultFilter
+      }
 
       return matchesSearch && matchesResult
     })
@@ -300,8 +324,11 @@ const Tickets = () => {
             <option value="Pendiente" className="bg-[#111615] text-white">
               Pendiente
             </option>
-            <option value="Ganador" className="bg-[#111615] text-white">
-              Ganador
+            <option value="Ganador_Pendiente" className="bg-[#111615] text-emerald-500 font-black">
+              Ganadores por Pagar
+            </option>
+            <option value="Ganador_Pagado" className="bg-[#111615] text-zinc-400">
+              Ganadores Ya Pagados
             </option>
             <option value="No Ganador" className="bg-[#111615] text-white">
               No Ganador
@@ -506,7 +533,7 @@ const Tickets = () => {
               </div>
               <button
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p - 1)}
+                onClick={() => setCurrentPage((p) => p + 1)}
                 className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all"
               >
                 <LuChevronRight size={18} />
@@ -522,6 +549,7 @@ const Tickets = () => {
           sorteos={sorteos}
           usuario={user}
           fetchData={fetchData}
+          suertes={suertes}
         />
       )}
 
@@ -533,6 +561,7 @@ const Tickets = () => {
           usuario={user}
           onConfirm={handleConfirmarPagoReal}
           caja={caja}
+          handlePrintComprobante={handlePrintComprobante} // <--- Prop agregada aquí
         />
       )}
     </motion.div>

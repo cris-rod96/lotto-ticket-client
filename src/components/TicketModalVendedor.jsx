@@ -1,11 +1,14 @@
-import { cajaAPI, ticketAPI } from '@/api/index.api'
+import { pdf } from '@react-pdf/renderer'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { LuBanknote, LuCreditCard, LuLoader, LuPlus, LuTicket, LuTrash2, LuX } from 'react-icons/lu'
 import Swal from 'sweetalert2'
 
-const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData }) => {
-  // El punto de venta ya viene directo desde el usuario logueado
+import { cajaAPI, ticketAPI } from '@/api/index.api'
+import TicketTemplate from '@/templates/TicketTemplate'
+
+// Cambiamos el valor por defecto a null para validar reactividad de forma estricta
+const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, suertes = [] }) => {
   const puntoVentaId = usuario?.PuntoVentaId
 
   const [sorteoId, setSorteoId] = useState('')
@@ -81,6 +84,49 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData }) =
     }
   }
 
+  /**
+   * LÓGICA DE IMPRESIÓN AUTOMÁTICA SINCRONIZADA
+   * Pasamos explícitamente 'suertes' asegurando que use la última referencia reactiva de las props
+   */
+  const handlePrintAutomatico = async (ticketCreado) => {
+    try {
+      // Forzamos el uso de la prop actual de suertes para evitar desincronizaciones del scope
+      const suertesParaImprimir = suertes && suertes.length > 0 ? suertes : []
+
+      const doc = <TicketTemplate ticket={ticketCreado} suertes={suertesParaImprimir} />
+      const blob = await pdf(doc).toBlob()
+      const url = URL.createObjectURL(blob)
+
+      const iframe = document.createElement('iframe')
+      iframe.style.position = 'fixed'
+      iframe.style.right = '0'
+      iframe.style.bottom = '0'
+      iframe.style.width = '0'
+      iframe.style.height = '0'
+      iframe.style.border = '0'
+      iframe.src = url
+
+      document.body.appendChild(iframe)
+
+      // Aumentamos ligeramente a 600ms para dar tiempo suficiente a que se dibuje el árbol de suertes en la estructura del PDF
+      setTimeout(() => {
+        try {
+          iframe.contentWindow.focus()
+          iframe.contentWindow.print()
+        } catch (printError) {
+          console.error('Fallo al invocar print() en el iframe:', printError)
+        }
+
+        setTimeout(() => {
+          document.body.removeChild(iframe)
+          URL.revokeObjectURL(url)
+        }, 3000)
+      }, 600)
+    } catch (error) {
+      console.error('Error en la generación del búfer de impresión:', error)
+    }
+  }
+
   const emitirTicket = async () => {
     if (jugadas.length === 0) return
     if (!puntoVentaId) return setError('ERROR DE CONFIGURACIÓN: SIN SUCURSAL ASIGNADA')
@@ -104,6 +150,13 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData }) =
 
       const response = await ticketAPI.vender(payload)
       if (response.status === 201) {
+        const ticketCreado = response.data?.data?.ticket
+
+        if (ticketCreado) {
+          // Ejecutamos la impresión automática pasando los datos frescos
+          await handlePrintAutomatico(ticketCreado)
+        }
+
         Swal.fire({
           title: 'ÉXITO',
           text: 'Ticket generado correctamente',
@@ -171,13 +224,11 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData }) =
           {/* PANEL IZQUIERDO: CONFIGURACIÓN */}
           <div className="col-span-12 lg:col-span-5 p-8 border-r border-white/5 flex flex-col gap-6 overflow-y-auto custom-scroll-minimal">
             <div className="space-y-4">
-              {/* Información fija de su caja actual */}
               <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex justify-between items-center">
                 <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">
                   Estado de Terminal:
                 </span>
                 <div className="flex items-center gap-2">
-                  {/* Un pequeño círculo indicador para darle un toque más Pro */}
                   <div
                     className={`w-2 h-2 rounded-full animate-pulse ${caja?.id ? 'bg-emerald-500' : 'bg-red-500'}`}
                   />
@@ -375,7 +426,7 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData }) =
               </AnimatePresence>
             </div>
 
-            {/* FOOTER: TOTAL Y EMISIÓN */}
+            {/* FOOTER */}
             <div className="mt-6 p-6 bg-zinc-900/50 border border-white/5 rounded-[2rem]">
               <div className="flex justify-between items-end mb-6">
                 <div>

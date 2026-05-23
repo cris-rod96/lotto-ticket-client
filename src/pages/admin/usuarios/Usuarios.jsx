@@ -3,12 +3,12 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   LuChevronLeft,
   LuChevronRight,
+  LuFilter,
   LuInbox,
   LuMapPin,
   LuPencil,
   LuPlus,
   LuRefreshCw,
-  LuSearch,
   LuTrash2,
   LuUserCog,
   LuUsers,
@@ -39,7 +39,10 @@ const Usuarios = () => {
 
   const [showModal, setShowModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
-  const [searchTerm, setSearchTerm] = useState('')
+
+  // NUEVOS ESTADOS DE FILTROS SELECTORES
+  const [roleFilter, setRoleFilter] = useState('Todos')
+  const [statusFilter, setStatusFilter] = useState('Todos')
 
   // ⬇️ PAGINACIÓN
   const [currentPage, setCurrentPage] = useState(1)
@@ -74,14 +77,18 @@ const Usuarios = () => {
     fetchData()
   }, [])
 
-  // ⬇️ FILTRADO + MEMO
+  // ⬇️ FILTRADO MÚLTIPLE BASADO EN SELECTORES DE ALTO CONTRASTE
   const filteredUsers = useMemo(() => {
-    return usuarios.filter(
-      (u) =>
-        u.nombresCompletos.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.alias.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [usuarios, searchTerm])
+    return usuarios.filter((u) => {
+      const matchesRole = roleFilter === 'Todos' || u.Role?.id === roleFilter
+
+      let matchesStatus = true
+      if (statusFilter === 'Activos') matchesStatus = u.activo === true
+      if (statusFilter === 'Inactivos') matchesStatus = u.activo === false
+
+      return matchesRole && matchesStatus
+    })
+  }, [usuarios, roleFilter, statusFilter])
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage)
 
@@ -90,10 +97,10 @@ const Usuarios = () => {
     return filteredUsers.slice(start, start + itemsPerPage)
   }, [filteredUsers, currentPage])
 
-  // Resetear página al buscar
+  // Resetear página automáticamente al cambiar cualquiera de los selectores
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm])
+  }, [roleFilter, statusFilter])
 
   const handleEdit = (user) => {
     setSelectedUser(user)
@@ -192,25 +199,57 @@ const Usuarios = () => {
         </motion.button>
       </div>
 
-      {/* Buscador */}
+      {/* BARRA DE FILTROS SELECTS DE ALTO CONTRASTE */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 flex flex-col md:flex-row justify-between items-center gap-4"
+        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 flex flex-col sm:flex-row items-center gap-4"
       >
-        <div className="relative w-full md:w-1/2">
-          <LuSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-          <input
-            type="text"
-            placeholder="Buscar por nombre o alias..."
-            className="w-full bg-zinc-950/40 border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-white focus:outline-none focus:border-luck-gold/40 transition-all placeholder:text-zinc-600 text-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+        {/* SELECT 1: POR ROLES DINÁMICOS */}
+        <div className="relative w-full sm:w-64">
+          <LuUserCog
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold"
+            size={18}
           />
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
+          >
+            <option value="Todos" className="bg-[#1a1f1e] text-white">
+              Todos los roles
+            </option>
+            {roles.map((rol) => (
+              <option key={rol.id} value={rol.id} className="bg-[#1a1f1e] text-white">
+                {rol.nombre}
+              </option>
+            ))}
+          </select>
         </div>
-        <div className="px-4">
+
+        {/* SELECT 2: POR ESTADO DE ACCESO */}
+        <div className="relative w-full sm:w-64">
+          <LuFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
+          >
+            <option value="Todos" className="bg-[#1a1f1e] text-white">
+              Todos los estados
+            </option>
+            <option value="Activos" className="bg-[#1a1f1e] text-white">
+              Activos
+            </option>
+            <option value="Inactivos" className="bg-[#1a1f1e] text-white">
+              Inactivos
+            </option>
+          </select>
+        </div>
+
+        <div className="ml-auto px-4 hidden sm:block">
           <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-            {filteredUsers.length} Usuarios Registrados
+            {filteredUsers.length} Usuarios Filtrados
           </span>
         </div>
       </motion.div>
@@ -340,7 +379,7 @@ const Usuarios = () => {
                           No se encontraron usuarios
                         </p>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-2">
-                          Prueba con otro término o crea uno nuevo
+                          Prueba cambiando los selectores de filtro
                         </p>
                       </div>
                     </td>
@@ -385,7 +424,7 @@ const Usuarios = () => {
 
               <button
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
+                onClick={() => setCurrentPage((p) => p - 1)}
                 className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all"
               >
                 <LuChevronRight size={20} />
