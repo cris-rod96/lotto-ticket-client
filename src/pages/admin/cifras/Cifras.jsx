@@ -15,23 +15,15 @@ import {
 } from 'react-icons/lu'
 import Swal from 'sweetalert2'
 
-// Variantes de animación consistentes con los otros módulos
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05 },
-  },
+  visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
 }
 
 const rowVariants = {
   hidden: { x: -10, opacity: 0 },
-  visible: {
-    x: 0,
-    opacity: 1,
-    transition: { duration: 0.3 },
-  },
-  exit: { opacity: 0, scale: 0.95, transition: { duration: 0.2 } },
+  visible: { x: 0, opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } },
+  exit: { opacity: 0, scale: 0.99, transition: { duration: 0.15 } },
 }
 
 const Cifras = () => {
@@ -40,11 +32,9 @@ const Cifras = () => {
   const [cifras, setCifras] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // NUEVOS ESTADOS DE FILTROS SELECTORES
   const [digitsFilter, setDigitsFilter] = useState('Todos')
   const [statusFilter, setStatusFilter] = useState('Todos')
 
-  // --- LÓGICA DE PAGINACIÓN ---
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 5
 
@@ -64,33 +54,27 @@ const Cifras = () => {
     fetchData()
   }, [])
 
-  // Extraer cantidades únicas de cifras dinámicamente para el selector
   const uniqueDigits = useMemo(() => {
     const list = cifras.map((c) => c.cantidad).filter((val) => val !== undefined && val !== null)
     return [...new Set(list)].sort((a, b) => a - b)
   }, [cifras])
 
-  // Filtrado Combinado por Selectores de Alto Contraste
   const filteredCifras = useMemo(() => {
     return cifras.filter((c) => {
       const matchesDigits = digitsFilter === 'Todos' || c.cantidad.toString() === digitsFilter
-
       let matchesStatus = true
       if (statusFilter === 'Activos') matchesStatus = c.activo === true
       if (statusFilter === 'Inactivos') matchesStatus = c.activo === false
-
       return matchesDigits && matchesStatus
     })
   }, [cifras, digitsFilter, statusFilter])
 
-  // Paginación computada
   const totalPages = Math.ceil(filteredCifras.length / itemsPerPage)
   const currentData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage
     return filteredCifras.slice(start, start + itemsPerPage)
   }, [filteredCifras, currentPage])
 
-  // Resetear automáticamente a la página 1 cuando cambia algún filtro selector
   useEffect(() => {
     setCurrentPage(1)
   }, [digitsFilter, statusFilter])
@@ -107,21 +91,16 @@ const Cifras = () => {
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#EAB308',
-      cancelButtonColor: '#111615',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
       background: '#111615',
       color: '#fff',
     })
 
     if (result.isConfirmed) {
       try {
-        // Asumiendo que cifraAPI tiene un método eliminar
-        // await cifraAPI.eliminar(id)
         setCifras(cifras.filter((c) => c.id !== id))
-        Swal.fire('Eliminado', 'La configuración ha sido eliminada.', 'success')
+        Swal.fire({ title: 'Eliminado', icon: 'success', background: '#111615', color: '#fff' })
       } catch (error) {
-        Swal.fire('Error', 'No se pudo eliminar el registro', 'error')
+        Swal.fire({ title: 'Error', text: 'No se pudo eliminar', icon: 'error', background: '#111615', color: '#fff' })
       }
     }
   }
@@ -129,230 +108,105 @@ const Cifras = () => {
   return (
     <motion.div initial="hidden" animate="visible" className="w-full pb-10">
       <div className="flex justify-between items-center mb-10">
-        <Title
-          titulo="Gestión de Cifras"
-          descripcion="Configuración de límites y montos por cantidad de números"
-        />
+        <Title titulo="Gestión de Cifras" descripcion="Configuración de límites y montos por cantidad de números" />
         <motion.button
           whileHover={{ scale: 1.02, backgroundColor: '#EAB308' }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => {
-            setSelectedCifra(null)
-            setShowModal(true)
-          }}
-          className="bg-luck-gold text-black font-black py-3.5 px-6 rounded-2xl flex items-center gap-2 uppercase text-sm shadow-lg shadow-luck-gold/10"
+          onClick={() => { setSelectedCifra(null); setShowModal(true) }}
+          className="bg-luck-gold text-black font-black py-3.5 px-6 rounded-2xl flex items-center gap-2 uppercase text-xs shadow-lg shadow-luck-gold/10 transition-colors tracking-wider"
         >
-          <LuPlus size={20} strokeWidth={3} /> Nueva Cifra
+          <LuPlus size={18} strokeWidth={3} /> Nueva Cifra
         </motion.button>
       </div>
 
-      {/* BARRA DE FILTROS SELECTS DE ALTO CONTRASTE */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 flex flex-col sm:flex-row items-center gap-4"
-      >
-        {/* SELECT 1: POR CANTIDAD DE CIFRAS DINÁMICAS */}
-        <div className="relative w-full sm:w-64">
-          <LuHash className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
-          <select
-            value={digitsFilter}
-            onChange={(e) => setDigitsFilter(e.target.value)}
-            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
-          >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">
-              Todas las cifras
-            </option>
-            {uniqueDigits.map((digit, idx) => (
-              <option key={idx} value={digit.toString()} className="bg-[#1a1f1e] text-white">
-                {digit} Cifras
-              </option>
-            ))}
+      <motion.div className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 flex flex-wrap items-center gap-4">
+        <div className="relative w-full sm:w-56">
+          <LuHash className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={16} />
+          <select value={digitsFilter} onChange={(e) => setDigitsFilter(e.target.value)} className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-3 pl-11 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold">
+            <option value="Todos">Todas las cifras</option>
+            {uniqueDigits.map((digit) => <option key={digit} value={digit}>{digit} Cifras</option>)}
           </select>
         </div>
 
-        {/* SELECT 2: POR ESTADO OPERATIVO */}
-        <div className="relative w-full sm:w-64">
-          <LuFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
-          >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">
-              Todos los estados
-            </option>
-            <option value="Activos" className="bg-[#1a1f1e] text-white">
-              Activos
-            </option>
-            <option value="Inactivos" className="bg-[#1a1f1e] text-white">
-              Inactivos
-            </option>
+        <div className="relative w-full sm:w-56">
+          <LuFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={16} />
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-3 pl-11 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold">
+            <option value="Todos">Todos los estados</option>
+            <option value="Activos">Activos</option>
+            <option value="Inactivos">Inactivos</option>
           </select>
         </div>
 
-        <div className="ml-auto px-4 hidden sm:block">
-          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-            {filteredCifras.length} Filtros Coincidentes
-          </span>
+        <div className="ml-auto px-2 hidden lg:block">
+          <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">{filteredCifras.length} Registros Filtrados</span>
         </div>
       </motion.div>
 
-      {/* Tabla Estilizada y Animada */}
-      <motion.div
-        variants={containerVariants}
-        className="bg-[#111615] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
-      >
+      <motion.div variants={containerVariants} className="bg-[#111615] border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl flex flex-col">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-white/[0.02] text-zinc-500 uppercase text-[11px] font-bold tracking-[0.15em]">
-                <th className="p-7 pl-10">Cantidad</th>
-                <th className="p-7">Cupo Máximo</th>
-                <th className="p-7">Valor Mín. Ticket</th>
-                <th className="p-7 text-center">Estado</th>
-                <th className="p-7 text-right pr-10">Acciones</th>
+              <tr className="bg-white/[0.02] text-zinc-500 uppercase text-[10px] font-black tracking-[0.18em] border-b border-white/5">
+                <th className="p-5 pl-8">Cantidad</th>
+                <th className="p-5">Cupo Máximo</th>
+                <th className="p-5">Valor Mín. Ticket</th>
+                <th className="p-5 text-center">Estado</th>
+                <th className="p-5 text-right pr-8">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.03]">
+            <tbody className="divide-y divide-white/[0.02]">
               <AnimatePresence mode="popLayout" initial={false}>
                 {loading ? (
-                  <tr>
-                    <td
-                      colSpan="5"
-                      className="p-20 text-center animate-pulse text-zinc-500 font-black italic"
-                    >
-                      CARGANDO...
-                    </td>
-                  </tr>
+                  <tr><td colSpan="5" className="p-16 text-center text-zinc-600 font-black text-xs uppercase">Cargando registros...</td></tr>
                 ) : currentData.length > 0 ? (
                   currentData.map((cifra) => (
-                    <motion.tr
-                      key={cifra.id}
-                      variants={rowVariants}
-                      layout
-                      className="group hover:bg-white/[0.01] transition-colors"
-                    >
-                      <td className="p-7 pl-10">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-luck-gold/10 border border-luck-gold/20 flex items-center justify-center text-luck-gold font-black text-lg italic shadow-inner">
-                            {cifra.cantidad}
-                          </div>
-                          <span className="text-white font-bold text-base uppercase tracking-tight">
-                            {cifra.cantidad} Cifras
-                          </span>
+                    <motion.tr key={cifra.id} variants={rowVariants} layout className="group hover:bg-white/[0.01] transition-colors">
+                      <td className="p-5 pl-8">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-luck-gold/10 border border-luck-gold/20 flex items-center justify-center text-luck-gold font-black">{cifra.cantidad}</div>
+                          <span className="text-white font-black text-sm">{cifra.cantidad} Cifras</span>
                         </div>
                       </td>
-                      <td className="p-7 text-zinc-200 font-black italic text-lg">
-                        ${parseFloat(cifra.cupoMaximoPorNumero).toFixed(2)}
-                      </td>
-                      <td className="p-7 text-zinc-200 font-black italic text-lg">
-                        ${parseFloat(cifra.valorMinimoTicket).toFixed(2)}
-                      </td>
-                      <td className="p-7 text-center">
-                        <span
-                          className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                            cifra.activo
-                              ? 'bg-green-500/5 text-green-500 border-green-500/20'
-                              : 'bg-red-500/5 text-red-500 border-red-500/20'
-                          }`}
-                        >
+                      <td className="p-5 font-mono text-zinc-400">${parseFloat(cifra.cupoMaximoPorNumero).toFixed(2)}</td>
+                      <td className="p-5 font-mono text-zinc-400">${parseFloat(cifra.valorMinimoTicket).toFixed(2)}</td>
+                      <td className="p-5 text-center">
+                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border ${cifra.activo ? 'bg-green-500/5 text-green-500 border-green-500/20' : 'bg-red-500/5 text-red-500 border-red-500/20'}`}>
                           {cifra.activo ? 'Activo' : 'Inactivo'}
                         </span>
                       </td>
-                      <td className="p-7 pr-10">
-                        <div className="flex justify-end gap-3">
-                          <motion.button
-                            whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.05)' }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleEdit(cifra)}
-                            className="p-3 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-luck-gold transition-colors"
-                          >
-                            <LuPencil size={18} />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1, backgroundColor: 'rgba(239,68,68,0.1)' }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleDelete(cifra.id)}
-                            className="p-3 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-red-500 transition-colors"
-                          >
-                            <LuTrash2 size={18} />
-                          </motion.button>
+                      <td className="p-5 pr-8">
+                        <div className="flex justify-end gap-2.5">
+                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleEdit(cifra)} className="p-2 bg-zinc-900/40 border border-white/5 rounded-lg text-zinc-500 hover:text-luck-gold transition-colors"><LuPencil size={15} /></motion.button>
+                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleDelete(cifra.id)} className="p-2 bg-zinc-900/40 border border-white/5 rounded-lg text-zinc-500 hover:text-red-500 transition-colors"><LuTrash2 size={15} /></motion.button>
                         </div>
                       </td>
                     </motion.tr>
                   ))
                 ) : (
-                  <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <td colSpan="5" className="p-32 text-center">
-                      <div className="flex flex-col items-center justify-center opacity-20">
-                        <LuInbox size={60} className="mb-4 text-luck-gold" />
-                        <p className="text-xs font-black uppercase tracking-[0.4em] text-white">
-                          No hay configuraciones
-                        </p>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-2">
-                          Prueba cambiando los selectores de filtro
-                        </p>
-                      </div>
-                    </td>
-                  </motion.tr>
+                  <tr><td colSpan="5" className="p-24 text-center"><LuInbox size={50} className="mx-auto text-luck-gold opacity-30" /><p className="text-[10px] font-black uppercase text-white mt-4 tracking-widest opacity-30">No se encontraron registros</p></td></tr>
                 )}
               </AnimatePresence>
             </tbody>
           </table>
         </div>
 
-        {/* PAGINACIÓN */}
         {totalPages > 1 && (
-          <div className="p-6 border-t border-white/5 bg-white/[0.01] flex justify-between items-center">
-            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-              Página {currentPage} de {totalPages}
-            </p>
-            <div className="flex items-center gap-3">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => p - 1)}
-                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all"
-              >
-                <LuChevronLeft size={20} />
-              </button>
-
+          <div className="p-5 border-t border-white/5 bg-white/[0.01] flex justify-between items-center">
+            <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Página {currentPage} de {totalPages}</p>
+            <div className="flex items-center gap-2">
+              <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="p-2 bg-zinc-900 border border-white/5 rounded-lg text-zinc-500 hover:text-luck-gold transition-all"><LuChevronLeft size={16} /></button>
               <div className="flex gap-1">
                 {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${
-                      currentPage === i + 1
-                        ? 'bg-luck-gold text-black'
-                        : 'text-zinc-500 hover:bg-white/5'
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
+                  <button key={i} onClick={() => setCurrentPage(i + 1)} className={`w-7 h-7 rounded-md text-[9px] font-black ${currentPage === i + 1 ? 'bg-luck-gold text-black' : 'text-zinc-500 hover:bg-white/5'}`}>{i + 1}</button>
                 ))}
               </div>
-
-              <button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p - 1)}
-                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all"
-              >
-                <LuChevronRight size={20} />
-              </button>
+              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="p-2 bg-zinc-900 border border-white/5 rounded-lg text-zinc-500 hover:text-luck-gold transition-all"><LuChevronRight size={16} /></button>
             </div>
           </div>
         )}
       </motion.div>
 
-      {showModal && (
-        <CifraModal
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
-          initialData={selectedCifra}
-          fetchData={fetchData}
-        />
-      )}
+      {showModal && <CifraModal isOpen={showModal} onClose={() => setShowModal(false)} initialData={selectedCifra} fetchData={fetchData} />}
     </motion.div>
   )
 }

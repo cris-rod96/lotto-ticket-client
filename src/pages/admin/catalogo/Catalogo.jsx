@@ -13,6 +13,7 @@ import {
   LuPlus,
   LuTrash2,
 } from 'react-icons/lu'
+import Swal from 'sweetalert2'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -21,8 +22,8 @@ const containerVariants = {
 
 const rowVariants = {
   hidden: { x: -10, opacity: 0 },
-  visible: { x: 0, opacity: 1 },
-  exit: { opacity: 0, scale: 0.95 },
+  visible: { x: 0, opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } },
+  exit: { opacity: 0, scale: 0.99, transition: { duration: 0.15 } },
 }
 
 const Catalogo = () => {
@@ -30,18 +31,16 @@ const Catalogo = () => {
   const [selectedItem, setSelectedItem] = useState(null)
   const [catalogos, setCatalogos] = useState([])
 
-  // NUEVOS ESTADOS DE FILTROS SELECTORES
   const [countryFilter, setCountryFilter] = useState('Todos')
   const [statusFilter, setStatusFilter] = useState('Todos')
 
-  // Lógica de Paginación
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 3
+  const itemsPerPage = 5 // Ajustado para consistencia
 
   const fetchData = async () => {
     try {
       const resp = await catalogoAPI.listarTodos()
-      setCatalogos(resp.data.catalogos || [])
+      setCatalogos(resp.data?.catalogos || [])
     } catch (error) {
       console.log(error)
     }
@@ -51,21 +50,17 @@ const Catalogo = () => {
     fetchData()
   }, [])
 
-  // Filtrado Combinado por Selectores de Alto Contraste
   const filtered = useMemo(() => {
     return catalogos.filter((c) => {
       const matchesCountry = countryFilter === 'Todos' || c.pais === countryFilter
-
       let matchesStatus = true
       if (statusFilter === 'Activos') matchesStatus = c.activo === true
       if (statusFilter === 'Inactivos') matchesStatus = c.activo === false
-
       return matchesCountry && matchesStatus
     })
   }, [catalogos, countryFilter, statusFilter])
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage)
-
   const currentData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage
     return filtered.slice(start, start + itemsPerPage)
@@ -79,10 +74,40 @@ const Catalogo = () => {
   const handleCloseModal = (refresh = false) => {
     setShowModal(false)
     setSelectedItem(null)
-    if (refresh) fetchData() // Solo recarga si hubo un guardado exitoso
+    if (refresh) fetchData()
   }
 
-  // Resetear automáticamente a la página 1 cuando cambia algún filtro
+  const handleDelete = async (item) => {
+    const result = await Swal.fire({
+      title: '¿Desactivar Juego?',
+      text: `Vas a restringir el acceso a: ${item.nombre}`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, desactivar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#EAB308',
+      // Eliminamos background y color para que tome el estilo por defecto (blanco)
+    })
+
+    if (!result.isConfirmed) return
+
+    try {
+      await catalogoAPI.eliminar(item.id)
+      Swal.fire({
+        title: 'Desactivado',
+        text: 'El juego ha sido restringido correctamente.',
+        icon: 'success',
+      })
+      fetchData()
+    } catch (error) {
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo procesar la solicitud.',
+        icon: 'error',
+      })
+    }
+  }
+
   useEffect(() => {
     setCurrentPage(1)
   }, [countryFilter, statusFilter])
@@ -90,211 +115,102 @@ const Catalogo = () => {
   return (
     <motion.div initial="hidden" animate="visible" className="w-full pb-10">
       <div className="flex justify-between items-center mb-10">
-        <Title
-          titulo="Catálogo de Juegos"
-          descripcion="Definición de productos de lotería por región"
-        />
+        <Title titulo="Catálogo de Juegos" descripcion="Definición de productos de lotería por región" />
         <motion.button
           whileHover={{ scale: 1.02, backgroundColor: '#EAB308' }}
           whileTap={{ scale: 0.98 }}
           onClick={() => handleOpenModal()}
-          className="bg-luck-gold text-black font-black py-3.5 px-6 rounded-2xl flex items-center gap-2 uppercase text-sm shadow-lg shadow-luck-gold/10"
+          className="bg-luck-gold text-black font-black py-3.5 px-6 rounded-2xl flex items-center gap-2 uppercase text-xs shadow-lg shadow-luck-gold/10 transition-colors tracking-wider"
         >
-          <LuPlus size={20} strokeWidth={3} /> Nuevo Juego
+          <LuPlus size={18} strokeWidth={3} /> Nuevo Juego
         </motion.button>
       </div>
 
-      {/* BARRA DE FILTROS SELECTS DE ALTO CONTRASTE */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 flex flex-col sm:flex-row items-center gap-4"
-      >
-        {/* SELECT 1: POR PAÍS / REGIÓN */}
-        <div className="relative w-full sm:w-64">
-          <LuGlobe className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
-          <select
-            value={countryFilter}
-            onChange={(e) => setCountryFilter(e.target.value)}
-            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
-          >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">
-              Todos los países
-            </option>
-            <option value="EC" className="bg-[#1a1f1e] text-white">
-              Ecuador
-            </option>
-            <option value="AR" className="bg-[#1a1f1e] text-white">
-              Argentina
-            </option>
+      <motion.div className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 flex flex-wrap items-center gap-4">
+        <div className="relative w-full sm:w-56">
+          <LuGlobe className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={16} />
+          <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)} className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-3 pl-11 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold">
+            <option value="Todos">Todos los países</option>
+            <option value="EC">Ecuador</option>
+            <option value="AR">Argentina</option>
           </select>
         </div>
 
-        {/* SELECT 2: POR ESTADO DEL JUEGO */}
-        <div className="relative w-full sm:w-64">
-          <LuFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
-          >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">
-              Todos los estados
-            </option>
-            <option value="Activos" className="bg-[#1a1f1e] text-white">
-              Activos
-            </option>
-            <option value="Inactivos" className="bg-[#1a1f1e] text-white">
-              Inactivos
-            </option>
+        <div className="relative w-full sm:w-56">
+          <LuFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={16} />
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-3 pl-11 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold">
+            <option value="Todos">Todos los estados</option>
+            <option value="Activos">Activos</option>
+            <option value="Inactivos">Inactivos</option>
           </select>
         </div>
 
-        {/* Indicador de registros */}
-        <div className="ml-auto px-4 hidden sm:block">
-          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-            {filtered.length} Juegos Filtrados
-          </span>
+        <div className="ml-auto px-2 hidden lg:block">
+          <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">{filtered.length} Juegos Filtrados</span>
         </div>
       </motion.div>
 
-      <motion.div
-        variants={containerVariants}
-        className="bg-[#111615] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
-      >
-        <div className="overflow-x-hidden overflow-y-hidden">
+      <motion.div variants={containerVariants} className="bg-[#111615] border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl flex flex-col">
+        <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-white/[0.02] text-zinc-500 uppercase text-[11px] font-bold tracking-[0.15em]">
-                <th className="p-7 pl-10">Nombre del Juego</th>
-                <th className="p-7">País</th>
-                <th className="p-7 text-center">Estado</th>
-                <th className="p-7 text-right pr-10">Acciones</th>
+              <tr className="bg-white/[0.02] text-zinc-500 uppercase text-[10px] font-black tracking-[0.18em] border-b border-white/5">
+                <th className="p-5 pl-8">Nombre del Juego</th>
+                <th className="p-5">País</th>
+                <th className="p-5 text-center">Estado</th>
+                <th className="p-5 text-right pr-8">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.03]">
+            <tbody className="divide-y divide-white/[0.02]">
               <AnimatePresence mode="popLayout" initial={false}>
                 {currentData.length > 0 ? (
                   currentData.map((item) => (
-                    <motion.tr
-                      key={item.id}
-                      variants={rowVariants}
-                      layout
-                      className="group hover:bg-white/[0.01] transition-colors"
-                    >
-                      <td className="p-7 pl-10 font-black text-white uppercase text-sm tracking-tight">
-                        {item.nombre}
-                      </td>
-                      <td className="p-7">
-                        <div className="flex items-center gap-2.5 text-zinc-400">
-                          <LuGlobe size={16} className="text-luck-gold" />
-                          <span className="font-medium text-zinc-300">
-                            {item.pais === 'EC' ? 'Ecuador' : 'Argentina'}
-                          </span>
+                    <motion.tr key={item.id} variants={rowVariants} layout className="group hover:bg-white/[0.01] transition-colors">
+                      <td className="p-5 pl-8">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-luck-gold/10 border border-luck-gold/20 flex items-center justify-center text-luck-gold"><LuGlobe size={16} /></div>
+                          <span className="text-white font-black text-sm tracking-tight">{item.nombre}</span>
                         </div>
                       </td>
-                      <td className="p-7 text-center">
-                        <span
-                          className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                            item.activo
-                              ? 'bg-green-500/5 text-green-500 border-green-500/20'
-                              : 'bg-red-500/5 text-red-500 border-red-500/20'
-                          }`}
-                        >
+                      <td className="p-5 text-zinc-400 text-xs font-bold uppercase tracking-wider">{item.pais === 'EC' ? 'Ecuador' : 'Argentina'}</td>
+                      <td className="p-5 text-center">
+                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border ${item.activo ? 'bg-green-500/5 text-green-500 border-green-500/20' : 'bg-red-500/5 text-red-500 border-red-500/20'}`}>
                           {item.activo ? 'Activo' : 'Inactivo'}
                         </span>
                       </td>
-                      <td className="p-7 pr-10">
-                        <div className="flex justify-end gap-3">
-                          <motion.button
-                            whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.05)' }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleOpenModal(item)}
-                            className="p-3 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-luck-gold transition-colors"
-                          >
-                            <LuPencil size={18} />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1, backgroundColor: 'rgba(239,68,68,0.1)' }}
-                            whileTap={{ scale: 0.9 }}
-                            className="p-3 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-red-500 transition-colors"
-                          >
-                            <LuTrash2 size={18} />
-                          </motion.button>
+                      <td className="p-5 pr-8">
+                        <div className="flex justify-end gap-2.5">
+                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleOpenModal(item)} className="p-2 bg-zinc-900/40 border border-white/5 rounded-lg text-zinc-500 hover:text-luck-gold transition-colors"><LuPencil size={15} /></motion.button>
+                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="p-2 bg-zinc-900/40 border border-white/5 rounded-lg text-zinc-500 hover:text-red-500 transition-colors" onClick={() => handleDelete(item)}><LuTrash2 size={15} /></motion.button>
                         </div>
                       </td>
                     </motion.tr>
                   ))
                 ) : (
-                  /* ESTADO VACÍO DENTRO DE LA TABLA */
-                  <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <td colSpan="4" className="p-32 text-center">
-                      <div className="flex flex-col items-center justify-center opacity-20">
-                        <LuInbox size={60} className="mb-4 text-luck-gold" />
-                        <p className="text-xs font-black uppercase tracking-[0.4em] text-white">
-                          No se encontraron juegos
-                        </p>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-2">
-                          Prueba cambiando los selectores de filtro
-                        </p>
-                      </div>
-                    </td>
-                  </motion.tr>
+                  <tr><td colSpan="4" className="p-20 text-center"><LuInbox size={50} className="mx-auto text-luck-gold opacity-30" /><p className="text-[10px] font-black uppercase text-white mt-4 tracking-widest opacity-30">No se encontraron juegos</p></td></tr>
                 )}
               </AnimatePresence>
             </tbody>
           </table>
         </div>
 
-        {/* PAGINACIÓN ESTILO LUCK */}
         {totalPages > 1 && (
-          <div className="p-6 border-t border-white/5 bg-white/[0.01] flex justify-between items-center">
-            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-              Página {currentPage} de {totalPages}
-            </p>
-            <div className="flex items-center gap-3">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => p - 1)}
-                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all"
-              >
-                <LuChevronLeft size={20} />
-              </button>
-
+          <div className="p-5 border-t border-white/5 bg-white/[0.01] flex justify-between items-center">
+            <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Página {currentPage} de {totalPages}</p>
+            <div className="flex items-center gap-2">
+              <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="p-2 bg-zinc-900 border border-white/5 rounded-lg text-zinc-500 hover:text-luck-gold transition-all"><LuChevronLeft size={16} /></button>
               <div className="flex gap-1">
                 {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${
-                      currentPage === i + 1
-                        ? 'bg-luck-gold text-black'
-                        : 'text-zinc-500 hover:bg-white/5'
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
+                  <button key={i} onClick={() => setCurrentPage(i + 1)} className={`w-7 h-7 rounded-md text-[9px] font-black ${currentPage === i + 1 ? 'bg-luck-gold text-black' : 'text-zinc-500 hover:bg-white/5'}`}>{i + 1}</button>
                 ))}
               </div>
-
-              <button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
-                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all"
-              >
-                <LuChevronRight size={20} />
-              </button>
+              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="p-2 bg-zinc-900 border border-white/5 rounded-lg text-zinc-500 hover:text-luck-gold transition-all"><LuChevronRight size={16} /></button>
             </div>
           </div>
         )}
       </motion.div>
 
-      <CatalogoModal
-        isOpen={showModal}
-        onClose={(refresh) => handleCloseModal(refresh)}
-        initialData={selectedItem}
-        fetchData={fetchData}
-      />
+      <CatalogoModal isOpen={showModal} onClose={(refresh) => handleCloseModal(refresh)} initialData={selectedItem} fetchData={fetchData} />
     </motion.div>
   )
 }
