@@ -1,4 +1,4 @@
-import { LuFilter, LuHistory, LuTrendingDown, LuTrendingUp, LuUser } from 'react-icons/lu'
+import { LuFilter, LuHistory, LuTrendingDown, LuTrendingUp, LuUser, LuCircleAlert } from 'react-icons/lu'
 
 const CajasVendedorTable = ({
   data,
@@ -13,6 +13,7 @@ const CajasVendedorTable = ({
   onSelectCaja,
 }) => {
   const esMovimientos = tipoVista === 'movimientos'
+  const tieneDatos = data && data.length > 0
 
   return (
     <div className="w-full space-y-4">
@@ -27,18 +28,17 @@ const CajasVendedorTable = ({
         </div>
 
         <div className="flex items-center gap-4">
-          {/* BOTÓN FILTRO: Solo aparece en vista movimientos */}
+          {/* BOTÓN FILTRO: Engloba tanto Ventas como Pagos */}
           {esMovimientos && (
             <button
               onClick={() => setSoloMisMovimientos(!soloMisMovimientos)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-[9px] font-black uppercase tracking-widest ${
-                soloMisMovimientos
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-[9px] font-black uppercase tracking-widest ${soloMisMovimientos
                   ? 'bg-luck-gold border-luck-gold text-black'
                   : 'bg-white/5 border-white/10 text-zinc-400 hover:text-white'
-              }`}
+                }`}
             >
               <LuFilter size={12} />
-              {soloMisMovimientos ? 'Viendo: Mis Ventas' : 'Viendo: Todo'}
+              {soloMisMovimientos ? 'Viendo: Mis Operaciones' : 'Viendo: Todo'}
             </button>
           )}
 
@@ -74,72 +74,98 @@ const CajasVendedorTable = ({
       </div>
 
       <div className="space-y-2">
-        {data.map((item) => {
-          const isIngreso = item.tipo === 'Ingreso'
-          const esMio = item.UsuarioId === userId
+        {tieneDatos ? (
+          data.map((item) => {
+            const isIngreso = item.tipo === 'Ingreso'
+            const esMio = item.UsuarioId === userId
 
-          return (
-            <div
-              key={item.id}
-              onClick={() => !esMovimientos && onSelectCaja(item)}
-              className={`bg-[#0b0c0c] border p-4 rounded-2xl grid grid-cols-5 items-center transition-all border-l-2 group ${
-                esMovimientos
-                  ? 'border-white/5'
-                  : 'cursor-pointer hover:border-luck-gold border-white/5'
-              } ${esMio && esMovimientos ? 'border-l-luck-gold' : 'border-l-transparent'}`}
-            >
-              <div className="flex flex-col text-xs">
-                <span className="text-white font-bold">
-                  {new Date(item.createdAt).toLocaleTimeString()}
-                </span>
-                <span className="text-[8px] text-zinc-500">
-                  {new Date(item.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-
+            return (
               <div
-                className={`flex items-center gap-2 ${isIngreso ? 'text-emerald-400' : 'text-red-400'}`}
+                key={item.id}
+                onClick={() => !esMovimientos && onSelectCaja(item)}
+                className={`bg-[#0b0c0c] border p-4 rounded-2xl grid grid-cols-5 items-center transition-all group ${esMovimientos
+                    ? 'border-white/5'
+                    : 'cursor-pointer hover:border-luck-gold border-white/5'
+                  }`}
               >
-                {esMovimientos ? (
-                  isIngreso ? (
-                    <LuTrendingUp size={14} />
-                  ) : (
-                    <LuTrendingDown size={14} />
-                  )
-                ) : (
-                  <div className="w-2 h-2 rounded-full bg-luck-gold" />
-                )}
-                <span className="text-[9px] font-black uppercase truncate">
-                  {esMovimientos ? item.categoria : item.estado}
-                </span>
-              </div>
+                <div className="flex flex-col text-xs">
+                  <span className="text-white font-bold">
+                    {new Date(item.createdAt).toLocaleTimeString()}
+                  </span>
+                  <span className="text-[8px] text-zinc-500">
+                    {new Date(item.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
 
-              <div className="flex justify-center items-center gap-2">
                 <div
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded-md ${esMio ? 'bg-luck-gold/10 text-luck-gold' : 'bg-white/5 text-zinc-500'}`}
+                  className={`flex items-center gap-2 ${isIngreso ? 'text-emerald-400' : 'text-red-400'}`}
                 >
-                  <LuUser size={10} />
-                  <span className="text-[9px] font-black uppercase italic">
-                    {esMio ? 'Tú' : item.Usuario?.nombresCompletos?.split(' ')[0] || 'Admin'}
+                  {esMovimientos ? (
+                    isIngreso ? (
+                      <LuTrendingUp size={14} />
+                    ) : (
+                      <LuTrendingDown size={14} />
+                    )
+                  ) : (
+                    <div className="w-2 h-2 rounded-full bg-luck-gold" />
+                  )}
+                  <span className="text-[9px] font-black uppercase truncate">
+                    {esMovimientos ? item.categoria : item.estado}
+                  </span>
+                </div>
+
+                <div className="flex justify-center items-center gap-2">
+                  <div
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-md ${esMio ? 'bg-luck-gold/10 text-luck-gold' : 'bg-white/5 text-zinc-500'
+                      }`}
+                  >
+                    <LuUser size={10} />
+                    <span className="text-[9px] font-black uppercase italic">
+                      {esMio ? 'Tú' : item.Usuario?.nombresCompletos?.split(' ')[0] || 'Admin'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-center text-[9px] text-zinc-500 italic truncate px-2">
+                  {esMovimientos ? item.descripcion || 'Venta' : `Caja: ${item.id.split('-')[0]}`}
+                </div>
+
+                <div className="text-right">
+                  <span
+                    className={`text-lg font-black italic tracking-tighter ${esMovimientos ? (isIngreso ? 'text-emerald-400' : 'text-red-400') : 'text-white'
+                      }`}
+                  >
+                    {esMovimientos && (isIngreso ? '+' : '-')}
+                    {formatter.format(parseFloat(item.monto || item.saldoActual || 0))}
                   </span>
                 </div>
               </div>
-
-              <div className="text-center text-[9px] text-zinc-500 italic truncate px-2">
-                {esMovimientos ? item.descripcion || 'Venta' : `Caja: ${item.id.split('-')[0]}`}
-              </div>
-
-              <div className="text-right">
-                <span
-                  className={`text-lg font-black italic tracking-tighter ${esMovimientos ? (isIngreso ? 'text-emerald-400' : 'text-red-400') : 'text-white'}`}
-                >
-                  {esMovimientos && (isIngreso ? '+' : '-')}
-                  {formatter.format(parseFloat(item.monto || item.saldoActual || 0))}
-                </span>
-              </div>
+            )
+          })
+        ) : (
+          /* CONTENEDOR DE ESTADO VACÍO */
+          <div className="flex flex-col items-center justify-center bg-[#0b0c0c] border border-white/5 p-12 rounded-2xl text-center space-y-3">
+            <div className="p-3 bg-zinc-800/20 rounded-full text-zinc-600">
+              <LuCircleAlert size={24} />
             </div>
-          )
-        })}
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                {esMovimientos
+                  ? soloMisMovimientos
+                    ? 'No tienes operaciones registradas'
+                    : 'No hay movimientos en esta caja'
+                  : 'Historial vacío'}
+              </p>
+              <p className="text-[9px] text-zinc-600 font-medium max-w-xs mx-auto normal-case">
+                {esMovimientos
+                  ? soloMisMovimientos
+                    ? 'Aún no has realizado ninguna venta o pago de premio bajo tu usuario en este turno.'
+                    : 'Esta caja no reporta transacciones ni cobros por el momento.'
+                  : 'No se encontraron aperturas ni cierres de caja anteriores para este punto de venta.'}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -72,7 +72,7 @@ const Cajas = () => {
       />
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <CajasVendedorStats user={user} caja={caja} formatter={formatter} />
+        <CajasVendedorStats user={user} caja={caja} formatter={formatter} soloMisMovimientos={soloMisMovimientos} />
 
         <CajasVendedorTable
           tipoVista={filtroVista}

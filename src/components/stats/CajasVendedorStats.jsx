@@ -1,7 +1,34 @@
+import { useMemo } from 'react'
 import { LuTrendingDown, LuTrendingUp, LuUser, LuWallet } from 'react-icons/lu'
 
-const CajasVendedorStats = ({ user, caja, formatter }) => {
+const CajasVendedorStats = ({ user, caja, formatter, soloMisMovimientos }) => {
   const esCajaAbierta = caja?.estado === 'Abierta'
+
+  // Procesamos los movimientos en tiempo real según el modelo de Sequelize
+  const resumen = useMemo(() => {
+    const movimientos = caja?.Movimientos || []
+
+    return movimientos.reduce(
+      (acc, mov) => {
+        // Si el filtro "Mis Operaciones" está activo, ignoramos los movimientos de otros operadores
+        if (soloMisMovimientos && mov.UsuarioId !== user?.id) {
+          return acc
+        }
+
+        const montoFlotante = parseFloat(mov.monto || 0)
+
+        // Clasificación exacta según las ENUMs de tu modelo Sequelize
+        if (mov.categoria === 'Venta Ticket') {
+          acc.ventas += montoFlotante
+        } else if (mov.categoria === 'Pago Premio') {
+          acc.premios += montoFlotante
+        }
+
+        return acc
+      },
+      { ventas: 0, premios: 0 }
+    )
+  }, [caja?.Movimientos, soloMisMovimientos, user?.id])
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -14,7 +41,7 @@ const CajasVendedorStats = ({ user, caja, formatter }) => {
           <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block">
             Operador
           </span>
-          <p className="text-white font-black text-lg uppercase italic leading-none truncate w-40">
+          <p className="text-white font-black text-lg uppercase leading-none truncate w-40">
             {user?.nombresCompletos?.split(' ')[0] || 'Vendedor'}
           </p>
           <div className="flex items-center gap-1.5 mt-1.5">
@@ -30,7 +57,7 @@ const CajasVendedorStats = ({ user, caja, formatter }) => {
         </div>
       </div>
 
-      {/* BALANCE */}
+      {/* BALANCE: Siempre muestra el estado real general de la caja */}
       <div className="bg-[#0c0d0d] border border-luck-gold/30 p-5 rounded-2xl relative overflow-hidden group shadow-lg shadow-luck-gold/5">
         <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
           <LuWallet size={40} className="text-luck-gold" />
@@ -39,27 +66,31 @@ const CajasVendedorStats = ({ user, caja, formatter }) => {
           Balance Actual
         </span>
         <p className="text-3xl font-black text-white italic tracking-tighter">
-          {formatter.format(caja?.saldoActual || 0)}
+          {formatter.format(parseFloat(caja?.saldoActual || 0))}
         </p>
       </div>
 
-      {/* RESUMEN RÁPIDO */}
+      {/* RESUMEN RÁPIDO: Cálculos dinámicos reales del modelo */}
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-[#0c0d0d] border border-white/5 p-4 rounded-2xl flex items-center gap-3">
           <LuTrendingUp className="text-emerald-500" size={20} />
           <div>
-            <span className="text-[8px] font-black text-zinc-500 uppercase block">Ventas</span>
+            <span className="text-[8px] font-black text-zinc-500 uppercase block">
+              {soloMisMovimientos ? 'Mis Ventas' : 'Ventas Totales'}
+            </span>
             <span className="text-sm font-black text-white italic">
-              {formatter.format(caja?.totalVentas || 0)}
+              {formatter.format(resumen.ventas)}
             </span>
           </div>
         </div>
         <div className="bg-[#0c0d0d] border border-white/5 p-4 rounded-2xl flex items-center gap-3">
           <LuTrendingDown className="text-red-500" size={20} />
           <div>
-            <span className="text-[8px] font-black text-zinc-500 uppercase block">Premios</span>
+            <span className="text-[8px] font-black text-zinc-500 uppercase block">
+              {soloMisMovimientos ? 'Mis Premios' : 'Premios Pagados'}
+            </span>
             <span className="text-sm font-black text-white italic">
-              {formatter.format(caja?.totalPremiosPagados || 0)}
+              {formatter.format(resumen.premios)}
             </span>
           </div>
         </div>
