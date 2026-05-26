@@ -15,8 +15,9 @@ const ticketAPI = {
     return instance.post(`/${model}/vender`, data)
   },
 
-  eliminar: async (id) => {
-    return instance.delete(`/${model}/eliminar/${id}`)
+  anularTicket: async (id, usuarioId) => {
+    console.log(usuarioId)
+    return instance.patch(`/${model}/anular/${id}`, { usuarioId })
   },
 
   verificarCupo: async (SorteoId, numero, monto) => {

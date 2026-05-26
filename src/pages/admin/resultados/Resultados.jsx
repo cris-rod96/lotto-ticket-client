@@ -362,11 +362,10 @@ const Resultados = () => {
                   <button
                     key={i}
                     onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${
-                      currentPage === i + 1
-                        ? 'bg-luck-gold text-black'
-                        : 'text-zinc-500 hover:bg-white/5'
-                    }`}
+                    className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${currentPage === i + 1
+                      ? 'bg-luck-gold text-black'
+                      : 'text-zinc-500 hover:bg-white/5'
+                      }`}
                   >
                     {i + 1}
                   </button>
@@ -391,6 +390,7 @@ const Resultados = () => {
           isOpen={showModal}
           onClose={() => setShowModal(false)}
           fetchData={fetchData}
+
         />
       )}
       {showDetalle && (
@@ -405,6 +405,7 @@ const Resultados = () => {
           isOpen={showFlyerModal}
           onClose={() => setShowFlyerModal(false)}
           data={groupedFlyerData}
+
         />
       )}
     </motion.div>

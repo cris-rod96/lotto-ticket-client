@@ -227,6 +227,48 @@ const Tickets = () => {
     }
   }
 
+  const handleAnularTicket = async (ticket) => {
+    const result = await Swal.fire({
+      title: '¿Confirmar Anulación?',
+      text: `El ticket #${ticket.codigo} se anulará irreversiblemente.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, anular ticket'
+    })
+
+    if (result.isConfirmed) {
+      Swal.fire({
+        title: 'Procesando anulación...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      })
+
+      try {
+        // Llamada a tu API (ajusta el path según tu configuración en index.api)
+        const response = await ticketAPI.anularTicket(ticket.id, user.id)
+
+        if (response.status === 200) {
+          Swal.fire({
+            title: '¡Anulado!',
+            text: 'El ticket ha sido anulado correctamente.',
+            icon: 'success',
+            confirmButtonColor: '#EAB308'
+          })
+          fetchData()
+        }
+      } catch (error) {
+        Swal.fire({
+          title: 'Error',
+          text: error.response?.data?.message || 'No se pudo anular el ticket',
+          icon: 'error',
+          confirmButtonColor: '#ef4444'
+        })
+      }
+    }
+  }
+
   // OBTENER FECHAS ÚNICAS DISPONIBLES EN LOS TICKETS PARA EL SELECT
   const fechasDisponibles = useMemo(() => {
     const fechas = tickets.map((t) => t.Sorteo?.fechaSorteo).filter((fecha) => !!fecha)
@@ -461,13 +503,12 @@ const Tickets = () => {
 
                       <td className="p-7">
                         <span
-                          className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
-                            ticket.resultado === 'Ganador'
-                              ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                              : ticket.resultado === 'No Ganador'
-                                ? 'bg-zinc-900 text-zinc-600 border-white/5'
-                                : 'bg-blue-500/5 text-blue-400 border-blue-500/10'
-                          }`}
+                          className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${ticket.resultado === 'Ganador'
+                            ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                            : ticket.resultado === 'No Ganador'
+                              ? 'bg-zinc-900 text-zinc-600 border-white/5'
+                              : 'bg-blue-500/5 text-blue-400 border-blue-500/10'
+                            }`}
                         >
                           {ticket.resultado}
                         </span>
@@ -485,13 +526,12 @@ const Tickets = () => {
 
                       <td className="p-7">
                         <span
-                          className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${
-                            ticket.estado === 'Pagado'
-                              ? 'bg-zinc-900 text-emerald-500 border-emerald-500/30'
-                              : ticket.estado === 'Anulado'
-                                ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                                : 'bg-zinc-950 text-zinc-600 border-white/5'
-                          }`}
+                          className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${ticket.estado === 'Pagado'
+                            ? 'bg-zinc-900 text-emerald-500 border-emerald-500/30'
+                            : ticket.estado === 'Anulado'
+                              ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                              : 'bg-zinc-950 text-zinc-600 border-white/5'
+                            }`}
                         >
                           {ticket.estado}
                         </span>
@@ -534,7 +574,7 @@ const Tickets = () => {
                             <LuTicket size={16} />
                           </button>
 
-                          <button className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-600 hover:text-red-500 transition-colors">
+                          <button className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-600 hover:text-red-500 transition-colors" onClick={() => handleAnularTicket(ticket)}>
                             <LuTrash2 size={16} />
                           </button>
                         </div>
@@ -577,11 +617,10 @@ const Tickets = () => {
                   <button
                     key={i}
                     onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-[9px] font-black transition-all ${
-                      currentPage === i + 1
-                        ? 'bg-luck-gold text-black'
-                        : 'text-zinc-600 hover:bg-white/5'
-                    }`}
+                    className={`w-8 h-8 rounded-lg text-[9px] font-black transition-all ${currentPage === i + 1
+                      ? 'bg-luck-gold text-black'
+                      : 'text-zinc-600 hover:bg-white/5'
+                      }`}
                   >
                     {i + 1}
                   </button>
