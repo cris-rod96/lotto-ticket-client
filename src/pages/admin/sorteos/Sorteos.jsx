@@ -41,7 +41,6 @@ const Sorteos = () => {
   const [showModal, setShowModal] = useState(false)
   const [selectedSorteo, setSelectedSorteo] = useState(null)
 
-  // Estados de filtros selectores
   const [catalogoFilter, setCatalogoFilter] = useState('Todos')
   const [jornadaFilter, setJornadaFilter] = useState('Todos')
   const [cifraFilter, setCifraFilter] = useState('Todos')
@@ -51,7 +50,6 @@ const Sorteos = () => {
   const [catalogos, setCatalogos] = useState([])
   const [cifras, setCifras] = useState([])
 
-  // --- Lógica de Paginación ---
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 5
 
@@ -72,9 +70,8 @@ const Sorteos = () => {
     if (result.isConfirmed) {
       try {
         const resp = await sorteoAPI.eliminar(id)
-        Swal.fire({ title: 'Eliminado', icon: 'success', text: resp.data?.message || "Eliminación existosa" })
+        Swal.fire({ title: 'Eliminado', icon: 'success', text: resp.data?.message || "Eliminación exitosa" })
         fetchData()
-
       } catch (error) {
         const msg = error.response?.data?.message || 'No se pudo eliminar'
         Swal.fire({ title: 'Error', text: msg, icon: 'error' })
@@ -82,7 +79,6 @@ const Sorteos = () => {
     }
   }
 
-  // Filtrado múltiple combinado basado en selects
   const filteredSorteos = useMemo(() => {
     return sorteos.filter((s) => {
       const matchesCatalogo = catalogoFilter === 'Todos' || s.CatalogoId === catalogoFilter
@@ -94,7 +90,6 @@ const Sorteos = () => {
     })
   }, [sorteos, catalogoFilter, jornadaFilter, cifraFilter, statusFilter])
 
-  // Cálculo de datos paginados
   const totalPages = Math.ceil(filteredSorteos.length / itemsPerPage)
 
   const currentData = useMemo(() => {
@@ -102,7 +97,6 @@ const Sorteos = () => {
     return filteredSorteos.slice(start, start + itemsPerPage)
   }, [filteredSorteos, currentPage])
 
-  // Resetear a página 1 automáticamente cuando cambie cualquier filtro
   useEffect(() => {
     setCurrentPage(1)
   }, [catalogoFilter, jornadaFilter, cifraFilter, statusFilter])
@@ -122,16 +116,29 @@ const Sorteos = () => {
     }
   }
 
+  // LOGICA DE GUARDADO MEJORADA Y DINÁMICA
   const handleSave = async (formData) => {
     try {
-      const resp = await sorteoAPI.crear(formData)
-      if (resp.status === 201) {
+      let resp;
+      const esEdicion = !!selectedSorteo?.id;
+
+      if (esEdicion) {
+        // Asegúrate de tener este método .actualizar(id, data) en tu sorteoAPI
+        resp = await sorteoAPI.actualizar(selectedSorteo.id, formData)
         Swal.fire({
           icon: 'success',
-          title: 'Registro existoso',
-          text: 'Se ha creado el sorteo con éxito',
+          title: 'Sorteo Actualizado',
+          text: resp.data?.message || 'Los cambios se guardaron correctamente',
+        })
+      } else {
+        resp = await sorteoAPI.crear(formData)
+        Swal.fire({
+          icon: 'success',
+          title: 'Registro exitoso',
+          text: resp.data?.message || 'Se ha creado el sorteo con éxito',
         })
       }
+
       setShowModal(false)
       fetchData()
     } catch (error) {
@@ -175,35 +182,25 @@ const Sorteos = () => {
         </motion.button>
       </div>
 
-      {/* MATRIZ DE FILTROS SELECTS */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center"
       >
-        {/* SELECT 1: POR JUEGO (CATÁLOGO) */}
         <div className="relative w-full">
-          <LuShuffle
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold"
-            size={18}
-          />
+          <LuShuffle className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
           <select
             value={catalogoFilter}
             onChange={(e) => setCatalogoFilter(e.target.value)}
             className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
           >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">
-              Todos los juegos
-            </option>
+            <option value="Todos" className="bg-[#1a1f1e] text-white">Todos los juegos</option>
             {catalogos.map((cat) => (
-              <option key={cat.id} value={cat.id} className="bg-[#1a1f1e] text-white">
-                {cat.nombre}
-              </option>
+              <option key={cat.id} value={cat.id} className="bg-[#1a1f1e] text-white">{cat.nombre}</option>
             ))}
           </select>
         </div>
 
-        {/* SELECT 2: POR JORNADA CORREGIDA */}
         <div className="relative w-full">
           <LuClock className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
           <select
@@ -211,22 +208,13 @@ const Sorteos = () => {
             onChange={(e) => setJornadaFilter(e.target.value)}
             className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
           >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">
-              Todas las jornadas
-            </option>
-            <option value="Matutina" className="bg-[#1a1f1e] text-white">
-              Matutina
-            </option>
-            <option value="Vespertina" className="bg-[#1a1f1e] text-white">
-              Vespertina
-            </option>
-            <option value="Nocturna" className="bg-[#1a1f1e] text-white">
-              Nocturna
-            </option>
+            <option value="Todos" className="bg-[#1a1f1e] text-white">Todas las jornadas</option>
+            <option value="Matutina" className="bg-[#1a1f1e] text-white">Matutina</option>
+            <option value="Vespertina" className="bg-[#1a1f1e] text-white">Vespertina</option>
+            <option value="Nocturna" className="bg-[#1a1f1e] text-white">Nocturna</option>
           </select>
         </div>
 
-        {/* SELECT 3: POR CIFRAS */}
         <div className="relative w-full">
           <LuLayers className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
           <select
@@ -234,18 +222,13 @@ const Sorteos = () => {
             onChange={(e) => setCifraFilter(e.target.value)}
             className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
           >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">
-              Todas las cifras
-            </option>
+            <option value="Todos" className="bg-[#1a1f1e] text-white">Todas las cifras</option>
             {cifras.map((cif) => (
-              <option key={cif.id} value={cif.id} className="bg-[#1a1f1e] text-white">
-                {cif.cantidad} Cifras
-              </option>
+              <option key={cif.id} value={cif.id} className="bg-[#1a1f1e] text-white">{cif.cantidad} Cifras</option>
             ))}
           </select>
         </div>
 
-        {/* SELECT 4: POR ESTADO */}
         <div className="relative w-full">
           <LuFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
           <select
@@ -253,30 +236,20 @@ const Sorteos = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
           >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">
-              Todos los estados
-            </option>
-            <option value="Abierto" className="bg-[#1a1f1e] text-white">
-              Abierto
-            </option>
-            <option value="Cerrado" className="bg-[#1a1f1e] text-white">
-              Cerrado
-            </option>
-            <option value="Finalizado" className="bg-[#1a1f1e] text-white">
-              Finalizado
-            </option>
+            <option value="Todos" className="bg-[#1a1f1e] text-white">Todos los estados</option>
+            <option value="Abierto" className="bg-[#1a1f1e] text-white">Abierto</option>
+            <option value="Cerrado" className="bg-[#1a1f1e] text-white">Cerrado</option>
+            <option value="Finalizado" className="bg-[#1a1f1e] text-white">Finalizado</option>
           </select>
         </div>
       </motion.div>
 
-      {/* CONTADOR */}
       <div className="mb-4 text-right pr-4 hidden lg:block">
         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
           {filteredSorteos.length} Sorteos filtrados
         </span>
       </div>
 
-      {/* Contenedor de Tabla y Paginación */}
       <motion.div
         variants={containerVariants}
         className="bg-[#111615] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
@@ -350,10 +323,10 @@ const Sorteos = () => {
                       <td className="p-7 text-center">
                         <span
                           className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${sorteo.estado === 'Abierto'
-                              ? 'bg-green-500/5 text-green-500 border-green-500/20'
-                              : sorteo.estado === 'Cerrado'
-                                ? 'bg-orange-500/5 text-orange-500 border-orange-500/20'
-                                : 'bg-red-500/5 text-red-500 border-red-500/20'
+                            ? 'bg-green-500/5 text-green-500 border-green-500/20'
+                            : sorteo.estado === 'Cerrado'
+                              ? 'bg-orange-500/5 text-orange-500 border-orange-500/20'
+                              : 'bg-red-500/5 text-red-500 border-red-500/20'
                             }`}
                         >
                           {sorteo.estado}
@@ -418,7 +391,6 @@ const Sorteos = () => {
           </table>
         </div>
 
-        {/* --- PAGINACIÓN --- */}
         {totalPages > 1 && (
           <div className="p-6 border-t border-white/5 bg-white/[0.01] flex justify-between items-center">
             <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
@@ -439,8 +411,8 @@ const Sorteos = () => {
                     key={i}
                     onClick={() => setCurrentPage(i + 1)}
                     className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${currentPage === i + 1
-                        ? 'bg-luck-gold text-black'
-                        : 'text-zinc-500 hover:bg-white/5'
+                      ? 'bg-luck-gold text-black'
+                      : 'text-zinc-500 hover:bg-white/5'
                       }`}
                   >
                     {i + 1}
@@ -448,9 +420,10 @@ const Sorteos = () => {
                 ))}
               </div>
 
+              {/* CORREGIDO: Se cambió (p) => p - 1 por (p) => p + 1 */}
               <button
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p - 1)}
+                onClick={() => setCurrentPage((p) => p + 1)}
                 className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all"
               >
                 <LuChevronRight size={20} />
