@@ -41,10 +41,12 @@ const Sorteos = () => {
   const [showModal, setShowModal] = useState(false)
   const [selectedSorteo, setSelectedSorteo] = useState(null)
 
+  // Estados de filtros selectores (Añadido el estado de filtro por fecha)
   const [catalogoFilter, setCatalogoFilter] = useState('Todos')
   const [jornadaFilter, setJornadaFilter] = useState('Todos')
   const [cifraFilter, setCifraFilter] = useState('Todos')
   const [statusFilter, setStatusFilter] = useState('Todos')
+  const [dateFilter, setDateFilter] = useState('') // Formato YYYY-MM-DD o vacío
 
   const [sorteos, setSorteos] = useState([])
   const [catalogos, setCatalogos] = useState([])
@@ -79,16 +81,18 @@ const Sorteos = () => {
     }
   }
 
+  // Filtrado múltiple combinado basado en selects (Se incluye validación de fecha)
   const filteredSorteos = useMemo(() => {
     return sorteos.filter((s) => {
       const matchesCatalogo = catalogoFilter === 'Todos' || s.CatalogoId === catalogoFilter
       const matchesJornada = jornadaFilter === 'Todos' || s.jornada === jornadaFilter
       const matchesCifra = cifraFilter === 'Todos' || s.CifraId === cifraFilter
       const matchesStatus = statusFilter === 'Todos' || s.estado === statusFilter
+      const matchesDate = !dateFilter || s.fechaSorteo === dateFilter
 
-      return matchesCatalogo && matchesJornada && matchesCifra && matchesStatus
+      return matchesCatalogo && matchesJornada && matchesCifra && matchesStatus && matchesDate
     })
-  }, [sorteos, catalogoFilter, jornadaFilter, cifraFilter, statusFilter])
+  }, [sorteos, catalogoFilter, jornadaFilter, cifraFilter, statusFilter, dateFilter])
 
   const totalPages = Math.ceil(filteredSorteos.length / itemsPerPage)
 
@@ -97,9 +101,10 @@ const Sorteos = () => {
     return filteredSorteos.slice(start, start + itemsPerPage)
   }, [filteredSorteos, currentPage])
 
+  // Resetear a página 1 automáticamente cuando cambie cualquier filtro
   useEffect(() => {
     setCurrentPage(1)
-  }, [catalogoFilter, jornadaFilter, cifraFilter, statusFilter])
+  }, [catalogoFilter, jornadaFilter, cifraFilter, statusFilter, dateFilter])
 
   const fetchData = async () => {
     try {
@@ -116,14 +121,12 @@ const Sorteos = () => {
     }
   }
 
-  // LOGICA DE GUARDADO MEJORADA Y DINÁMICA
   const handleSave = async (formData) => {
     try {
       let resp;
       const esEdicion = !!selectedSorteo?.id;
 
       if (esEdicion) {
-        // Asegúrate de tener este método .actualizar(id, data) en tu sorteoAPI
         resp = await sorteoAPI.actualizar(selectedSorteo.id, formData)
         Swal.fire({
           icon: 'success',
@@ -182,31 +185,39 @@ const Sorteos = () => {
         </motion.button>
       </div>
 
+      {/* MATRIZ DE FILTROS SELECTS MAS PEQUEÑOS - Ahora grid-cols-5 en lg */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center"
+        className="bg-[#111615] border border-white/5 p-3 rounded-2xl mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-center"
       >
+        {/* SELECT 1: POR JUEGO (CATÁLOGO) */}
         <div className="relative w-full">
-          <LuShuffle className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
+          <LuShuffle
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-luck-gold"
+            size={15}
+          />
           <select
             value={catalogoFilter}
             onChange={(e) => setCatalogoFilter(e.target.value)}
-            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-2 pl-9 pr-8 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold"
           >
             <option value="Todos" className="bg-[#1a1f1e] text-white">Todos los juegos</option>
             {catalogos.map((cat) => (
-              <option key={cat.id} value={cat.id} className="bg-[#1a1f1e] text-white">{cat.nombre}</option>
+              <option key={cat.id} value={cat.id} className="bg-[#1a1f1e] text-white">
+                {cat.nombre}
+              </option>
             ))}
           </select>
         </div>
 
+        {/* SELECT 2: POR JORNADA */}
         <div className="relative w-full">
-          <LuClock className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
+          <LuClock className="absolute left-3 top-1/2 -translate-y-1/2 text-luck-gold" size={15} />
           <select
             value={jornadaFilter}
             onChange={(e) => setJornadaFilter(e.target.value)}
-            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-2 pl-9 pr-8 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold"
           >
             <option value="Todos" className="bg-[#1a1f1e] text-white">Todas las jornadas</option>
             <option value="Matutina" className="bg-[#1a1f1e] text-white">Matutina</option>
@@ -215,26 +226,30 @@ const Sorteos = () => {
           </select>
         </div>
 
+        {/* SELECT 3: POR CIFRAS */}
         <div className="relative w-full">
-          <LuLayers className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
+          <LuLayers className="absolute left-3 top-1/2 -translate-y-1/2 text-luck-gold" size={15} />
           <select
             value={cifraFilter}
             onChange={(e) => setCifraFilter(e.target.value)}
-            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-2 pl-9 pr-8 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold"
           >
             <option value="Todos" className="bg-[#1a1f1e] text-white">Todas las cifras</option>
             {cifras.map((cif) => (
-              <option key={cif.id} value={cif.id} className="bg-[#1a1f1e] text-white">{cif.cantidad} Cifras</option>
+              <option key={cif.id} value={cif.id} className="bg-[#1a1f1e] text-white">
+                {cif.cantidad} Cifras
+              </option>
             ))}
           </select>
         </div>
 
+        {/* SELECT 4: POR ESTADO */}
         <div className="relative w-full">
-          <LuFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
+          <LuFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-luck-gold" size={15} />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-2 pl-9 pr-8 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold"
           >
             <option value="Todos" className="bg-[#1a1f1e] text-white">Todos los estados</option>
             <option value="Abierto" className="bg-[#1a1f1e] text-white">Abierto</option>
@@ -242,14 +257,35 @@ const Sorteos = () => {
             <option value="Finalizado" className="bg-[#1a1f1e] text-white">Finalizado</option>
           </select>
         </div>
+
+        {/* NUEVO FILTRO 5: POR FECHA */}
+        <div className="relative w-full">
+          <LuCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-luck-gold" size={15} />
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-2 pl-9 pr-4 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs cursor-pointer uppercase font-bold text-center"
+          />
+          {dateFilter && (
+            <button
+              onClick={() => setDateFilter('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-zinc-500 hover:text-white font-black"
+            >
+              X
+            </button>
+          )}
+        </div>
       </motion.div>
 
+      {/* CONTADOR */}
       <div className="mb-4 text-right pr-4 hidden lg:block">
         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
           {filteredSorteos.length} Sorteos filtrados
         </span>
       </div>
 
+      {/* Contenedor de Tabla y Paginación */}
       <motion.div
         variants={containerVariants}
         className="bg-[#111615] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
@@ -391,6 +427,7 @@ const Sorteos = () => {
           </table>
         </div>
 
+        {/* --- PAGINACIÓN --- */}
         {totalPages > 1 && (
           <div className="p-6 border-t border-white/5 bg-white/[0.01] flex justify-between items-center">
             <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
@@ -420,7 +457,6 @@ const Sorteos = () => {
                 ))}
               </div>
 
-              {/* CORREGIDO: Se cambió (p) => p - 1 por (p) => p + 1 */}
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
