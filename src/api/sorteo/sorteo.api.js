@@ -21,6 +21,10 @@ const sorteoAPI = {
   listarCerrados: async () => {
     return instance.get(`/${model}/listar/cerrados`)
   },
+
+  eliminar: async (id) => {
+    return instance.delete(`/${model}/eliminar/${id}`)
+  }
 }
 
 export default sorteoAPI

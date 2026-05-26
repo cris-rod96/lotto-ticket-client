@@ -1,8 +1,10 @@
 import { cifraAPI } from '@/api/index.api'
 import CifraModal from '@/components/CifraModal'
+import CifraFilters from '@/components/filters/CifraFilters'
+import CifraHeader from '@/components/headers/CifraHeader'
 import Title from '@/components/Titlte'
+import useCifras from '@/hooks/useCifras'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useEffect, useMemo, useState } from 'react'
 import {
   LuChevronLeft,
   LuChevronRight,
@@ -12,6 +14,7 @@ import {
   LuPencil,
   LuPlus,
   LuTrash2,
+  LuRefreshCw
 } from 'react-icons/lu'
 import Swal from 'sweetalert2'
 
@@ -27,62 +30,26 @@ const rowVariants = {
 }
 
 const Cifras = () => {
-  const [showModal, setShowModal] = useState(false)
-  const [selectedCifra, setSelectedCifra] = useState(null)
-  const [cifras, setCifras] = useState([])
-  const [loading, setLoading] = useState(true)
+  const {
+    setSelectedCifra,
+    setShowModal,
+    showModal,
+    digitsFilter,
+    setDigitsFilter,
+    uniqueDigits,
+    statusFilter,
+    setStatusFilter,
+    filteredCifras,
+    currentData,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    handleEdit,
+    selectedCifra,
+    fetchData,
+    loading
 
-  const [digitsFilter, setDigitsFilter] = useState('Todos')
-  const [statusFilter, setStatusFilter] = useState('Todos')
-
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 5
-
-  const fetchData = async () => {
-    setLoading(true)
-    try {
-      const resp = await cifraAPI.listarTodas()
-      setCifras(resp.data?.cifras || [])
-    } catch (error) {
-      console.log(error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  const uniqueDigits = useMemo(() => {
-    const list = cifras.map((c) => c.cantidad).filter((val) => val !== undefined && val !== null)
-    return [...new Set(list)].sort((a, b) => a - b)
-  }, [cifras])
-
-  const filteredCifras = useMemo(() => {
-    return cifras.filter((c) => {
-      const matchesDigits = digitsFilter === 'Todos' || c.cantidad.toString() === digitsFilter
-      let matchesStatus = true
-      if (statusFilter === 'Activos') matchesStatus = c.activo === true
-      if (statusFilter === 'Inactivos') matchesStatus = c.activo === false
-      return matchesDigits && matchesStatus
-    })
-  }, [cifras, digitsFilter, statusFilter])
-
-  const totalPages = Math.ceil(filteredCifras.length / itemsPerPage)
-  const currentData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage
-    return filteredCifras.slice(start, start + itemsPerPage)
-  }, [filteredCifras, currentPage])
-
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [digitsFilter, statusFilter])
-
-  const handleEdit = (cifra) => {
-    setSelectedCifra(cifra)
-    setShowModal(true)
-  }
+  } = useCifras()
 
   const handleDelete = async (id) => {
     const result = await Swal.fire({
@@ -90,58 +57,61 @@ const Cifras = () => {
       text: 'No podrás revertir esta acción',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#EAB308',
-      background: '#111615',
-      color: '#fff',
+      confirmButtonColor: '#F00',
     })
 
     if (result.isConfirmed) {
       try {
-        setCifras(cifras.filter((c) => c.id !== id))
-        Swal.fire({ title: 'Eliminado', icon: 'success', background: '#111615', color: '#fff' })
+        const resp = await cifraAPI.eliminar(id)
+        Swal.fire({ title: 'Eliminado', icon: 'success', text: resp.data?.message || "Eliminación existosa" })
+        fetchData()
+
       } catch (error) {
-        Swal.fire({ title: 'Error', text: 'No se pudo eliminar', icon: 'error', background: '#111615', color: '#fff' })
+        const msg = error.response?.data?.message || 'No se pudo eliminar'
+        Swal.fire({ title: 'Error', text: msg, icon: 'error' })
+      }
+    }
+  }
+
+  const handleRecover = async (id) => {
+    const result = await Swal.fire({
+      title: '¿Deseas recuperar esta cifra?',
+      text: 'La cifra volverá a estar disponible en el sistema',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10B981', // Color verde
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Sí, recuperar'
+    })
+
+    if (result.isConfirmed) {
+      try {
+        // Llama a tu endpoint de recuperación en la API
+        const resp = await cifraAPI.recuperar(id)
+        Swal.fire({ title: 'Recuperado', icon: 'success', text: resp.data?.message || "Cifra restaurada con éxito" })
+        fetchData()
+      } catch (error) {
+        const msg = error.response?.data?.message || 'No se pudo recuperar la cifra'
+        Swal.fire({ title: 'Error', text: msg, icon: 'error' })
       }
     }
   }
 
   return (
     <motion.div initial="hidden" animate="visible" className="w-full pb-10">
-      <div className="flex justify-between items-center mb-10">
-        <Title titulo="Gestión de Cifras" descripcion="Configuración de límites y montos por cantidad de números" />
-        <motion.button
-          whileHover={{ scale: 1.02, backgroundColor: '#EAB308' }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => { setSelectedCifra(null); setShowModal(true) }}
-          className="bg-luck-gold text-black font-black py-3.5 px-6 rounded-2xl flex items-center gap-2 uppercase text-xs shadow-lg shadow-luck-gold/10 transition-colors tracking-wider"
-        >
-          <LuPlus size={18} strokeWidth={3} /> Nueva Cifra
-        </motion.button>
-      </div>
+      <CifraHeader
+        setSelectedCifra={setSelectedCifra}
+        setShowModal={setShowModal}
+      />
 
-      <motion.div className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 flex flex-wrap items-center gap-4">
-        <div className="relative w-full sm:w-56">
-          <LuHash className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={16} />
-          <select value={digitsFilter} onChange={(e) => setDigitsFilter(e.target.value)} className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-3 pl-11 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold">
-            <option value="Todos">Todas las cifras</option>
-            {uniqueDigits.map((digit) => <option key={digit} value={digit}>{digit} Cifras</option>)}
-          </select>
-        </div>
-
-        <div className="relative w-full sm:w-56">
-          <LuFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={16} />
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-3 pl-11 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold">
-            <option value="Todos">Todos los estados</option>
-            <option value="Activos">Activos</option>
-            <option value="Inactivos">Inactivos</option>
-          </select>
-        </div>
-
-        <div className="ml-auto px-2 hidden lg:block">
-          <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">{filteredCifras.length} Registros Filtrados</span>
-        </div>
-      </motion.div>
-
+      <CifraFilters
+        digitsFilter={digitsFilter}
+        setDigitsFilter={setDigitsFilter}
+        uniqueDigits={uniqueDigits}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        filteredCifras={filteredCifras}
+      />
       <motion.div variants={containerVariants} className="bg-[#111615] border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl flex flex-col">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -177,7 +147,13 @@ const Cifras = () => {
                       <td className="p-5 pr-8">
                         <div className="flex justify-end gap-2.5">
                           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleEdit(cifra)} className="p-2 bg-zinc-900/40 border border-white/5 rounded-lg text-zinc-500 hover:text-luck-gold transition-colors"><LuPencil size={15} /></motion.button>
-                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleDelete(cifra.id)} className="p-2 bg-zinc-900/40 border border-white/5 rounded-lg text-zinc-500 hover:text-red-500 transition-colors"><LuTrash2 size={15} /></motion.button>
+
+
+                          {cifra.activo ? (
+                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleDelete(cifra.id)} className="p-2 bg-zinc-900/40 border border-white/5 rounded-lg text-zinc-500 hover:text-red-500 transition-colors" title="Eliminar"><LuTrash2 size={15} /></motion.button>
+                          ) : (
+                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleRecover(cifra.id)} className="p-2 bg-zinc-900/40 border border-white/5 rounded-lg text-zinc-500 hover:text-emerald-500 transition-colors" title="Recuperar"><LuRefreshCw size={15} /></motion.button>
+                          )}
                         </div>
                       </td>
                     </motion.tr>

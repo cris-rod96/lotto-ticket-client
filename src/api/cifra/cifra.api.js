@@ -17,6 +17,11 @@ const cifraAPI = {
   eliminar: async (id) => {
     return instance.delete(`/${model}/eliminar/${id}`)
   },
+
+  recuperar: async (id) => {
+    return instance.patch(`/${model}/recuperar/${id}`)
+
+  }
 }
 
 export default cifraAPI

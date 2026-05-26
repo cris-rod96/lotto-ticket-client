@@ -70,6 +70,28 @@ const Sorteos = () => {
     setShowModal(true)
   }
 
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'No podrás revertir esta acción',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#F00',
+    })
+
+    if (result.isConfirmed) {
+      try {
+        const resp = await sorteoAPI.eliminar(id)
+        Swal.fire({ title: 'Eliminado', icon: 'success', text: resp.data?.message || "Eliminación existosa" })
+        fetchData()
+
+      } catch (error) {
+        const msg = error.response?.data?.message || 'No se pudo eliminar'
+        Swal.fire({ title: 'Error', text: msg, icon: 'error' })
+      }
+    }
+  }
+
   const filteredSorteos = sorteos.filter(
     (s) => s.numero.includes(searchTerm) || s.juego.toLowerCase().includes(searchTerm.toLowerCase())
   )
@@ -187,11 +209,10 @@ const Sorteos = () => {
                   </td>
                   <td className="p-7 text-center">
                     <span
-                      className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${
-                        sorteo.estado === 'Abierto'
-                          ? 'bg-green-500/5 text-green-500 border-green-500/20'
-                          : 'bg-red-500/5 text-red-500 border-red-500/20'
-                      }`}
+                      className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${sorteo.estado === 'Abierto'
+                        ? 'bg-green-500/5 text-green-500 border-green-500/20'
+                        : 'bg-red-500/5 text-red-500 border-red-500/20'
+                        }`}
                     >
                       {sorteo.estado}
                     </span>
@@ -210,6 +231,7 @@ const Sorteos = () => {
                         whileHover={{ scale: 1.1, backgroundColor: 'rgba(239,68,68,0.1)' }}
                         whileTap={{ scale: 0.9 }}
                         className="p-3 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-red-500 transition-colors"
+                        onClick={() => handleDelete(sorteo.id)}
                       >
                         <LuTrash2 size={18} />
                       </motion.button>
