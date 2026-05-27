@@ -76,8 +76,6 @@ const Tickets = () => {
         title: 'Error',
         text: 'No se pudo sincronizar tus ventas del día',
         icon: 'error',
-        background: '#ffffff',
-        color: '#111615',
         confirmButtonColor: '#ef4444',
         customClass: {
           popup: 'rounded-[2rem] border border-black/5',
@@ -101,8 +99,6 @@ const Tickets = () => {
       didOpen: () => {
         Swal.showLoading()
       },
-      background: '#ffffff',
-      color: '#111615',
       customClass: { popup: 'rounded-[2rem] border border-black/5' },
     })
 
@@ -116,8 +112,6 @@ const Tickets = () => {
           title: '¡PAGO EXITOSO!',
           text: response.data?.message || response.message || 'Se registró el cobro correctamente.',
           icon: 'success',
-          background: '#ffffff',
-          color: '#111615',
           confirmButtonColor: '#EAB308',
           customClass: { popup: 'rounded-[2rem] border border-black/5' },
         })
@@ -133,8 +127,6 @@ const Tickets = () => {
         title: 'ERROR EN PAGO',
         text: error.response?.data?.message || error.message,
         icon: 'error',
-        background: '#ffffff',
-        color: '#111615',
         confirmButtonColor: '#ef4444',
         customClass: { popup: 'rounded-[2rem] border border-black/5' },
       })
@@ -148,8 +140,6 @@ const Tickets = () => {
         title: 'PREPARANDO TICKET...',
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
-        background: '#ffffff',
-        color: '#111615',
         customClass: { popup: 'rounded-[2rem]' },
       })
 
@@ -177,8 +167,6 @@ const Tickets = () => {
       Swal.fire({
         title: 'Error de impresión',
         icon: 'error',
-        background: '#ffffff',
-        color: '#111615',
         confirmButtonColor: '#ef4444',
         customClass: { popup: 'rounded-[2rem] border border-black/5' },
       })
@@ -191,8 +179,6 @@ const Tickets = () => {
         title: 'GENERANDO COMPROBANTE...',
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
-        background: '#ffffff',
-        color: '#111615',
         customClass: { popup: 'rounded-[2rem]' },
       })
 
@@ -227,8 +213,6 @@ const Tickets = () => {
         title: 'Error de impresión',
         text: 'No se pudo generar el comprobante de pago',
         icon: 'error',
-        background: '#ffffff',
-        color: '#111615',
         confirmButtonColor: '#ef4444',
         customClass: { popup: 'rounded-[2rem]' },
       })

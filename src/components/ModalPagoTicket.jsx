@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
-import { LuCircleCheck, LuDollarSign, LuLoader, LuStore, LuX } from 'react-icons/lu'
+import {
+  LuCircleCheck,
+  LuDollarSign,
+  LuLoader,
+  LuStore,
+  LuTriangleAlert,
+  LuX,
+} from 'react-icons/lu'
 
 const ModalPagoTicket = ({
   isOpen,
@@ -14,24 +21,32 @@ const ModalPagoTicket = ({
   const [cajasDisponibles, setCajasDisponibles] = useState([])
   const [loading, setLoading] = useState(false)
 
-  // Al abrir el modal, pre-seleccionamos el PV donde se vendió el ticket
+  // 1. Al abrir el modal, pre-seleccionamos y fijamos estrictamente el PV del ticket
   useEffect(() => {
-    if (ticket) {
+    if (ticket?.PuntoVentaId) {
       setPuntoVentaId(ticket.PuntoVentaId)
+      setCajaId('') // Reseteamos la caja seleccionada por si cambia de ticket
     }
   }, [ticket])
 
-  // Aquí filtrarías las cajas según el Punto de Venta seleccionado
+  // 2. Filtrar automáticamente las cajas abiertas de ese Punto de Venta específico (UUIDv4 Strings)
   useEffect(() => {
-    puntosVenta
-    if (puntoVentaId) {
-      // Supongamos que tus puntos de venta traen sus cajas o las buscas de tu estado global
+    if (puntoVentaId && puntosVenta.length > 0) {
+      // Comparación directa de strings para UUIDv4
       const pv = puntosVenta.find((p) => p.id === puntoVentaId)
-      setCajasDisponibles(pv?.Cajas?.filter((c) => c.estado === 'Abierta') || [])
+      const cajasAbiertas = pv?.Cajas?.filter((c) => c.estado === 'Abierta') || []
+
+      setCajasDisponibles(cajasAbiertas)
+
+      // Si solo hay una caja abierta, la auto-seleccionamos para ahorrar clicks
+      if (cajasAbiertas.length === 1) {
+        setCajaId(cajasAbiertas[0].id)
+      }
+    } else {
+      setCajasDisponibles([])
     }
   }, [puntoVentaId, puntosVenta])
 
-  // Función añadida para ejecutar el pago e imprimir de inmediato
   const handleExecutePayment = async () => {
     if (!cajaId || !puntoVentaId || !ticket?.id) return
 
@@ -82,18 +97,17 @@ const ModalPagoTicket = ({
             </span>
           </div>
 
-          {/* Selección de Punto de Venta */}
+          {/* Selección de Punto de Venta (DESHABILITADO / FIJO) */}
           <div>
-            <label className="text-[10px] font-black text-zinc-500 uppercase ml-2 mb-2 block">
-              Punto de Venta Origen
+            <label className="text-[10px] font-black text-zinc-500 uppercase ml-2 mb-2 block tracking-wider">
+              Punto de Venta Origen (Automático)
             </label>
-            <div className="relative">
+            <div className="relative opacity-60">
               <LuStore className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" />
               <select
-                disabled={loading}
+                disabled={true}
                 value={puntoVentaId}
-                onChange={(e) => setPuntoVentaId(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white text-sm font-bold focus:outline-none focus:border-luck-gold/50 appearance-none"
+                className="w-full bg-black/60 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-zinc-400 text-sm font-bold focus:outline-none appearance-none cursor-not-allowed uppercase"
               >
                 {puntosVenta.map((pv) => (
                   <option key={pv.id} value={pv.id}>
@@ -104,33 +118,55 @@ const ModalPagoTicket = ({
             </div>
           </div>
 
-          {/* Selección de Caja */}
+          {/* Selección de Caja Abierta */}
           <div>
-            <label className="text-[10px] font-black text-zinc-500 uppercase ml-2 mb-2 block">
+            <label className="text-[10px] font-black text-zinc-500 uppercase ml-2 mb-2 block tracking-wider">
               Seleccionar Caja Abierta
             </label>
             <div className="relative">
               <LuDollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" />
               <select
-                disabled={loading}
+                disabled={loading || cajasDisponibles.length === 0}
                 value={cajaId}
                 onChange={(e) => setCajaId(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white text-sm font-bold focus:outline-none focus:border-luck-gold/50 appearance-none"
+                className={`w-full bg-black/40 border rounded-xl py-3 pl-12 pr-4 text-white text-sm font-bold focus:outline-none focus:border-luck-gold/50 appearance-none cursor-pointer ${
+                  cajasDisponibles.length === 0
+                    ? 'border-red-500/30 text-red-400'
+                    : 'border-white/10'
+                }`}
               >
-                <option value="">Seleccione una caja...</option>
-                {cajasDisponibles.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nombre} (Saldo: ${c.saldoActual})
-                  </option>
-                ))}
+                {cajasDisponibles.length === 0 ? (
+                  <option value="">No hay cajas disponibles</option>
+                ) : (
+                  <>
+                    <option value="">Seleccione una caja...</option>
+                    {cajasDisponibles.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nombre} (Saldo: ${c.saldoActual})
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
             </div>
+
+            {/* ALERTA DE CAJAS NO DISPONIBLES */}
+            {cajasDisponibles.length === 0 && (
+              <div className="mt-2.5 flex items-start gap-2 bg-red-500/5 border border-red-500/10 rounded-xl p-3">
+                <LuTriangleAlert className="text-red-500 shrink-0 mt-0.5" size={14} />
+                <p className="text-[10px] text-red-400 font-bold uppercase tracking-wide leading-relaxed">
+                  Atención: Esta sucursal no tiene ninguna caja abierta en este turno. Abre una caja
+                  en este punto antes de liquidar el premio.
+                </p>
+              </div>
+            )}
           </div>
 
+          {/* Botón de Acción Principal */}
           <button
-            disabled={!cajaId || loading}
+            disabled={!cajaId || loading || cajasDisponibles.length === 0}
             onClick={handleExecutePayment}
-            className="w-full bg-luck-gold disabled:opacity-30 text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 uppercase text-xs italic transition-all hover:scale-[1.02]"
+            className="w-full bg-luck-gold disabled:opacity-20 text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 uppercase text-xs italic transition-all hover:enabled:scale-[1.02]"
           >
             {loading ? (
               <LuLoader className="animate-spin" size={18} />

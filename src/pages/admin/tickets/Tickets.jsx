@@ -80,8 +80,6 @@ const Tickets = () => {
         title: 'Error',
         text: 'No se pudo sincronizar la información de tickets',
         icon: 'error',
-        background: '#111615',
-        color: '#fff',
       })
     } finally {
       setLoading(false)
@@ -99,9 +97,7 @@ const Tickets = () => {
       didOpen: () => {
         Swal.showLoading()
       },
-      background: '#111615',
-      color: '#ffffff',
-      customClass: { popup: 'rounded-[2rem] border border-white/10' },
+      customClass: { popup: 'rounded-[2rem]' },
     })
 
     try {
@@ -112,10 +108,8 @@ const Tickets = () => {
           title: '¡PAGO EXITOSO!',
           text: response.data?.message || response.message || 'Cobro procesado con éxito.',
           icon: 'success',
-          background: '#111615',
-          color: '#ffffff',
           confirmButtonColor: '#EAB308',
-          customClass: { popup: 'rounded-[2rem] border border-white/10' },
+          customClass: { popup: 'rounded-[2rem]' },
         })
         setCaja(response.data.caja)
         fetchData()
@@ -128,10 +122,8 @@ const Tickets = () => {
         title: 'ERROR EN PAGO',
         text: error.response?.data?.message || error.message,
         icon: 'error',
-        background: '#111615',
-        color: '#ffffff',
         confirmButtonColor: '#ef4444',
-        customClass: { popup: 'rounded-[2rem] border border-white/10' },
+        customClass: { popup: 'rounded-[2rem]' },
       })
       return null
     }
@@ -143,8 +135,6 @@ const Tickets = () => {
         title: 'PREPARANDO TICKET...',
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
-        background: '#111615',
-        color: '#fff',
         customClass: { popup: 'rounded-[2rem]' },
       })
 
@@ -172,8 +162,6 @@ const Tickets = () => {
       Swal.fire({
         title: 'Error de impresión',
         icon: 'error',
-        background: '#111615',
-        color: '#fff',
       })
     }
   }
@@ -184,8 +172,6 @@ const Tickets = () => {
         title: 'GENERANDO COMPROBANTE...',
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
-        background: '#111615',
-        color: '#ffffff',
         customClass: { popup: 'rounded-[2rem]' },
       })
 
@@ -219,8 +205,6 @@ const Tickets = () => {
         title: 'Error de impresión',
         text: 'No se pudo generar el comprobante de pago',
         icon: 'error',
-        background: '#111615',
-        color: '#ffffff',
         confirmButtonColor: '#ef4444',
         customClass: { popup: 'rounded-[2rem]' },
       })
@@ -235,7 +219,7 @@ const Tickets = () => {
       showCancelButton: true,
       confirmButtonColor: '#d33',
       cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, anular ticket'
+      confirmButtonText: 'Sí, anular ticket',
     })
 
     if (result.isConfirmed) {
@@ -246,7 +230,6 @@ const Tickets = () => {
       })
 
       try {
-        // Llamada a tu API (ajusta el path según tu configuración en index.api)
         const response = await ticketAPI.anularTicket(ticket.id, user.id)
 
         if (response.status === 200) {
@@ -254,7 +237,7 @@ const Tickets = () => {
             title: '¡Anulado!',
             text: 'El ticket ha sido anulado correctamente.',
             icon: 'success',
-            confirmButtonColor: '#EAB308'
+            confirmButtonColor: '#EAB308',
           })
           fetchData()
         }
@@ -263,7 +246,7 @@ const Tickets = () => {
           title: 'Error',
           text: error.response?.data?.message || 'No se pudo anular el ticket',
           icon: 'error',
-          confirmButtonColor: '#ef4444'
+          confirmButtonColor: '#ef4444',
         })
       }
     }
@@ -272,7 +255,7 @@ const Tickets = () => {
   // OBTENER FECHAS ÚNICAS DISPONIBLES EN LOS TICKETS PARA EL SELECT
   const fechasDisponibles = useMemo(() => {
     const fechas = tickets.map((t) => t.Sorteo?.fechaSorteo).filter((fecha) => !!fecha)
-    return [...new Set(fechas)].sort().reverse() // Ordenadas de más reciente a más antigua
+    return [...new Set(fechas)].sort().reverse()
   }, [tickets])
 
   // LÓGICA DE FILTRADO MULTI-CRITERIO
@@ -338,7 +321,7 @@ const Tickets = () => {
         </motion.button>
       </div>
 
-      {/* BLOQUE DE FILTROS AVANZADOS DE AUDITORÍA (CORREGIDO Y ESTILIZADO) */}
+      {/* BLOQUE DE FILTROS AVANZADOS DE AUDITORÍA */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -365,7 +348,7 @@ const Tickets = () => {
           </select>
         </div>
 
-        {/* CORREGIDO: Selector de Fecha con Estilo Coherente */}
+        {/* Selector de Fecha con Estilo Coherente */}
         <div className="flex flex-col gap-2">
           <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider flex items-center gap-1">
             <LuCalendar size={10} /> Fecha del Sorteo
@@ -414,7 +397,7 @@ const Tickets = () => {
           </select>
         </div>
 
-        {/* CORREGIDO: Contador de Coincidencias Alineado de Forma Estética */}
+        {/* Contador de Coincidencias */}
         <div className="flex flex-col gap-2">
           <span className="text-[9px] font-black uppercase text-transparent tracking-wider hidden md:block select-none">
             Espaciador
@@ -503,12 +486,13 @@ const Tickets = () => {
 
                       <td className="p-7">
                         <span
-                          className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${ticket.resultado === 'Ganador'
-                            ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                            : ticket.resultado === 'No Ganador'
-                              ? 'bg-zinc-900 text-zinc-600 border-white/5'
-                              : 'bg-blue-500/5 text-blue-400 border-blue-500/10'
-                            }`}
+                          className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                            ticket.resultado === 'Ganador'
+                              ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                              : ticket.resultado === 'No Ganador'
+                                ? 'bg-zinc-900 text-zinc-600 border-white/5'
+                                : 'bg-blue-500/5 text-blue-400 border-blue-500/10'
+                          }`}
                         >
                           {ticket.resultado}
                         </span>
@@ -526,12 +510,13 @@ const Tickets = () => {
 
                       <td className="p-7">
                         <span
-                          className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${ticket.estado === 'Pagado'
-                            ? 'bg-zinc-900 text-emerald-500 border-emerald-500/30'
-                            : ticket.estado === 'Anulado'
-                              ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                              : 'bg-zinc-950 text-zinc-600 border-white/5'
-                            }`}
+                          className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${
+                            ticket.estado === 'Pagado'
+                              ? 'bg-zinc-900 text-emerald-500 border-emerald-500/30'
+                              : ticket.estado === 'Anulado'
+                                ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                                : 'bg-zinc-950 text-zinc-600 border-white/5'
+                          }`}
                         >
                           {ticket.estado}
                         </span>
@@ -539,22 +524,23 @@ const Tickets = () => {
 
                       <td className="p-7 pr-10">
                         <div className="flex justify-end gap-2">
-                          {ticket.resultado === 'Ganador' && ticket.estado === 'Pendiente' && (
-                            <motion.button
-                              whileHover={{
-                                scale: 1.05,
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                              }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => {
-                                setTicketToPay(ticket)
-                                setIsPayModalOpen(true)
-                              }}
-                              className="flex items-center gap-2 px-4 py-2 border border-emerald-500/50 text-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                            >
-                              <LuCheck size={14} /> PAGAR
-                            </motion.button>
-                          )}
+                          {(ticket.resultado === 'Ganador' && ticket.estado === 'Pending') ||
+                            (ticket.estado === 'Pendiente' && (
+                              <motion.button
+                                whileHover={{
+                                  scale: 1.05,
+                                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => {
+                                  setTicketToPay(ticket)
+                                  setIsPayModalOpen(true)
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 border border-emerald-500/50 text-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                              >
+                                <LuCheck size={14} /> PAGAR
+                              </motion.button>
+                            ))}
 
                           {ticket.estado === 'Pagado' && (
                             <button
@@ -574,7 +560,10 @@ const Tickets = () => {
                             <LuTicket size={16} />
                           </button>
 
-                          <button className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-600 hover:text-red-500 transition-colors" onClick={() => handleAnularTicket(ticket)}>
+                          <button
+                            className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-600 hover:text-red-500 transition-colors"
+                            onClick={() => handleAnularTicket(ticket)}
+                          >
                             <LuTrash2 size={16} />
                           </button>
                         </div>
@@ -617,10 +606,11 @@ const Tickets = () => {
                   <button
                     key={i}
                     onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-[9px] font-black transition-all ${currentPage === i + 1
-                      ? 'bg-luck-gold text-black'
-                      : 'text-zinc-600 hover:bg-white/5'
-                      }`}
+                    className={`w-8 h-8 rounded-lg text-[9px] font-black transition-all ${
+                      currentPage === i + 1
+                        ? 'bg-luck-gold text-black'
+                        : 'text-zinc-600 hover:bg-white/5'
+                    }`}
                   >
                     {i + 1}
                   </button>
@@ -628,7 +618,7 @@ const Tickets = () => {
               </div>
               <button
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
+                onClick={() => setCurrentPage((p) => p - 1)}
                 className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all"
               >
                 <LuChevronRight size={18} />
