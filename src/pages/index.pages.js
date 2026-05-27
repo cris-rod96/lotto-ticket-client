@@ -14,6 +14,7 @@ import {
   Usuarios,
 } from './admin/index.admin.js'
 import Login from './login/Login.jsx'
+import NotFound from './notFound/NotFound.jsx'
 import {
   CajasVendedor,
   DashboardVendedor,
@@ -30,6 +31,7 @@ export {
   DashboardAdmin,
   DashboardVendedor,
   Login,
+  NotFound,
   PuntosVentas,
   Reportes,
   Resultados,

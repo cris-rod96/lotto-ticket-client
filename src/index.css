@@ -21,15 +21,51 @@
   --color-luck-gold-muted: rgba(251, 191, 36, 0.1);
 }
 
-@layer utilities {
-  /* Ocultar scrollbar para Chrome, Safari y Opera */
-  .scrollbar-hide::-webkit-scrollbar {
+/* ==========================================================================
+   ESTILOS GENERALES DEL VIEWPORT (SCROLLBAR DE LA PANTALLA PRINCIPAL)
+   ========================================================================== */
+
+/* Firefox: Se limita solo a la raíz de la página */
+html,
+body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(251, 191, 36, 0.2) #021a14;
+}
+
+/* Chrome, Safari, Edge, Brave: Afecta solo a la barra del navegador principal */
+body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body::-webkit-scrollbar-track {
+  background: #0b0f0e; /* Se fusiona con el fondo oscuro de tu Torre de Control */
+}
+
+body::-webkit-scrollbar-thumb {
+  background: rgba(251, 191, 36, 0.15); /* Tu --color-luck-gold con baja opacidad */
+  border-radius: 9999px;
+  border: 2px solid #0b0f0e; /* Espaciador elegante */
+  transition: background-color 0.2s ease;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  background: rgba(251, 191, 36, 0.4); /* Más brillante al interactuar */
+}
+
+body::-webkit-scrollbar-thumb:active {
+  background: #fbbf24; /* Tu dorado sólido al arrastrarla */
+}
+
+/* ==========================================================================
+   UTILIDADES PERSONALIZADAS (Sintaxis Tailwind v4)
+   ========================================================================== */
+@utility scrollbar-hide {
+  /* Chrome, Safari y Opera */
+  &::-webkit-scrollbar {
     display: none;
   }
-
-  /* Ocultar scrollbar para IE, Edge y Firefox */
-  .scrollbar-hide {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
-  }
+  /* IE, Edge y Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

@@ -118,12 +118,16 @@ const DashboardAdmin = () => {
           {ADMIN_DASHBOARD_ITEMS.map((item, index) => {
             const data = stats[item.label]
 
-            // Lógica visual: Si hay deuda de premios, resaltamos Reportes Globales
             const isCritical =
               item.label === 'Reportes Globales' && data?.p !== '$0.00' && data?.p !== '--'
 
             return (
-              <motion.div key={index} variants={itemVariants} whileHover={{ y: -8 }}>
+              <motion.div
+                key={index}
+                variants={itemVariants}
+                whileHover={{ y: -8 }}
+                className="mt-10"
+              >
                 <NavLink
                   to={item.path}
                   className={`group relative bg-[#111615] border p-8 rounded-[2rem] min-h-[250px] flex flex-col justify-between transition-all duration-500 shadow-2xl overflow-hidden ${
