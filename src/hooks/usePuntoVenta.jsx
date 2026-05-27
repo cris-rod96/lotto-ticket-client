@@ -29,6 +29,7 @@ const usePuntoVenta = () => {
     setLoading(true)
     try {
       const resp = await puntosVentaAPI.listarTodos()
+      console.log(resp.data?.puntosVentas)
       setPuntos(resp.data?.puntosVentas || [])
     } catch (error) {
       const msg = error.response?.data?.message || 'No se pudo cargar la información'

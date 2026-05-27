@@ -23,6 +23,7 @@ export const useAuthStore = create(
         set({
           token: null,
           user: null,
+          esAdministrador: false,
         }),
     }),
     {

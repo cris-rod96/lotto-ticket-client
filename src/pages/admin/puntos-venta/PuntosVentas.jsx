@@ -1,10 +1,12 @@
 import DetallePuntoModal from '@/components/DetallePuntoModal'
 import PuntoVentaModal from '@/components/PuntoVentaModal'
+import SuertesDetailModal from '@/components/SuertesDetailModal'
 import PuntoVentaFilters from '@/components/filters/PuntoVentaFilters'
 import PuntoVentaHeader from '@/components/headers/PuntoVentaHeader'
 import PuntoVentaTable from '@/components/tables/PuntoVentaTable'
 import usePuntoVenta from '@/hooks/usePuntoVenta'
 import { motion } from 'framer-motion'
+import { useState } from 'react' // Estados propios locales
 
 // Variantes de animación consistentes
 const containerVariants = {
@@ -33,7 +35,7 @@ const PuntosVenta = () => {
     setCurrentPage,
     totalPages,
     loading,
-    openDetailView,
+    openDetailView, // Se mantiene intacto para usuarios y tickets
     calcularRecaudacion,
     handleEdit,
     handleDeletePunto,
@@ -43,6 +45,17 @@ const PuntosVenta = () => {
     viewModal,
     setViewModal,
   } = usePuntoVenta()
+
+  // ==========================================================================
+  // ESTADOS PROPIOS EXCLUSIVOS PARA EL MODAL DE SUERTES
+  // ==========================================================================
+  const [isSuertesOpen, setIsSuertesOpen] = useState(false)
+  const [puntoSeleccionadoSuertes, setPuntoSeleccionadoSuertes] = useState(null)
+
+  const handleOpenSuertes = (punto) => {
+    setPuntoSeleccionadoSuertes(punto)
+    setIsSuertesOpen(true)
+  }
 
   return (
     <motion.div initial="hidden" animate="visible" className="w-full pb-10">
@@ -56,6 +69,8 @@ const PuntosVenta = () => {
         setStatusFilter={setStatusFilter}
       />
 
+      {/* Volvemos a dejar openDetailView como estaba originalmente.
+          Añadimos onVerSuertes como una prop nueva y limpia de forma aislada */}
       <PuntoVentaTable
         containerVariants={containerVariants}
         rowVariants={rowVariants}
@@ -65,6 +80,7 @@ const PuntosVenta = () => {
         totalPages={totalPages}
         loading={loading}
         openDetailView={openDetailView}
+        onVerSuertes={handleOpenSuertes} // <-- ¡AQUÍ! Prop limpia y dedicada
         calcularRecaudacion={calcularRecaudacion}
         handleEdit={handleEdit}
         handleDeletePunto={handleDeletePunto}
@@ -77,12 +93,23 @@ const PuntosVenta = () => {
         initialData={selectedPunto}
         fetchData={fetchData}
       />
+
       <DetallePuntoModal
         isOpen={viewModal.open}
         onClose={() => setViewModal({ ...viewModal, open: false })}
         title={viewModal.title}
         data={viewModal.data}
         type={viewModal.type}
+      />
+
+      {/* Tu modal independiente controlado por tus estados locales propios */}
+      <SuertesDetailModal
+        isOpen={isSuertesOpen}
+        onClose={() => {
+          setIsSuertesOpen(false)
+          setPuntoSeleccionadoSuertes(null)
+        }}
+        puntoVenta={puntoSeleccionadoSuertes}
       />
     </motion.div>
   )
