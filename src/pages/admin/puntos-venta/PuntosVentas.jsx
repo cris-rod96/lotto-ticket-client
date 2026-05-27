@@ -1,11 +1,10 @@
-import { motion } from 'framer-motion'
-
 import DetallePuntoModal from '@/components/DetallePuntoModal'
 import PuntoVentaModal from '@/components/PuntoVentaModal'
 import PuntoVentaFilters from '@/components/filters/PuntoVentaFilters'
 import PuntoVentaHeader from '@/components/headers/PuntoVentaHeader'
 import PuntoVentaTable from '@/components/tables/PuntoVentaTable'
 import usePuntoVenta from '@/hooks/usePuntoVenta'
+import { motion } from 'framer-motion'
 
 // Variantes de animación consistentes
 const containerVariants = {
