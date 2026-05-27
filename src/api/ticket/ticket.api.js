@@ -16,7 +16,7 @@ const ticketAPI = {
   },
 
   anularTicket: async (id, usuarioId) => {
-    console.log(usuarioId)
+    usuarioId
     return instance.patch(`/${model}/anular/${id}`, { usuarioId })
   },
 

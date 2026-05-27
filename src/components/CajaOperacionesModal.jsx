@@ -16,20 +16,27 @@ const CajaOperacionesModal = ({ type, onClose, puntoVentaId, cajaActiva }) => {
     usuarioId: esAdministrador ? '' : user?.id, // Auto-asigna si es vendedor
   })
 
-  // Cargar lista de usuarios solo para Apertura realizada por Admin
+  // Cargar lista de usuarios filtrada para Apertura realizada por Admin
   useEffect(() => {
     if (type === 'abrir' && esAdministrador) {
       const cargarUsuarios = async () => {
         try {
           const { data } = await usuarioAPI.listarTodos()
-          setUsuarios(data.usuarios || [])
+          const listaUsuarios = data.usuarios || []
+
+          // FILTRADO: Solo administradores (PuntoVentaId null) o trabajadores de esta sucursal
+          const usuariosFiltrados = listaUsuarios.filter((u) => {
+            return u.PuntoVentaId === null || u.PuntoVentaId === puntoVentaId
+          })
+
+          setUsuarios(usuariosFiltrados)
         } catch (error) {
           console.error('Error cargando usuarios:', error)
         }
       }
       cargarUsuarios()
     }
-  }, [type, esAdministrador])
+  }, [type, esAdministrador, puntoVentaId])
 
   const config = {
     abrir: {
@@ -69,7 +76,7 @@ const CajaOperacionesModal = ({ type, onClose, puntoVentaId, cajaActiva }) => {
       labelMonto: 'Monto a Inyectar',
       action: async (data) => {
         if (!cajaActiva?.id) throw new Error('No hay una caja abierta para inyectar capital')
-        return await cajaAPI.inyectarDinero({
+        return await cajaAPI.registrarInyeccion({
           cajaId: cajaActiva.id,
           montoInyeccion: data.monto,
           observaciones: data.observaciones,
@@ -153,7 +160,7 @@ const CajaOperacionesModal = ({ type, onClose, puntoVentaId, cajaActiva }) => {
                 <option value="">Seleccione un cajero...</option>
                 {usuarios.map((u) => (
                   <option key={u.id} value={u.id}>
-                    {u.nombresCompletos}
+                    {u.nombresCompletos} {u.PuntoVentaId === null ? '(ADMIN)' : ''}
                   </option>
                 ))}
               </select>

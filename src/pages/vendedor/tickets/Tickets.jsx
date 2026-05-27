@@ -40,13 +40,15 @@ const Tickets = () => {
   const [showModal, setShowModal] = useState(false)
   const [isPayModalOpen, setIsPayModalOpen] = useState(false)
   const [ticketToPay, setTicketToPay] = useState(null)
+
+  // FILTROS DEL VENDEDOR
   const [searchTerm, setSearchTerm] = useState('')
+  const [filterFecha, setFilterFecha] = useState('Todos')
   const [resultFilter, setResultFilter] = useState('Todos')
 
   // Datos fijos del vendedor autenticado
   const { user } = useAuthStore()
   const caja = useCajaStore((state) => state.caja)
-  console.log(caja)
   const setCaja = useCajaStore((state) => state.setCaja)
 
   const [sorteos, setSorteos] = useState([])
@@ -123,7 +125,6 @@ const Tickets = () => {
         setCaja(response.data.caja)
         fetchData()
 
-        // RETORNO CLAVE: Retornamos la respuesta con el ticket armado para el modal
         return response.data
       }
       return null
@@ -141,13 +142,8 @@ const Tickets = () => {
     }
   }
 
-  /**
-   * NUEVA LÓGICA DE IMPRESIÓN AUTOMÁTICA (IFRAME)
-   * Se añade para evitar la descarga física del archivo.
-   */
   const handlePrintTicket = async (ticket) => {
     try {
-      // Feedback visual
       Swal.fire({
         title: 'PREPARANDO TICKET...',
         allowOutsideClick: false,
@@ -161,7 +157,6 @@ const Tickets = () => {
       const blob = await pdf(doc).toBlob()
       const url = URL.createObjectURL(blob)
 
-      // Crear iframe oculto
       const iframe = document.createElement('iframe')
       iframe.style.display = 'none'
       iframe.src = url
@@ -171,7 +166,6 @@ const Tickets = () => {
         iframe.contentWindow.focus()
         iframe.contentWindow.print()
 
-        // Limpieza
         setTimeout(() => {
           document.body.removeChild(iframe)
           URL.revokeObjectURL(url)
@@ -191,9 +185,6 @@ const Tickets = () => {
     }
   }
 
-  /**
-   * NUEVA LÓGICA DE IMPRESIÓN COMPROBANTE (IFRAME)
-   */
   const handlePrintComprobante = async (ticket) => {
     try {
       Swal.fire({
@@ -205,8 +196,7 @@ const Tickets = () => {
         customClass: { popup: 'rounded-[2rem]' },
       })
 
-      // Generamos el documento dinámico usando la data fresca que retornó el controlador
-      const { pdf } = await import('@react-pdf/renderer') // Import dinámico por si acaso, o lo dejas global
+      const { pdf } = await import('@react-pdf/renderer')
       const doc = <ComprobantePagoTemplate ticket={ticket} />
       const blob = await pdf(doc).toBlob()
       const url = URL.createObjectURL(blob)
@@ -245,13 +235,25 @@ const Tickets = () => {
     }
   }
 
+  // OBTENER FECHAS ÚNICAS DISPONIBLES EN LOS TICKETS ASIGNADOS AL VENDEDOR
+  const fechasDisponibles = useMemo(() => {
+    const fechas = tickets.map((t) => t.Sorteo?.fechaSorteo).filter((fecha) => !!fecha)
+    return [...new Set(fechas)].sort().reverse()
+  }, [tickets])
+
+  // LÓGICA DE FILTRADO MULTI-CRITERIO OPTIMIZADA
   const filtered = useMemo(() => {
     return tickets.filter((t) => {
+      // 1. Coincidencia por texto
       const matchesSearch =
         t.codigo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.Sorteo?.Catalogo?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.Cliente?.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
 
+      // 2. Coincidencia por Fecha del Sorteo
+      const matchesFecha = filterFecha === 'Todos' || t.Sorteo?.fechaSorteo === filterFecha
+
+      // 3. Coincidencia por Estado de liquidación
       let matchesResult = false
       if (resultFilter === 'Todos') {
         matchesResult = true
@@ -263,9 +265,9 @@ const Tickets = () => {
         matchesResult = t.resultado === resultFilter
       }
 
-      return matchesSearch && matchesResult
+      return matchesSearch && matchesFecha && matchesResult
     })
-  }, [tickets, searchTerm, resultFilter])
+  }, [tickets, searchTerm, filterFecha, resultFilter])
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage)
 
@@ -276,7 +278,14 @@ const Tickets = () => {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, resultFilter])
+  }, [searchTerm, filterFecha, resultFilter])
+
+  // FORMATO VISUAL DE FECHA (DD/MM/YYYY)
+  const formatVisualFecha = (dateString) => {
+    if (!dateString) return ''
+    const [year, month, day] = dateString.split('-')
+    return `${day}/${month}/${year}`
+  }
 
   return (
     <motion.div initial="hidden" animate="visible" className="w-full pb-10">
@@ -295,12 +304,14 @@ const Tickets = () => {
         </motion.button>
       </div>
 
+      {/* BLOQUE DE FILTROS DEL VENDEDOR INTEGRADO Y ADAPTADO */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 flex flex-col md:flex-row justify-between items-center gap-4"
+        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 grid grid-cols-1 md:grid-cols-4 gap-4 items-center"
       >
-        <div className="relative w-full md:w-1/2">
+        {/* Input Buscador */}
+        <div className="relative w-full md:col-span-2">
           <LuSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
           <input
             type="text"
@@ -311,12 +322,30 @@ const Tickets = () => {
           />
         </div>
 
-        {/* Grupo de filtros y contador a la derecha */}
-        <div className="flex items-center gap-4 w-full md:w-auto justify-end">
+        {/* Selector de Fecha del Sorteo */}
+        <div className="w-full">
+          <select
+            value={filterFecha}
+            onChange={(e) => setFilterFecha(e.target.value)}
+            className="w-full bg-black/40 border border-white/5 text-zinc-300 rounded-2xl py-4 px-4 text-xs font-bold focus:outline-none focus:border-luck-gold/30 transition-all cursor-pointer uppercase tracking-wider"
+          >
+            <option value="Todos" className="bg-[#111615] text-white">
+              Todas las Fechas
+            </option>
+            {fechasDisponibles.map((fecha) => (
+              <option key={fecha} value={fecha} className="bg-[#111615] text-white">
+                {formatVisualFecha(fecha)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Selector de Estado / Resultados */}
+        <div className="w-full flex items-center gap-4">
           <select
             value={resultFilter}
             onChange={(e) => setResultFilter(e.target.value)}
-            className="bg-black/40 border border-white/5 text-zinc-300 rounded-2xl py-4 px-5 text-xs font-bold focus:outline-none focus:border-luck-gold/30 transition-all cursor-pointer uppercase tracking-wider"
+            className="w-full bg-black/40 border border-white/5 text-zinc-300 rounded-2xl py-4 px-5 text-xs font-bold focus:outline-none focus:border-luck-gold/30 transition-all cursor-pointer uppercase tracking-wider"
           >
             <option value="Todos" className="bg-[#111615] text-white">
               Todos los resultados
@@ -335,14 +364,16 @@ const Tickets = () => {
             </option>
           </select>
 
-          <div className="px-6 py-4 bg-white/[0.02] border border-white/5 rounded-2xl whitespace-nowrap">
+          {/* Contador de Tickets de la sucursal */}
+          <div className="px-6 py-4 bg-white/[0.02] border border-white/5 rounded-2xl whitespace-nowrap min-w-[110px] text-center">
             <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">
-              {filtered.length} Tickets
+              {filtered.length} Und.
             </span>
           </div>
         </div>
       </motion.div>
 
+      {/* Tabla con Estilo Unificado */}
       <motion.div
         variants={containerVariants}
         className="bg-[#111615] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
@@ -396,7 +427,8 @@ const Tickets = () => {
                             {ticket?.Sorteo?.jornada}
                           </span>
                           <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-mono">
-                            <LuCalendar size={12} /> {ticket?.Sorteo?.fechaSorteo}
+                            <LuCalendar size={12} />{' '}
+                            {formatVisualFecha(ticket?.Sorteo?.fechaSorteo)}
                           </div>
                         </div>
                       </td>
@@ -503,6 +535,7 @@ const Tickets = () => {
           </table>
         </div>
 
+        {/* Paginación */}
         {totalPages > 1 && (
           <div className="p-8 border-t border-white/5 bg-black/[0.1] flex justify-between items-center">
             <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
@@ -533,7 +566,7 @@ const Tickets = () => {
               </div>
               <button
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
+                onClick={() => setCurrentPage((p) => p - 1)}
                 className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all"
               >
                 <LuChevronRight size={18} />
@@ -542,6 +575,7 @@ const Tickets = () => {
           </div>
         )}
       </motion.div>
+
       {showModal && (
         <TicketModalVendedor
           isOpen={showModal}
@@ -561,7 +595,7 @@ const Tickets = () => {
           usuario={user}
           onConfirm={handleConfirmarPagoReal}
           caja={caja}
-          handlePrintComprobante={handlePrintComprobante} // <--- Prop agregada aquí
+          handlePrintComprobante={handlePrintComprobante}
         />
       )}
     </motion.div>

@@ -22,7 +22,7 @@ const useRoles = () => {
     setLoading(true)
     try {
       const resp = await rolAPI.listarTodos()
-      console.log(resp.data?.roles)
+
       setRoles(resp.data?.roles || [])
     } catch (error) {
       const msg = error.response?.data?.message || 'No se pudo cargar la información'

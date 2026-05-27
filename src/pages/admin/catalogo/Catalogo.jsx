@@ -33,7 +33,7 @@ const Catalogo = () => {
       const resp = await catalogoAPI.listarTodos()
       setCatalogos(resp.data?.catalogos || [])
     } catch (error) {
-      console.log(error)
+      error
     }
   }
 
@@ -105,8 +105,6 @@ const Catalogo = () => {
 
   return (
     <motion.div initial="hidden" animate="visible" className="w-full pb-10">
-
-
       <CatalogoTableHeader
         filtered={filtered}
         handleOpenModal={handleOpenModal}
@@ -114,7 +112,6 @@ const Catalogo = () => {
         setCountryFilter={setCountryFilter}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
-
       />
 
       <CatalogoTableBody
@@ -128,7 +125,12 @@ const Catalogo = () => {
         totalPages={totalPages}
       />
 
-      <CatalogoModal isOpen={showModal} onClose={(refresh) => handleCloseModal(refresh)} initialData={selectedItem} fetchData={fetchData} />
+      <CatalogoModal
+        isOpen={showModal}
+        onClose={(refresh) => handleCloseModal(refresh)}
+        initialData={selectedItem}
+        fetchData={fetchData}
+      />
     </motion.div>
   )
 }

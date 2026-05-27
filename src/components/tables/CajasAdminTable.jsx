@@ -10,10 +10,17 @@ import {
   LuSearch,
   LuUser,
   LuWallet,
+  LuWalletCards,
   LuX,
 } from 'react-icons/lu'
 
-const CajasAdminTable = ({ currentData, currentPage, totalPages, setCurrentPage, formatter }) => {
+const CajasAdminTable = ({
+  currentData = [],
+  currentPage,
+  totalPages,
+  setCurrentPage,
+  formatter,
+}) => {
   const [selectedCaja, setSelectedCaja] = useState(null)
   const [showModal, setShowModal] = useState(false)
 
@@ -59,7 +66,7 @@ const CajasAdminTable = ({ currentData, currentPage, totalPages, setCurrentPage,
           </p>
         </div>
 
-        {totalPages > 1 && (
+        {totalPages > 1 && currentData.length > 0 && (
           <div className="flex items-center gap-2">
             <button
               disabled={currentPage === 1}
@@ -82,74 +89,89 @@ const CajasAdminTable = ({ currentData, currentPage, totalPages, setCurrentPage,
         )}
       </div>
 
-      {/* Tabla Principal */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="text-zinc-500 uppercase text-[9px] font-black tracking-[0.2em] bg-zinc-900/50">
-              <th className="p-6 pl-10">Fecha / Registro</th>
-              <th className="p-6">Responsable</th>
-              <th className="p-6">Apertura</th>
-              <th className="p-6">Cierre</th>
-              <th className="p-6">Diferencia</th>
-              <th className="p-6">Estado</th>
-              <th className="p-6 text-right pr-10">Ver</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/[0.03]">
-            {currentData.map((c) => (
-              <tr key={c.id} className="group hover:bg-white/[0.02] transition-colors">
-                <td className="p-6 pl-10">
-                  <span className="text-white font-bold text-sm block">
-                    {new Date(c.createdAt).toLocaleDateString('es-EC', {
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </span>
-                  <span className="text-[8px] text-zinc-600 font-black uppercase tracking-widest">
-                    REF: {c.id.slice(0, 8).toUpperCase()}
-                  </span>
-                </td>
-                <td className="p-6">
-                  <div className="flex items-center gap-2">
-                    <LuUser size={14} className="text-luck-gold/50" />
-                    <span className="text-zinc-300 font-bold text-[11px] uppercase truncate max-w-[150px]">
-                      {c.Usuario?.nombresCompletos || 'N/A'}
-                    </span>
-                  </div>
-                </td>
-                <td className="p-6 text-zinc-400 font-mono font-bold text-sm">
-                  {formatter.format(c.montoApertura)}
-                </td>
-                <td className="p-6 text-zinc-400 font-mono font-bold text-sm">
-                  {c.montoCierre ? formatter.format(c.montoCierre) : '---'}
-                </td>
-                <td
-                  className={`p-6 font-mono font-bold text-sm ${c.diferencia < 0 ? 'text-red-500' : c.diferencia > 0 ? 'text-green-500' : 'text-zinc-500'}`}
-                >
-                  {c.diferencia !== null ? formatter.format(c.diferencia) : '---'}
-                </td>
-                <td className="p-6">
-                  <span
-                    className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${c.estado === 'Abierta' ? 'border-green-500/20 text-green-500 bg-green-500/5' : 'border-white/5 text-zinc-500 bg-zinc-800/30'}`}
-                  >
-                    {c.estado}
-                  </span>
-                </td>
-                <td className="p-6 text-right pr-10">
-                  <button
-                    onClick={() => handleVerDetalle(c)}
-                    className="p-3 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold hover:border-luck-gold/30 transition-all"
-                  >
-                    <LuSearch size={18} />
-                  </button>
-                </td>
+      {/* Condicional de Datos Existentes / Tabla o Mensaje Vacío */}
+      {currentData.length === 0 ? (
+        <div className="p-20 flex flex-col items-center justify-center text-center bg-white/[0.005]">
+          <div className="w-16 h-16 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-500 mb-6 shadow-inner">
+            <LuWalletCards size={28} className="opacity-40 text-luck-gold" />
+          </div>
+          <h4 className="text-white font-black text-xs uppercase tracking-[0.2em]">
+            No hay cajas registradas
+          </h4>
+          <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-wider mt-2 max-w-sm leading-relaxed">
+            Actualmente no se registran aperturas ni cierres de sesión activos en el sistema para
+            auditar.
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="text-zinc-500 uppercase text-[9px] font-black tracking-[0.2em] bg-zinc-900/50">
+                <th className="p-6 pl-10">Fecha / Registro</th>
+                <th className="p-6">Responsable</th>
+                <th className="p-6">Apertura</th>
+                <th className="p-6">Cierre</th>
+                <th className="p-6">Diferencia</th>
+                <th className="p-6">Estado</th>
+                <th className="p-6 text-right pr-10">Ver</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-white/[0.03]">
+              {currentData.map((c) => (
+                <tr key={c.id} className="group hover:bg-white/[0.02] transition-colors">
+                  <td className="p-6 pl-10">
+                    <span className="text-white font-bold text-sm block">
+                      {new Date(c.createdAt).toLocaleDateString('es-EC', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </span>
+                    <span className="text-[8px] text-zinc-600 font-black uppercase tracking-widest">
+                      REF: {c.id.slice(0, 8).toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="p-6">
+                    <div className="flex items-center gap-2">
+                      <LuUser size={14} className="text-luck-gold/50" />
+                      <span className="text-zinc-300 font-bold text-[11px] uppercase truncate max-w-[150px]">
+                        {c.Usuario?.nombresCompletos || 'N/A'}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="p-6 text-zinc-400 font-mono font-bold text-sm">
+                    {formatter.format(c.montoApertura)}
+                  </td>
+                  <td className="p-6 text-zinc-400 font-mono font-bold text-sm">
+                    {c.montoCierre ? formatter.format(c.montoCierre) : '---'}
+                  </td>
+                  <td
+                    className={`p-6 font-mono font-bold text-sm ${c.diferencia < 0 ? 'text-red-500' : c.diferencia > 0 ? 'text-green-500' : 'text-zinc-500'}`}
+                  >
+                    {c.diferencia !== null ? formatter.format(c.diferencia) : '---'}
+                  </td>
+                  <td className="p-6">
+                    <span
+                      className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${c.estado === 'Abierta' ? 'border-green-500/20 text-green-500 bg-green-500/5' : 'border-white/5 text-zinc-500 bg-zinc-800/30'}`}
+                    >
+                      {c.estado}
+                    </span>
+                  </td>
+                  <td className="p-6 text-right pr-10">
+                    <button
+                      onClick={() => handleVerDetalle(c)}
+                      className="p-3 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold hover:border-luck-gold/30 transition-all"
+                    >
+                      <LuSearch size={18} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* --- MODAL DE AUDITORÍA DETALLADA --- */}
       {showModal && selectedCaja && (

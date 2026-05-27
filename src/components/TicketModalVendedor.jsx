@@ -1,7 +1,17 @@
 import { pdf } from '@react-pdf/renderer'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
-import { LuBanknote, LuCreditCard, LuLoader, LuPlus, LuTicket, LuTrash2, LuX, LuUserPlus, LuCircleAlert } from 'react-icons/lu'
+import {
+  LuBanknote,
+  LuCircleAlert,
+  LuCreditCard,
+  LuLoader,
+  LuPlus,
+  LuTicket,
+  LuTrash2,
+  LuUserPlus,
+  LuX,
+} from 'react-icons/lu'
 import Swal from 'sweetalert2'
 
 import { cajaAPI, ticketAPI } from '@/api/index.api'
@@ -196,6 +206,9 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
 
   if (!isOpen) return null
 
+  // Variable de control para desactivar todo el formulario si no hay caja activa
+  const esFormularioBloqueado = !caja?.id
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
       <style>{`
@@ -237,15 +250,18 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
         <div className="flex-1 grid grid-cols-12 overflow-hidden">
           {/* PANEL IZQUIERDO */}
           <div className="col-span-12 lg:col-span-5 p-8 border-r border-white/5 flex flex-col justify-between overflow-hidden">
-
             {/* Terminal Status */}
             <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3.5 flex justify-between items-center">
               <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">
                 Estado de Terminal:
               </span>
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full animate-pulse ${caja?.id ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                <span className={`text-[10px] font-black uppercase tracking-widest ${caja?.id ? 'text-emerald-500' : 'text-red-500'}`}>
+                <div
+                  className={`w-2 h-2 rounded-full animate-pulse ${caja?.id ? 'bg-emerald-500' : 'bg-red-500'}`}
+                />
+                <span
+                  className={`text-[10px] font-black uppercase tracking-widest ${caja?.id ? 'text-emerald-500' : 'text-red-500'}`}
+                >
                   {caja?.id ? 'Caja Abierta / Activa' : 'Caja Cerrada / Inactiva'}
                 </span>
               </div>
@@ -254,17 +270,19 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
             {/* Sorteo */}
             <div className="space-y-1.5">
               <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-1">
-                Sorteo Available
+                Sorteo Disponible
               </label>
               <select
-                disabled={jugadas.length > 0}
-                className="w-full bg-zinc-900/50 border border-white/5 rounded-xl p-3.5 text-xs text-white focus:border-luck-gold/40 outline-none transition-all cursor-pointer"
+                disabled={esFormularioBloqueado || jugadas.length > 0}
+                className="w-full bg-[#111615] border border-white/10 rounded-xl p-3.5 text-xs text-white focus:border-luck-gold/40 outline-none transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed uppercase font-bold tracking-wider"
                 value={sorteoId}
                 onChange={(e) => setSorteoId(e.target.value)}
               >
-                <option value="" disabled>SELECCIONAR SORTEO...</option>
+                <option value="" disabled className="bg-[#0c0d0d] text-zinc-500">
+                  SELECCIONAR SORTEO...
+                </option>
                 {sorteos.map((s) => (
-                  <option key={s.id} value={s.id}>
+                  <option key={s.id} value={s.id} className="bg-[#0c0d0d] text-white">
                     {s.Catalogo?.nombre} ({s.Cifra?.cantidad} Cifras)
                   </option>
                 ))}
@@ -283,8 +301,9 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
               <div className="space-y-2.5">
                 <input
                   type="text"
+                  disabled={esFormularioBloqueado}
                   placeholder="NOMBRES COMPLETOS DEL CLIENTE"
-                  className="w-full bg-zinc-900/40 border border-white/5 rounded-xl p-3 text-xs text-white placeholder:text-zinc-700 outline-none focus:border-luck-gold/30 transition-all uppercase"
+                  className="w-full bg-zinc-900/40 border border-white/5 rounded-xl p-3 text-xs text-white placeholder:text-zinc-700 outline-none focus:border-luck-gold/30 transition-all uppercase disabled:opacity-20 disabled:cursor-not-allowed"
                   value={clienteNombres}
                   onChange={(e) => setClienteNombres(e.target.value)}
                 />
@@ -292,16 +311,18 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                   <input
                     type="text"
                     maxLength={10}
+                    disabled={esFormularioBloqueado}
                     placeholder="CÉDULA / RUC"
-                    className="w-full bg-zinc-900/40 border border-white/5 rounded-xl p-3 text-xs text-white placeholder:text-zinc-700 outline-none focus:border-luck-gold/30 transition-all"
+                    className="w-full bg-zinc-900/40 border border-white/5 rounded-xl p-3 text-xs text-white placeholder:text-zinc-700 outline-none focus:border-luck-gold/30 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
                     value={clienteCedula}
                     onChange={(e) => setClienteCedula(e.target.value.replace(/\D/g, ''))}
                   />
                   <input
                     type="text"
                     maxLength={10}
+                    disabled={esFormularioBloqueado}
                     placeholder="Nº WHATSAPP"
-                    className="w-full bg-zinc-900/40 border border-white/5 rounded-xl p-3 text-xs text-white placeholder:text-zinc-700 outline-none focus:border-luck-gold/30 transition-all"
+                    className="w-full bg-zinc-900/40 border border-white/5 rounded-xl p-3 text-xs text-white placeholder:text-zinc-700 outline-none focus:border-luck-gold/30 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
                     value={clienteWhatsapp}
                     onChange={(e) => setClienteWhatsapp(e.target.value.replace(/\D/g, ''))}
                   />
@@ -316,20 +337,24 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <button
+                  disabled={esFormularioBloqueado}
                   onClick={() => setMetodoPago('Efectivo')}
-                  className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all text-[10px] font-black uppercase ${metodoPago === 'Efectivo'
-                    ? 'bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10'
-                    : 'bg-zinc-900/50 text-zinc-500 border-white/5'
-                    }`}
+                  className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all text-[10px] font-black uppercase disabled:opacity-20 disabled:cursor-not-allowed ${
+                    metodoPago === 'Efectivo' && !esFormularioBloqueado
+                      ? 'bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10'
+                      : 'bg-zinc-900/50 text-zinc-500 border-white/5'
+                  }`}
                 >
                   <LuBanknote size={15} /> Efectivo
                 </button>
                 <button
+                  disabled={esFormularioBloqueado}
                   onClick={() => setMetodoPago('Transferencia')}
-                  className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all text-[10px] font-black uppercase ${metodoPago === 'Transferencia'
-                    ? 'bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10'
-                    : 'bg-zinc-900/50 text-zinc-500 border-white/5'
-                    }`}
+                  className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all text-[10px] font-black uppercase disabled:opacity-20 disabled:cursor-not-allowed ${
+                    metodoPago === 'Transferencia' && !esFormularioBloqueado
+                      ? 'bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10'
+                      : 'bg-zinc-900/50 text-zinc-500 border-white/5'
+                  }`}
                 >
                   <LuCreditCard size={15} /> Transferencia
                 </button>
@@ -338,7 +363,7 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
 
             {/* Referencia Digital */}
             <AnimatePresence>
-              {metodoPago === 'Transferencia' && (
+              {metodoPago === 'Transferencia' && !esFormularioBloqueado && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -347,8 +372,9 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                 >
                   <input
                     type="text"
+                    disabled={esFormularioBloqueado}
                     placeholder="Nº COMPROBANTE DE TRANSFERENCIA"
-                    className="w-full bg-luck-gold/5 border border-luck-gold/20 rounded-xl p-3 text-xs text-white placeholder:text-luck-gold/30 outline-none focus:border-luck-gold transition-all"
+                    className="w-full bg-luck-gold/5 border border-luck-gold/20 rounded-xl p-3 text-xs text-white placeholder:text-luck-gold/30 outline-none focus:border-luck-gold transition-all disabled:opacity-20 disabled:cursor-not-allowed"
                     value={referenciaPago}
                     onChange={(e) => setReferenciaPago(e.target.value.toUpperCase())}
                   />
@@ -375,8 +401,9 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                   <input
                     type="text"
                     maxLength={numCifras}
+                    disabled={esFormularioBloqueado}
                     placeholder="00"
-                    className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-3.5 text-center text-3xl font-black text-white focus:border-luck-gold outline-none transition-all"
+                    className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-3.5 text-center text-3xl font-black text-white focus:border-luck-gold outline-none transition-all disabled:opacity-20 disabled:cursor-not-allowed"
                     value={tempNumero}
                     onChange={(e) => {
                       setError('')
@@ -390,8 +417,9 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                   </span>
                   <input
                     type="number"
+                    disabled={esFormularioBloqueado}
                     placeholder="0.00"
-                    className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-3.5 text-center text-3xl font-black text-white focus:border-luck-gold outline-none transition-all"
+                    className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-3.5 text-center text-3xl font-black text-white focus:border-luck-gold outline-none transition-all disabled:opacity-20 disabled:cursor-not-allowed"
                     value={tempMonto}
                     onChange={(e) => {
                       setError('')
@@ -403,10 +431,14 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
 
               <button
                 onClick={agregarJugada}
-                disabled={loading || !caja?.id}
-                className="w-full bg-luck-gold hover:bg-yellow-500 text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 uppercase text-[10px] tracking-widest transition-all shadow-lg disabled:opacity-20"
+                disabled={loading || esFormularioBloqueado}
+                className="w-full bg-luck-gold hover:bg-yellow-500 text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 uppercase text-[10px] tracking-widest transition-all shadow-lg disabled:opacity-20 disabled:cursor-not-allowed"
               >
-                {loading ? <LuLoader className="animate-spin" size={18} /> : <LuPlus size={18} strokeWidth={4} />}
+                {loading ? (
+                  <LuLoader className="animate-spin" size={18} />
+                ) : (
+                  <LuPlus size={18} strokeWidth={4} />
+                )}
                 Añadir Jugada
               </button>
             </div>
@@ -421,7 +453,6 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
             <div className="flex-1 overflow-y-auto pr-2 custom-scroll-minimal space-y-2 flex flex-col justify-start relative">
               <AnimatePresence mode="wait">
                 {error && jugadas.length === 0 ? (
-                  /* CASO 1: ERROR CON LISTA VACÍA -> PANTALLA COMPLETA ANIMADA */
                   <motion.div
                     key="error-screen"
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -440,7 +471,6 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                     </span>
                   </motion.div>
                 ) : jugadas.length > 0 ? (
-                  /* LISTA REAL DE JUGADAS (No se bloquea por errores nuevos) */
                   <div className="space-y-2 w-full">
                     {jugadas.map((j) => (
                       <motion.div
@@ -477,7 +507,6 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                     ))}
                   </div>
                 ) : (
-                  /* VISTA POR DEFECTO CON LISTA VACÍA */
                   <motion.div
                     key="empty-screen"
                     initial={{ opacity: 0 }}
@@ -493,7 +522,6 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                 )}
               </AnimatePresence>
 
-              {/* CASO 2: ERROR CUANDO YA HAY ELEMENTOS -> TOAST FLOTANTE ULTRA PREMIUM */}
               <AnimatePresence>
                 {error && jugadas.length > 0 && (
                   <motion.div
@@ -540,19 +568,24 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                     {jugadas.length} JUGADAS
                   </span>
                   <div
-                    className={`px-3 py-1 rounded-full border text-[8px] font-black uppercase ${metodoPago === 'Transferencia'
-                      ? 'bg-luck-gold/10 border-luck-gold/20 text-luck-gold'
-                      : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
-                      }`}
+                    className={`px-3 py-1 rounded-full border text-[8px] font-black uppercase ${
+                      metodoPago === 'Transferencia' && !esFormularioBloqueado
+                        ? 'bg-luck-gold/10 border-luck-gold/20 text-luck-gold'
+                        : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                    }`}
                   >
-                    {metodoPago === 'Transferencia' ? 'Pago Digital' : 'Terminal Online'}
+                    {esFormularioBloqueado
+                      ? 'Terminal Inactiva'
+                      : metodoPago === 'Transferencia'
+                        ? 'Pago Digital'
+                        : 'Terminal Online'}
                   </div>
                 </div>
               </div>
               <button
-                disabled={jugadas.length === 0 || loading || !caja?.id}
+                disabled={jugadas.length === 0 || loading || esFormularioBloqueado}
                 onClick={emitirTicket}
-                className="w-full bg-white hover:bg-zinc-200 text-black font-black py-4 rounded-2xl uppercase text-[10px] tracking-[0.2em] transition-all disabled:opacity-20 active:scale-[0.98] flex items-center justify-center gap-2 shadow-xl"
+                className="w-full bg-white hover:bg-zinc-200 text-black font-black py-4 rounded-2xl uppercase text-[10px] tracking-[0.2em] transition-all disabled:opacity-20 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2 shadow-xl"
               >
                 {loading && <LuLoader className="animate-spin" size={16} />}
                 Confirmar Venta y Emitir

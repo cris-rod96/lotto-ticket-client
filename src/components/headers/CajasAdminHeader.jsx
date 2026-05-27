@@ -1,6 +1,6 @@
 import Title from '@/components/Titlte'
 import { AnimatePresence, motion } from 'framer-motion'
-import { LuCircleX, LuPlus, LuStore, LuWallet } from 'react-icons/lu'
+import { LuCircleX, LuStore, LuWallet } from 'react-icons/lu'
 
 const CajasAdminHeader = ({
   puntoSeleccionado,
@@ -44,20 +44,12 @@ const CajasAdminHeader = ({
               className="flex gap-2 w-full md:w-auto"
             >
               {esCajaAbierta ? (
-                <>
-                  <button
-                    onClick={() => setModalType('inyectar')}
-                    className="flex-1 md:flex-none bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2 transition-all uppercase text-[10px] tracking-widest border border-white/5"
-                  >
-                    <LuPlus className="text-luck-gold" size={16} /> Inyectar
-                  </button>
-                  <button
-                    onClick={() => setModalType('cerrar')}
-                    className="flex-1 md:flex-none bg-red-500/10 hover:bg-red-500/20 text-red-500 font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2 transition-all uppercase text-[10px] tracking-widest border border-red-500/20"
-                  >
-                    <LuCircleX size={16} /> Forzar Cierre
-                  </button>
-                </>
+                <button
+                  onClick={() => setModalType('cerrar')}
+                  className="flex-1 md:flex-none bg-red-500/10 hover:bg-red-500/20 text-red-500 font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2 transition-all uppercase text-[10px] tracking-widest border border-red-500/20"
+                >
+                  <LuCircleX size={16} /> Forzar Cierre
+                </button>
               ) : (
                 <button
                   onClick={() => setModalType('abrir')}

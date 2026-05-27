@@ -58,10 +58,9 @@ const Sorteos = () => {
 
   const fetchData = async () => {
     try {
-      const resp = await sorteoAPI.listarTodos()
-      console.log(resp)
+      const resp = await sorteoAPI.listarTodos()(resp)
     } catch (error) {
-      console.log(error)
+      error
     }
   }
 
@@ -82,9 +81,12 @@ const Sorteos = () => {
     if (result.isConfirmed) {
       try {
         const resp = await sorteoAPI.eliminar(id)
-        Swal.fire({ title: 'Eliminado', icon: 'success', text: resp.data?.message || "Eliminación existosa" })
+        Swal.fire({
+          title: 'Eliminado',
+          icon: 'success',
+          text: resp.data?.message || 'Eliminación existosa',
+        })
         fetchData()
-
       } catch (error) {
         const msg = error.response?.data?.message || 'No se pudo eliminar'
         Swal.fire({ title: 'Error', text: msg, icon: 'error' })
@@ -209,10 +211,11 @@ const Sorteos = () => {
                   </td>
                   <td className="p-7 text-center">
                     <span
-                      className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${sorteo.estado === 'Abierto'
-                        ? 'bg-green-500/5 text-green-500 border-green-500/20'
-                        : 'bg-red-500/5 text-red-500 border-red-500/20'
-                        }`}
+                      className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${
+                        sorteo.estado === 'Abierto'
+                          ? 'bg-green-500/5 text-green-500 border-green-500/20'
+                          : 'bg-red-500/5 text-red-500 border-red-500/20'
+                      }`}
                     >
                       {sorteo.estado}
                     </span>

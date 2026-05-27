@@ -4,7 +4,7 @@ import { LuDices, LuFilter, LuHash, LuInfo, LuLayoutGrid, LuTrophy, LuX } from '
 
 const SuertesDetailModal = ({ isOpen, onClose, puntoVenta }) => {
   useEffect(() => {
-    console.log(puntoVenta)
+    puntoVenta
   }, [])
   const [filterCifras, setFilterCifras] = useState('all')
 

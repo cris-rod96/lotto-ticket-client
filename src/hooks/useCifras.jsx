@@ -1,8 +1,5 @@
 import { cifraAPI } from '@/api/index.api'
-import React from 'react'
-import { useMemo } from 'react'
-import { useEffect } from 'react'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 const useCifras = () => {
   const [showModal, setShowModal] = useState(false)
@@ -22,7 +19,7 @@ const useCifras = () => {
       const resp = await cifraAPI.listarTodas()
       setCifras(resp.data?.cifras || [])
     } catch (error) {
-      console.log(error)
+      error
     } finally {
       setLoading(false)
     }
@@ -80,7 +77,7 @@ const useCifras = () => {
     handleEdit,
     selectedCifra,
     fetchData,
-    loading
+    loading,
   }
 }
 

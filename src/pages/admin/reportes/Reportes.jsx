@@ -62,7 +62,7 @@ const Reportes = () => {
 
       // Seteamos las estadísticas globales de los KPIs superiores
       if (respStats.data?.stats) {
-        console.log(respStats.data)
+        respStats.data
         setKpis({
           ventasTotales: respStats.data.stats.ventasTotales || 0,
           premiosPorPagar: respStats.data.stats.premiosPorPagar || 0,

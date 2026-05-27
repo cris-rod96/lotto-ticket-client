@@ -23,7 +23,7 @@ const ModalPagoTicket = ({
 
   // Aquí filtrarías las cajas según el Punto de Venta seleccionado
   useEffect(() => {
-    console.log(puntosVenta)
+    puntosVenta
     if (puntoVentaId) {
       // Supongamos que tus puntos de venta traen sus cajas o las buscas de tu estado global
       const pv = puntosVenta.find((p) => p.id === puntoVentaId)

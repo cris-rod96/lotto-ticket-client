@@ -72,7 +72,11 @@ const Sorteos = () => {
     if (result.isConfirmed) {
       try {
         const resp = await sorteoAPI.eliminar(id)
-        Swal.fire({ title: 'Eliminado', icon: 'success', text: resp.data?.message || "Eliminación exitosa" })
+        Swal.fire({
+          title: 'Eliminado',
+          icon: 'success',
+          text: resp.data?.message || 'Eliminación exitosa',
+        })
         fetchData()
       } catch (error) {
         const msg = error.response?.data?.message || 'No se pudo eliminar'
@@ -117,14 +121,14 @@ const Sorteos = () => {
       setCatalogos(respCatalogos.data?.catalogos || [])
       setCifras(respCifras.data?.cifras || [])
     } catch (error) {
-      console.log(error)
+      error
     }
   }
 
   const handleSave = async (formData) => {
     try {
-      let resp;
-      const esEdicion = !!selectedSorteo?.id;
+      let resp
+      const esEdicion = !!selectedSorteo?.id
 
       if (esEdicion) {
         resp = await sorteoAPI.actualizar(selectedSorteo.id, formData)
@@ -202,7 +206,9 @@ const Sorteos = () => {
             onChange={(e) => setCatalogoFilter(e.target.value)}
             className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-2 pl-9 pr-8 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold"
           >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">Todos los juegos</option>
+            <option value="Todos" className="bg-[#1a1f1e] text-white">
+              Todos los juegos
+            </option>
             {catalogos.map((cat) => (
               <option key={cat.id} value={cat.id} className="bg-[#1a1f1e] text-white">
                 {cat.nombre}
@@ -219,10 +225,18 @@ const Sorteos = () => {
             onChange={(e) => setJornadaFilter(e.target.value)}
             className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-2 pl-9 pr-8 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold"
           >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">Todas las jornadas</option>
-            <option value="Matutina" className="bg-[#1a1f1e] text-white">Matutina</option>
-            <option value="Vespertina" className="bg-[#1a1f1e] text-white">Vespertina</option>
-            <option value="Nocturna" className="bg-[#1a1f1e] text-white">Nocturna</option>
+            <option value="Todos" className="bg-[#1a1f1e] text-white">
+              Todas las jornadas
+            </option>
+            <option value="Matutina" className="bg-[#1a1f1e] text-white">
+              Matutina
+            </option>
+            <option value="Vespertina" className="bg-[#1a1f1e] text-white">
+              Vespertina
+            </option>
+            <option value="Nocturna" className="bg-[#1a1f1e] text-white">
+              Nocturna
+            </option>
           </select>
         </div>
 
@@ -234,7 +248,9 @@ const Sorteos = () => {
             onChange={(e) => setCifraFilter(e.target.value)}
             className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-2 pl-9 pr-8 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold"
           >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">Todas las cifras</option>
+            <option value="Todos" className="bg-[#1a1f1e] text-white">
+              Todas las cifras
+            </option>
             {cifras.map((cif) => (
               <option key={cif.id} value={cif.id} className="bg-[#1a1f1e] text-white">
                 {cif.cantidad} Cifras
@@ -251,16 +267,27 @@ const Sorteos = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-2 pl-9 pr-8 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold"
           >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">Todos los estados</option>
-            <option value="Abierto" className="bg-[#1a1f1e] text-white">Abierto</option>
-            <option value="Cerrado" className="bg-[#1a1f1e] text-white">Cerrado</option>
-            <option value="Finalizado" className="bg-[#1a1f1e] text-white">Finalizado</option>
+            <option value="Todos" className="bg-[#1a1f1e] text-white">
+              Todos los estados
+            </option>
+            <option value="Abierto" className="bg-[#1a1f1e] text-white">
+              Abierto
+            </option>
+            <option value="Cerrado" className="bg-[#1a1f1e] text-white">
+              Cerrado
+            </option>
+            <option value="Finalizado" className="bg-[#1a1f1e] text-white">
+              Finalizado
+            </option>
           </select>
         </div>
 
         {/* NUEVO FILTRO 5: POR FECHA */}
         <div className="relative w-full">
-          <LuCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-luck-gold" size={15} />
+          <LuCalendar
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-luck-gold"
+            size={15}
+          />
           <input
             type="date"
             value={dateFilter}
@@ -358,12 +385,13 @@ const Sorteos = () => {
                       </td>
                       <td className="p-7 text-center">
                         <span
-                          className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${sorteo.estado === 'Abierto'
-                            ? 'bg-green-500/5 text-green-500 border-green-500/20'
-                            : sorteo.estado === 'Cerrado'
-                              ? 'bg-orange-500/5 text-orange-500 border-orange-500/20'
-                              : 'bg-red-500/5 text-red-500 border-red-500/20'
-                            }`}
+                          className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${
+                            sorteo.estado === 'Abierto'
+                              ? 'bg-green-500/5 text-green-500 border-green-500/20'
+                              : sorteo.estado === 'Cerrado'
+                                ? 'bg-orange-500/5 text-orange-500 border-orange-500/20'
+                                : 'bg-red-500/5 text-red-500 border-red-500/20'
+                          }`}
                         >
                           {sorteo.estado}
                         </span>
@@ -447,10 +475,11 @@ const Sorteos = () => {
                   <button
                     key={i}
                     onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${currentPage === i + 1
-                      ? 'bg-luck-gold text-black'
-                      : 'text-zinc-500 hover:bg-white/5'
-                      }`}
+                    className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${
+                      currentPage === i + 1
+                        ? 'bg-luck-gold text-black'
+                        : 'text-zinc-500 hover:bg-white/5'
+                    }`}
                   >
                     {i + 1}
                   </button>
