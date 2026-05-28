@@ -19,7 +19,7 @@ import {
 import Swal from 'sweetalert2'
 
 import { puntosVentaAPI, sorteoAPI, suerteAPI, ticketAPI } from '@/api/index.api'
-import DetalleJugadasModal from '@/components/DetalleJugadasModal' // Importación desde @/components
+import DetalleJugadasModal from '@/components/DetalleJugadasModal'
 import ModalPagoTicket from '@/components/ModalPagoTicket'
 import TicketModal from '@/components/TicketModal'
 import Title from '@/components/Titlte'
@@ -307,6 +307,52 @@ const Tickets = () => {
     return `${day}/${month}/${year}`
   }
 
+  // ==========================================================================
+  // CÁLCULO DE NÚMEROS DE PÁGINA COMPACTO (SLIDING WINDOW)
+  // ==========================================================================
+  const renderPageNumbers = useMemo(() => {
+    const pages = []
+    const maxVisibleButtons = 5 // Número máximo de botones numéricos a mostrar en el centro
+
+    if (totalPages <= maxVisibleButtons + 2) {
+      // Si el total de páginas es pequeño, muéstralas todas sin elipsis
+      for (let i = 1; i <= totalPages; i++) pages.push(i)
+    } else {
+      // Determinar los límites de los botones centrales
+      let startPage = Math.max(2, currentPage - 2)
+      let endPage = Math.min(totalPages - 1, currentPage + 2)
+
+      // Ajustar si la ventana choca con los extremos
+      if (currentPage <= 3) {
+        endPage = maxVisibleButtons
+      } else if (currentPage >= totalPages - 2) {
+        startPage = totalPages - maxVisibleButtons + 1
+      }
+
+      // Siempre incluir la primera página
+      pages.push(1)
+
+      // Elipsis izquierda si es necesario
+      if (startPage > 2) {
+        pages.push('ellipsis-left')
+      }
+
+      // Insertar los botones del bloque central
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i)
+      }
+
+      // Elipsis derecha si es necesario
+      if (endPage < totalPages - 1) {
+        pages.push('ellipsis-right')
+      }
+
+      // Siempre incluir la última página
+      pages.push(totalPages)
+    }
+    return pages
+  }, [totalPages, currentPage])
+
   return (
     <motion.div initial="hidden" animate="visible" className="w-full pb-10">
       <div className="flex justify-between items-center mb-10">
@@ -354,7 +400,7 @@ const Tickets = () => {
           </select>
         </div>
 
-        {/* Selector de Fecha con Estilo Coherente */}
+        {/* Selector de Fecha */}
         <div className="flex flex-col gap-2">
           <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider flex items-center gap-1">
             <LuCalendar size={10} /> Fecha del Sorteo
@@ -530,7 +576,6 @@ const Tickets = () => {
 
                       <td className="p-7 pr-10">
                         <div className="flex justify-end gap-2">
-                          {/* BOTÓN REUTILIZADO: VER JUGADAS EN MODAL */}
                           <button
                             onClick={() => {
                               setSelectedTicketDetails(ticket)
@@ -606,9 +651,9 @@ const Tickets = () => {
           </table>
         </div>
 
-        {/* Paginación */}
+        {/* CONTROLES DE PAGINACIÓN OPTIMIZADOS (FIXED BLOCKS) */}
         {totalPages > 1 && (
-          <div className="p-8 border-t border-white/5 bg-black/[0.1] flex justify-between items-center">
+          <div className="p-8 border-t border-white/5 bg-black/[0.1] flex justify-between items-center select-none">
             <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
               Página {currentPage} de {totalPages}
             </span>
@@ -616,29 +661,44 @@ const Tickets = () => {
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all"
+                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all cursor-pointer disabled:cursor-not-allowed"
               >
                 <LuChevronLeft size={18} />
               </button>
-              <div className="flex gap-1">
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-[9px] font-black transition-all ${
-                      currentPage === i + 1
-                        ? 'bg-luck-gold text-black'
-                        : 'text-zinc-600 hover:bg-white/5'
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+
+              <div className="flex items-center gap-1">
+                {renderPageNumbers.map((page, index) => {
+                  if (page === 'ellipsis-left' || page === 'ellipsis-right') {
+                    return (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="w-8 h-8 flex items-center justify-center text-zinc-600 text-[11px] font-black"
+                      >
+                        ...
+                      </span>
+                    )
+                  }
+
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded-lg text-[9px] font-black transition-all cursor-pointer ${
+                        currentPage === page
+                          ? 'bg-luck-gold text-black'
+                          : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                })}
               </div>
+
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
-                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all"
+                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all cursor-pointer disabled:cursor-not-allowed"
               >
                 <LuChevronRight size={18} />
               </button>
@@ -670,7 +730,6 @@ const Tickets = () => {
         />
       )}
 
-      {/* RENDERIZADO DEL MODAL DE DESGLOSE DE JUGADAS */}
       <DetalleJugadasModal
         isOpen={isDetailsOpen}
         onClose={() => {
