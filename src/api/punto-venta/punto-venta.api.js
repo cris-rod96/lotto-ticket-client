@@ -21,6 +21,10 @@ const puntosVentaAPI = {
   restaurar: (id) => {
     return instance.patch(`/${model}/restaurar/${id}`)
   },
+
+  obtenerDetalles: (id) => {
+    return instance.get(`/${model}/obtener-detalle/punto-venta/${id}`)
+  },
 }
 
 export default puntosVentaAPI

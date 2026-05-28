@@ -23,6 +23,7 @@ const useResultados = () => {
     setLoading(true)
     try {
       const resp = await resultadoAPI.listar()
+      console.log(resp.data?.data)
       setResultados(resp.data?.data || [])
     } catch (error) {
       console.error(error)

@@ -6,6 +6,7 @@ import {
   LuCheck,
   LuChevronLeft,
   LuChevronRight,
+  LuEye,
   LuInbox,
   LuPlus,
   LuReceipt,
@@ -16,6 +17,7 @@ import {
 import Swal from 'sweetalert2'
 
 import { sorteoAPI, suerteAPI, ticketAPI } from '@/api/index.api'
+import DetalleJugadasModal from '@/components/DetalleJugadasModal' // Importación del nuevo modal
 import ModalPagoTicketVendedor from '@/components/ModalPagoTicketVendedor'
 import TicketModalVendedor from '@/components/TicketModalVendedor'
 import Title from '@/components/Titlte'
@@ -40,6 +42,10 @@ const Tickets = () => {
   const [showModal, setShowModal] = useState(false)
   const [isPayModalOpen, setIsPayModalOpen] = useState(false)
   const [ticketToPay, setTicketToPay] = useState(null)
+
+  // ESTADOS PARA EL NUEVO MODAL DE DETALLES
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+  const [selectedTicketDetails, setSelectedTicketDetails] = useState(null)
 
   // FILTROS DEL VENDEDOR
   const [searchTerm, setSearchTerm] = useState('')
@@ -464,6 +470,18 @@ const Tickets = () => {
 
                       <td className="p-7 pr-10">
                         <div className="flex justify-end gap-2">
+                          {/* BOTÓN RECIÉN AÑADIDO: VER NUMEROS JUGADOS EN MODAL */}
+                          <button
+                            onClick={() => {
+                              setSelectedTicketDetails(ticket)
+                              setIsDetailsOpen(true)
+                            }}
+                            className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-white transition-colors flex items-center justify-center"
+                            title="Ver números apostados"
+                          >
+                            <LuEye size={16} />
+                          </button>
+
                           {ticket.resultado === 'Ganador' && ticket.estado === 'Pendiente' && (
                             <motion.button
                               whileHover={{
@@ -582,6 +600,16 @@ const Tickets = () => {
           handlePrintComprobante={handlePrintComprobante}
         />
       )}
+
+      {/* RENDERIZADO DEL NUEVO MODAL DE DESGLOSE */}
+      <DetalleJugadasModal
+        isOpen={isDetailsOpen}
+        onClose={() => {
+          setIsDetailsOpen(false)
+          setSelectedTicketDetails(null)
+        }}
+        ticket={selectedTicketDetails}
+      />
     </motion.div>
   )
 }

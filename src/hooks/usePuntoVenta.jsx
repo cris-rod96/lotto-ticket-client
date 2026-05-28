@@ -16,13 +16,28 @@ const usePuntoVenta = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 5
 
-  const openDetailView = (punto, type) => {
-    setViewModal({
-      open: true,
-      title: `${type === 'usuarios' ? 'Usuarios' : 'Tickets'} - ${punto.nombre}`,
-      data: punto, // <--- PASAMOS EL OBJETO COMPLETO, NO SOLO EL ARRAY
-      type: type,
-    })
+  const openDetailView = async (punto, type) => {
+    try {
+      // 1. Vamos al servidor a traer los tickets/usuarios de este punto específico
+      const resp = await puntosVentaAPI.obtenerDetalles(punto.id)
+      const puntoCompleto = resp.data.detalle
+
+      // 2. Pasamos el objeto completo ya inflado con los datos al modal
+      setViewModal({
+        open: true,
+        title: `${type === 'usuarios' ? 'Usuarios' : 'Tickets'} - ${punto.nombre}`,
+        data: puntoCompleto,
+        type: type,
+      })
+    } catch (error) {
+      // Si el backend devuelve 404 (no existe) o 500, saltará aquí
+      const msg = error.response?.data?.message || 'No se pudieron cargar los detalles'
+      Swal.fire({
+        title: 'Error',
+        text: msg,
+        icon: 'error',
+      })
+    }
   }
 
   const fetchData = async () => {
@@ -117,7 +132,9 @@ const usePuntoVenta = () => {
   }, [filteredPuntos, currentPage])
 
   const calcularRecaudacion = (tickets) => {
+    // Si no hay tickets cargados todavía, la recaudación inicial es 0
     if (!tickets || tickets.length === 0) return 0
+
     return tickets.reduce((acc, ticket) => {
       const sumaDetalles =
         ticket.DetallesTickets?.reduce((sum, det) => sum + parseFloat(det.montoApostado || 0), 0) ||

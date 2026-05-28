@@ -1,3 +1,4 @@
+import { puntosVentaAPI } from '@/api/index.api'
 import DetallePuntoModal from '@/components/DetallePuntoModal'
 import PuntoVentaModal from '@/components/PuntoVentaModal'
 import SuertesDetailModal from '@/components/SuertesDetailModal'
@@ -7,6 +8,7 @@ import PuntoVentaTable from '@/components/tables/PuntoVentaTable'
 import usePuntoVenta from '@/hooks/usePuntoVenta'
 import { motion } from 'framer-motion'
 import { useState } from 'react' // Estados propios locales
+import Swal from 'sweetalert2'
 
 // Variantes de animación consistentes
 const containerVariants = {
@@ -52,9 +54,22 @@ const PuntosVenta = () => {
   const [isSuertesOpen, setIsSuertesOpen] = useState(false)
   const [puntoSeleccionadoSuertes, setPuntoSeleccionadoSuertes] = useState(null)
 
-  const handleOpenSuertes = (punto) => {
-    setPuntoSeleccionadoSuertes(punto)
-    setIsSuertesOpen(true)
+  const handleOpenSuertes = async (punto) => {
+    try {
+      // 1. Buscamos los detalles específicos de suertes para este punto
+      const resp = await puntosVentaAPI.obtenerDetalles(punto.id)
+
+      // 2. Guardamos el punto con sus datos reales en el estado local
+      setPuntoSeleccionadoSuertes(resp.data.detalle)
+      setIsSuertesOpen(true)
+    } catch (error) {
+      const msg = error.response?.data?.message || 'No se pudieron cargar las suertes'
+      Swal.fire({
+        title: 'Error',
+        text: msg,
+        icon: 'error',
+      })
+    }
   }
 
   return (

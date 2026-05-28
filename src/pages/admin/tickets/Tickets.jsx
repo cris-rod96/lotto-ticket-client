@@ -6,6 +6,7 @@ import {
   LuCheck,
   LuChevronLeft,
   LuChevronRight,
+  LuEye,
   LuFilter,
   LuInbox,
   LuPlus,
@@ -18,6 +19,7 @@ import {
 import Swal from 'sweetalert2'
 
 import { puntosVentaAPI, sorteoAPI, suerteAPI, ticketAPI } from '@/api/index.api'
+import DetalleJugadasModal from '@/components/DetalleJugadasModal' // Importación desde @/components
 import ModalPagoTicket from '@/components/ModalPagoTicket'
 import TicketModal from '@/components/TicketModal'
 import Title from '@/components/Titlte'
@@ -43,6 +45,10 @@ const Tickets = () => {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false)
   const [ticketToPay, setTicketToPay] = useState(null)
   const [selectedTicket, setSelectedTicket] = useState(null)
+
+  // ESTADOS PARA EL MODAL DE DESGLOSE DE NÚMEROS
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+  const [selectedTicketDetails, setSelectedTicketDetails] = useState(null)
 
   // ESTADOS DE FILTRADO CONTROLADO
   const [filterPuntoVenta, setFilterPuntoVenta] = useState('Todos')
@@ -524,23 +530,35 @@ const Tickets = () => {
 
                       <td className="p-7 pr-10">
                         <div className="flex justify-end gap-2">
-                          {(ticket.resultado === 'Ganador' && ticket.estado === 'Pending') ||
-                            (ticket.estado === 'Pendiente' && (
-                              <motion.button
-                                whileHover={{
-                                  scale: 1.05,
-                                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => {
-                                  setTicketToPay(ticket)
-                                  setIsPayModalOpen(true)
-                                }}
-                                className="flex items-center gap-2 px-4 py-2 border border-emerald-500/50 text-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                              >
-                                <LuCheck size={14} /> PAGAR
-                              </motion.button>
-                            ))}
+                          {/* BOTÓN REUTILIZADO: VER JUGADAS EN MODAL */}
+                          <button
+                            onClick={() => {
+                              setSelectedTicketDetails(ticket)
+                              setIsDetailsOpen(true)
+                            }}
+                            className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-white transition-colors flex items-center justify-center"
+                            title="Ver números apostados"
+                          >
+                            <LuEye size={16} />
+                          </button>
+
+                          {((ticket.resultado === 'Ganador' && ticket.estado === 'Pending') ||
+                            (ticket.resultado === 'Ganador' && ticket.estado === 'Pendiente')) && (
+                            <motion.button
+                              whileHover={{
+                                scale: 1.05,
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                              }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => {
+                                setTicketToPay(ticket)
+                                setIsPayModalOpen(true)
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 border border-emerald-500/50 text-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                            >
+                              <LuCheck size={14} /> PAGAR
+                            </motion.button>
+                          )}
 
                           {ticket.estado === 'Pagado' && (
                             <button
@@ -563,6 +581,7 @@ const Tickets = () => {
                           <button
                             className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-600 hover:text-red-500 transition-colors"
                             onClick={() => handleAnularTicket(ticket)}
+                            title="Anular Ticket"
                           >
                             <LuTrash2 size={16} />
                           </button>
@@ -618,7 +637,7 @@ const Tickets = () => {
               </div>
               <button
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p - 1)}
+                onClick={() => setCurrentPage((p) => p + 1)}
                 className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all"
               >
                 <LuChevronRight size={18} />
@@ -650,6 +669,16 @@ const Tickets = () => {
           handlePrintComprobante={handlePrintComprobante}
         />
       )}
+
+      {/* RENDERIZADO DEL MODAL DE DESGLOSE DE JUGADAS */}
+      <DetalleJugadasModal
+        isOpen={isDetailsOpen}
+        onClose={() => {
+          setIsDetailsOpen(false)
+          setSelectedTicketDetails(null)
+        }}
+        ticket={selectedTicketDetails}
+      />
     </motion.div>
   )
 }
