@@ -1,4 +1,4 @@
-import { cifraAPI, rolAPI, statsAPI } from '@/api/index.api'
+import { cifraAPI, respaldoAPI, rolAPI, statsAPI } from '@/api/index.api'
 import Title from '@/components/Titlte'
 import { ADMIN_DASHBOARD_ITEMS } from '@/data/Items.js'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -35,10 +35,11 @@ const DashboardAdmin = () => {
 
       try {
         // Ejecutamos la analítica optimizada y datos estáticos necesarios
-        const [respStats, respCifras, respRoles] = await Promise.all([
+        const [respStats, respCifras, respRoles, respRespaldos] = await Promise.all([
           statsAPI.listarEstadisticas(),
           cifraAPI.listarTodas(),
           rolAPI.listarTodos(),
+          respaldoAPI.listarTodos(),
         ])
 
         const s = respStats.data.stats // La info que viene de tu nuevo Service
@@ -77,6 +78,10 @@ const DashboardAdmin = () => {
           'Reportes Globales': {
             p: formatter.format(s.deudaPremios || 0),
             s: 'Riesgo: Premios por pagar',
+          },
+          Respaldos: {
+            p: respRespaldos.data?.respaldos?.length || 0,
+            s: 'Respaldos generados',
           },
           Usuarios: {
             p: s.totalUsuarios || 0,
