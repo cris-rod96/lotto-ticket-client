@@ -37,7 +37,7 @@ const PuntosVenta = () => {
     setCurrentPage,
     totalPages,
     loading,
-    openDetailView, // Se mantiene intacto para usuarios y tickets
+    openDetailView,
     calcularRecaudacion,
     handleEdit,
     handleDeletePunto,
@@ -46,6 +46,15 @@ const PuntosVenta = () => {
     fetchData,
     viewModal,
     setViewModal,
+
+    // ==========================================================================
+    // NUEVAS PROPS DESESTRUCTURADAS DESDE EL HOOK ADAPTADO
+    // ==========================================================================
+    modalTickets,
+    ticketPage,
+    ticketTotalPages,
+    loadingModalTickets,
+    cargarTicketsDelPunto,
   } = usePuntoVenta()
 
   // ==========================================================================
@@ -84,8 +93,6 @@ const PuntosVenta = () => {
         setStatusFilter={setStatusFilter}
       />
 
-      {/* Volvemos a dejar openDetailView como estaba originalmente.
-          Añadimos onVerSuertes como una prop nueva y limpia de forma aislada */}
       <PuntoVentaTable
         containerVariants={containerVariants}
         rowVariants={rowVariants}
@@ -95,7 +102,7 @@ const PuntosVenta = () => {
         totalPages={totalPages}
         loading={loading}
         openDetailView={openDetailView}
-        onVerSuertes={handleOpenSuertes} // <-- ¡AQUÍ! Prop limpia y dedicada
+        onVerSuertes={handleOpenSuertes}
         calcularRecaudacion={calcularRecaudacion}
         handleEdit={handleEdit}
         handleDeletePunto={handleDeletePunto}
@@ -109,12 +116,19 @@ const PuntosVenta = () => {
         fetchData={fetchData}
       />
 
+      {/* MODIFICADO: Inyectamos los estados paginados del hook para que la UI responda */}
       <DetallePuntoModal
         isOpen={viewModal.open}
         onClose={() => setViewModal({ ...viewModal, open: false })}
         title={viewModal.title}
         data={viewModal.data}
         type={viewModal.type}
+        // Nuevas propiedades requeridas por el modal histórico
+        modalTickets={modalTickets}
+        ticketPage={ticketPage}
+        ticketTotalPages={ticketTotalPages}
+        loadingModalTickets={loadingModalTickets}
+        cargarTicketsDelPunto={cargarTicketsDelPunto}
       />
 
       {/* Tu modal independiente controlado por tus estados locales propios */}

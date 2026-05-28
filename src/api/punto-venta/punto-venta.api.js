@@ -25,6 +25,16 @@ const puntosVentaAPI = {
   obtenerDetalles: (id) => {
     return instance.get(`/${model}/obtener-detalle/punto-venta/${id}`)
   },
+
+  // NUEVO MÉTODO: Trae los tickets del punto fraccionados por páginas
+  obtenerTicketsPaginados: (id, page = 1, limit = 20) => {
+    return instance.get(`/${model}/puntos-ventas/${id}/tickets`, {
+      params: {
+        page,
+        limit,
+      },
+    })
+  },
 }
 
 export default puntosVentaAPI

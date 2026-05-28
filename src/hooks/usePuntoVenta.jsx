@@ -16,21 +16,60 @@ const usePuntoVenta = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 5
 
+  // --- NUEVOS ESTADOS PARA LA PAGINACIÓN INTERNA DE TICKETS EN EL MODAL ---
+  const [modalTickets, setModalTickets] = useState([])
+  const [ticketPage, setTicketPage] = useState(1)
+  const [ticketTotalPages, setTicketTotalPages] = useState(1)
+  const [loadingModalTickets, setLoadingModalTickets] = useState(false)
+
+  // --- NUEVA FUNCIÓN: CARGAR HISTORIAL DE TICKETS POR PÁGINAS ---
+  const cargarTicketsDelPunto = async (puntoId, page = 1) => {
+    setLoadingModalTickets(true)
+    try {
+      // Llamamos al nuevo método de tu API pasándole la página y el límite de 20
+      const resp = await puntosVentaAPI.obtenerTicketsPaginados(puntoId, page, 20)
+
+      setModalTickets(resp.data.tickets || [])
+      setTicketTotalPages(resp.data.totalPages || 1)
+      setTicketPage(resp.data.currentPage || 1)
+    } catch (error) {
+      console.error('Error al cargar el historial de tickets:', error)
+      const msg = error.response?.data?.message || 'No se pudo cargar el historial de tickets'
+      Swal.fire({
+        title: 'Error',
+        text: msg,
+        icon: 'error',
+      })
+    } finally {
+      setLoadingModalTickets(false)
+    }
+  }
+
+  // --- FUNCIÓN MODIFICADA: APERTURA ASÍNCRONA DEL MODAL ---
   const openDetailView = async (punto, type) => {
     try {
-      // 1. Vamos al servidor a traer los tickets/usuarios de este punto específico
+      // 1. Vamos al servidor a traer los detalles base del punto (usuarios, cajas y suertes)
       const resp = await puntosVentaAPI.obtenerDetalles(punto.id)
-      const puntoCompleto = resp.data.detalle
+      const puntoBase = resp.data.detalle
 
-      // 2. Pasamos el objeto completo ya inflado con los datos al modal
+      // Limpiamos el estado anterior de los tickets antes de levantar el nuevo modal
+      setModalTickets([])
+      setTicketPage(1)
+      setTicketTotalPages(1)
+
+      // 2. Abrimos el modal con los datos base de la sucursal
       setViewModal({
         open: true,
         title: `${type === 'usuarios' ? 'Usuarios' : 'Tickets'} - ${punto.nombre}`,
-        data: puntoCompleto,
+        data: puntoBase,
         type: type,
       })
+
+      // 3. SI EL TIPO ES TICKETS, DISPARAMOS INMEDIATAMENTE LA CARGA DE LA PÁGINA 1
+      if (type === 'tickets') {
+        await cargarTicketsDelPunto(punto.id, 1)
+      }
     } catch (error) {
-      // Si el backend devuelve 404 (no existe) o 500, saltará aquí
       const msg = error.response?.data?.message || 'No se pudieron cargar los detalles'
       Swal.fire({
         title: 'Error',
@@ -73,7 +112,6 @@ const usePuntoVenta = () => {
       fetchData()
     } catch (error) {
       const msg = error.response?.data?.message || 'No se pudo desactivar'
-
       Swal.fire({
         title: 'Error',
         text: msg,
@@ -131,10 +169,9 @@ const usePuntoVenta = () => {
     return filteredPuntos.slice(start, start + itemsPerPage)
   }, [filteredPuntos, currentPage])
 
+  // Esta función se queda blindada por retrocompatibilidad por si se usa en otros flujos de tu UI
   const calcularRecaudacion = (tickets) => {
-    // Si no hay tickets cargados todavía, la recaudación inicial es 0
     if (!tickets || tickets.length === 0) return 0
-
     return tickets.reduce((acc, ticket) => {
       const sumaDetalles =
         ticket.DetallesTickets?.reduce((sum, det) => sum + parseFloat(det.montoApostado || 0), 0) ||
@@ -151,6 +188,7 @@ const usePuntoVenta = () => {
     setSelectedPunto(punto)
     setShowModal(true)
   }
+
   return {
     selectedPunto,
     setShowModal,
@@ -174,6 +212,13 @@ const usePuntoVenta = () => {
     fetchData,
     viewModal,
     setViewModal,
+
+    // EXPORTAMOS LOS NUEVOS ESTADOS Y FUNCIONES PARA EL MODAL PAGINADO
+    modalTickets,
+    ticketPage,
+    ticketTotalPages,
+    loadingModalTickets,
+    cargarTicketsDelPunto,
   }
 }
 
