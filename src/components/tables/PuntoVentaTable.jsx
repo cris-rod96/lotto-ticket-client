@@ -21,8 +21,7 @@ const PuntoVentaTable = ({
   totalPages,
   loading,
   openDetailView,
-  onVerSuertes, // <-- Recibimos la prop local e independiente para las suertes
-  calcularRecaudacion,
+  onVerSuertes, // Prop independiente para abrir el modal de suertes en caliente
   handleEdit,
   handleDeletePunto,
   handleRestorePunto,
@@ -91,7 +90,7 @@ const PuntoVentaTable = ({
                       </motion.button>
                     </td>
 
-                    {/* COLUMNA: TICKETS */}
+                    {/* COLUMNA: TICKETS (Corregido: Lee el contador directo de Postgres) */}
                     <td className="p-5 text-center">
                       <motion.button
                         whileHover={{ scale: 1.05 }}
@@ -100,16 +99,16 @@ const PuntoVentaTable = ({
                       >
                         <LuTicket size={13} className="text-luck-gold" />
                         <span className="font-mono text-[11px] font-bold">
-                          {punto.Tickets?.length || 0}
+                          {punto.totalTickets || 0}
                         </span>
                       </motion.button>
                     </td>
 
-                    {/* COLUMNA: VER SUERTES (Con su propia lógica independiente) */}
+                    {/* COLUMNA: VER SUERTES */}
                     <td className="p-5 text-center">
                       <motion.button
                         whileHover={{ scale: 1.05 }}
-                        onClick={() => onVerSuertes(punto)} // <-- Ejecuta la función del estado propio de la vista
+                        onClick={() => onVerSuertes(punto)}
                         className="flex items-center justify-center gap-2 text-zinc-300 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-luck-gold/40 transition-all mx-auto cursor-pointer"
                       >
                         <LuDices size={13} className="text-luck-gold" />
@@ -117,11 +116,11 @@ const PuntoVentaTable = ({
                       </motion.button>
                     </td>
 
-                    {/* COLUMNA: RECAUDADO */}
+                    {/* COLUMNA: RECAUDADO (Corregido: Renderiza la suma de dinero apostado calculada nativamente) */}
                     <td className="p-5 text-center text-luck-gold font-mono font-bold text-xs">
                       <div className="flex items-center justify-center gap-1">
                         <LuDollarSign size={13} />
-                        {calcularRecaudacion(punto.Tickets).toFixed(2)}
+                        {Number(punto.totalRecaudado || 0).toFixed(2)}
                       </div>
                     </td>
 
