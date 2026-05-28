@@ -5,6 +5,7 @@ import Configuracion from './configuracion/Configuracion'
 import DashboardAdmin from './dashboard/Dashboard'
 import PuntosVentas from './puntos-venta/PuntosVentas'
 import Reportes from './reportes/Reportes'
+import Respaldos from './respaldos/Respaldos'
 import Resultados from './resultados/Resultados'
 import Roles from './roles/Roles'
 import Sorteos from './sorteos/Sorteos'
@@ -20,6 +21,7 @@ export {
   DashboardAdmin,
   PuntosVentas,
   Reportes,
+  Respaldos,
   Resultados,
   Roles,
   Sorteos,

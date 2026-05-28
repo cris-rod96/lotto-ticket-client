@@ -1,6 +1,7 @@
 import {
   LuArrowLeftRight,
   LuBinary,
+  LuDatabaseBackup,
   LuDice5,
   LuLibrary,
   LuSettings,
@@ -62,6 +63,13 @@ export const ADMIN_DASHBOARD_ITEMS = [
     path: '/reportes',
     icon: LuTrendingUp,
     desc: 'Analítica de rendimiento',
+  },
+  // NUEVA SECCIÓN: Respaldos de seguridad
+  {
+    label: 'Respaldos',
+    path: '/respaldos',
+    icon: LuDatabaseBackup,
+    desc: 'Copias de seguridad en Cloudinary',
   },
   {
     label: 'Usuarios',

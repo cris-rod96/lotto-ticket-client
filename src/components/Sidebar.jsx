@@ -5,12 +5,13 @@ import {
   LuBinary,
   LuChevronLeft,
   LuClover,
+  LuDatabaseBackup, // NUEVO: Icono para la sección de Respaldos
   LuDice5,
   LuLayoutDashboard,
   LuLibrary,
   LuLoader,
   LuLock,
-  LuLogOut, // Icono de candado para las opciones bloqueadas
+  LuLogOut,
   LuSettings,
   LuShieldCheck,
   LuStore,
@@ -35,7 +36,7 @@ const Sidebar = () => {
   const logout = useAuthStore((state) => state.logout)
   const clearCaja = useCajaStore((state) => state.clearCaja)
 
-  // Mapeo completo con la propiedad 'soloAdmin'
+  // Mapeo completo actualizado
   const menuItems = [
     { title: 'Dashboard', icon: <LuLayoutDashboard />, path: '/dashboard', soloAdmin: true },
     { title: 'Gestión de Tickets', icon: <LuTicket />, path: '/tickets', soloAdmin: false },
@@ -46,6 +47,8 @@ const Sidebar = () => {
     { title: 'Gestión de Cifras', icon: <LuBinary />, path: '/cifras', soloAdmin: true },
     { title: 'Gestión de Cajas', icon: <LuWallet />, path: '/cajas', soloAdmin: false },
     { title: 'Reportes', icon: <LuTrendingUp />, path: '/reportes', soloAdmin: true },
+    // NUEVA OPCIÓN: Respaldos de base de datos (Exclusivo para Administradores)
+    { title: 'Respaldos', icon: <LuDatabaseBackup />, path: '/respaldos', soloAdmin: true },
     { title: 'Puntos de Venta', icon: <LuStore />, path: '/puntos-venta', soloAdmin: true },
     { title: 'Gestión de Usuarios', icon: <LuUsers />, path: '/usuarios', soloAdmin: true },
     { title: 'Gestión de Roles', icon: <LuShieldCheck />, path: '/roles', soloAdmin: true },
@@ -133,11 +136,11 @@ const Sidebar = () => {
             return (
               <Link
                 key={item.path}
-                to={isBlocked ? '#' : item.path} // Evita la navegación si está bloqueado
-                tabIndex={isBlocked ? -1 : 0} // Evita el foco por teclado si está bloqueado
+                to={isBlocked ? '#' : item.path}
+                tabIndex={isBlocked ? -1 : 0}
                 className={`flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-300 group ${
                   isBlocked
-                    ? 'opacity-30 cursor-not-allowed pointer-events-none select-none bg-black/5' // Estilo inhabilitado
+                    ? 'opacity-30 cursor-not-allowed pointer-events-none select-none bg-black/5'
                     : isActive
                       ? 'bg-[#D4AF37] text-[#001a14] font-black shadow-[0_4px_20px_rgba(212,175,55,0.25)]'
                       : 'text-gray-300 hover:bg-white/[0.05] hover:text-[#D4AF37]'

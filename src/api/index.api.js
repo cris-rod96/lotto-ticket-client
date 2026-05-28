@@ -4,6 +4,7 @@ import catalogoAPI from './catalogo/catalogo.api'
 import cifraAPI from './cifra/cifra.api'
 import movimientoAPI from './movimiento/movimiento.api'
 import puntosVentaAPI from './punto-venta/punto-venta.api'
+import respaldoAPI from './respaldo/respaldo.api'
 import resultadoAPI from './resultado/resultado.api'
 import rolAPI from './rol/rol.api'
 import sorteoAPI from './sorteo/sorteo.api'
@@ -18,6 +19,7 @@ export {
   cifraAPI,
   movimientoAPI,
   puntosVentaAPI,
+  respaldoAPI,
   resultadoAPI,
   rolAPI,
   sorteoAPI,

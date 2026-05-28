@@ -15,6 +15,7 @@ import {
   NotFound,
   PuntosVentas,
   Reportes,
+  Respaldos,
   Resultados,
   Roles,
   Sorteos,
@@ -64,6 +65,7 @@ const AppRouter = () => {
                 <Route path="/catalogo" element={<Catalogo />} />
                 <Route path="/suertes" element={<Suertes />} />
                 <Route path="/resultados" element={<Resultados />} />
+                <Route path="/respaldos" element={<Respaldos />} />
               </>
             )}
 
