@@ -108,6 +108,7 @@ const Sorteos = () => {
       const respSorteos = await sorteoAPI.listarTodos(params)
 
       setSorteos(respSorteos.data?.sorteos || [])
+      console.log(respSorteos.data?.sorteos)
       setTotalPages(respSorteos.data?.totalPages || 1)
       setTotalItems(respSorteos.data?.totalItems || 0)
     } catch (error) {
