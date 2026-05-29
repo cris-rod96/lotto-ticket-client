@@ -10,7 +10,6 @@ import useResultados from '@/hooks/useResultados'
 import ReporteGanadoresPDF from '@/utils/pdf/reporteGanadores'
 import { pdf } from '@react-pdf/renderer'
 
-// Variantes para animaciones de la tabla
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
@@ -70,6 +69,7 @@ const Resultados = () => {
     const jornada = resultado.Sorteo?.jornada
     const nombreCatalogo = resultado.Sorteo?.Catalogo?.nombre
 
+    // Filtra sobre los resultados de la página actual
     const registrosRelacionados = resultados.filter(
       (r) =>
         r.Sorteo?.numero === numSorteo &&
@@ -79,8 +79,15 @@ const Resultados = () => {
 
     const dataUnificada = {
       ...resultado,
-      DetallesResultados: registrosRelacionados.flatMap((r) => r.DetallesResultados || []),
-      cifrasDisponibles: registrosRelacionados.map((r) => r.Sorteo?.Cifra?.cantidad),
+      // Si por alguna razón el par está en otra página, garantizamos que al menos use los detalles del registro actual
+      DetallesResultados:
+        registrosRelacionados.length > 0
+          ? registrosRelacionados.flatMap((r) => r.DetallesResultados || [])
+          : resultado.DetallesResultados || [],
+      cifrasDisponibles:
+        registrosRelacionados.length > 0
+          ? registrosRelacionados.map((r) => r.Sorteo?.Cifra?.cantidad)
+          : [resultado.Sorteo?.Cifra?.cantidad],
     }
 
     setGroupedFlyerData(dataUnificada)
@@ -91,16 +98,14 @@ const Resultados = () => {
     <motion.div initial="hidden" animate="visible" className="w-full pb-10">
       <ResultadoHeader setShowModal={setShowModal} />
 
-      {/* BARRA DE FILTROS SELECTS DE ALTO CONTRASTE */}
       <ResultadoFilters
-        filteredResults={filteredResults}
+        filteredResults={currentData}
         setJornadaFilter={setJornadaFilter}
         jornadaFilter={jornadaFilter}
         utilidadFilter={utilidadFilter}
         setUtilidadFilter={setUtilidadFilter}
       />
 
-      {/* TABLA */}
       <ResultadoTable
         containerVariants={containerVariants}
         rowVariants={rowVariants}
@@ -114,7 +119,6 @@ const Resultados = () => {
         setCurrentPage={setCurrentPage}
       />
 
-      {/* MODALES */}
       {showModal && (
         <ResultadoModal
           isOpen={showModal}
