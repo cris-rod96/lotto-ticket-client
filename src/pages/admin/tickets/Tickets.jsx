@@ -99,7 +99,6 @@ const Tickets = () => {
       }
 
       const response = await ticketAPI.listarTodos(params)
-      console.log(response.data)
 
       // Asignamos los estados destructurados desde el nuevo JSON del servidor
       setTickets(response.data?.tickets || [])
