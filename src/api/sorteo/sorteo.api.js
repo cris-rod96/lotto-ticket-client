@@ -2,8 +2,9 @@ import { instance } from '../base.api'
 const model = 'sorteos'
 
 const sorteoAPI = {
-  listarTodos: async () => {
-    return instance.get(`/${model}/listar/todos`)
+  // Ahora recibe un objeto params (ej: { page: 1, limit: 5, estado: 'Abierto' })
+  listarTodos: async (params = {}) => {
+    return instance.get(`/${model}/listar/todos`, { params })
   },
 
   crear: async (data) => {
@@ -14,17 +15,19 @@ const sorteoAPI = {
     return instance.patch(`/${model}/actualizar-sorteo/${id}`, data)
   },
 
-  listarAbiertos: async () => {
-    return instance.get(`/${model}/listar/abiertos`)
+  // También añadimos params aquí por si necesitas paginar o filtrar los abiertos
+  listarAbiertos: async (params = {}) => {
+    return instance.get(`/${model}/listar/abiertos`, { params })
   },
 
-  listarCerrados: async () => {
-    return instance.get(`/${model}/listar/cerrados`)
+  // También añadimos params aquí por si necesitas paginar o filtrar los cerrados
+  listarCerrados: async (params = {}) => {
+    return instance.get(`/${model}/listar/cerrados`, { params })
   },
 
   eliminar: async (id) => {
     return instance.delete(`/${model}/eliminar/${id}`)
-  }
+  },
 }
 
 export default sorteoAPI

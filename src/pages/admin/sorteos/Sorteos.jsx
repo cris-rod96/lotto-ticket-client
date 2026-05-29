@@ -1,8 +1,9 @@
 import { catalogoAPI, cifraAPI, sorteoAPI } from '@/api/index.api'
 import SorteoModal from '@/components/SorteoModal'
 import Title from '@/components/Titlte'
+import usePaginationWindow from '@/hooks/usePaginationWindow'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   LuCalendar,
   LuChevronLeft,
@@ -52,7 +53,10 @@ const Sorteos = () => {
   const [catalogos, setCatalogos] = useState([])
   const [cifras, setCifras] = useState([])
 
+  // Variables de control de paginación del Servidor
   const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
   const itemsPerPage = 5
 
   const handleEdit = (sorteo) => {
@@ -77,7 +81,7 @@ const Sorteos = () => {
           icon: 'success',
           text: resp.data?.message || 'Eliminación exitosa',
         })
-        fetchData()
+        fetchDataSorteos()
       } catch (error) {
         const msg = error.response?.data?.message || 'No se pudo eliminar'
         Swal.fire({ title: 'Error', text: msg, icon: 'error' })
@@ -85,45 +89,55 @@ const Sorteos = () => {
     }
   }
 
-  // Filtrado múltiple combinado basado en selects (Se incluye validación de fecha)
-  const filteredSorteos = useMemo(() => {
-    return sorteos.filter((s) => {
-      const matchesCatalogo = catalogoFilter === 'Todos' || s.CatalogoId === catalogoFilter
-      const matchesJornada = jornadaFilter === 'Todos' || s.jornada === jornadaFilter
-      const matchesCifra = cifraFilter === 'Todos' || s.CifraId === cifraFilter
-      const matchesStatus = statusFilter === 'Todos' || s.estado === statusFilter
-      const matchesDate = !dateFilter || s.fechaSorteo === dateFilter
+  // Usamos el hook pasándole la página actual y el total de páginas provisto por el servidor
+  const pageNumbers = usePaginationWindow(currentPage, totalPages)
 
-      return matchesCatalogo && matchesJornada && matchesCifra && matchesStatus && matchesDate
-    })
-  }, [sorteos, catalogoFilter, jornadaFilter, cifraFilter, statusFilter, dateFilter])
-
-  const totalPages = Math.ceil(filteredSorteos.length / itemsPerPage)
-
-  const currentData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage
-    return filteredSorteos.slice(start, start + itemsPerPage)
-  }, [filteredSorteos, currentPage])
-
-  // Resetear a página 1 automáticamente cuando cambie cualquier filtro
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [catalogoFilter, jornadaFilter, cifraFilter, statusFilter, dateFilter])
-
-  const fetchData = async () => {
+  // Carga independiente de Sorteos Paginados y Filtrados desde el Backend
+  const fetchDataSorteos = async () => {
     try {
-      const [respSorteos, respCatalogos, respCifras] = await Promise.all([
-        sorteoAPI.listarTodos(),
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        CatalogoId: catalogoFilter,
+        jornada: jornadaFilter,
+        CifraId: cifraFilter,
+        estado: statusFilter,
+        fechaSorteo: dateFilter || undefined,
+      }
+
+      const respSorteos = await sorteoAPI.listarTodos(params)
+
+      setSorteos(respSorteos.data?.sorteos || [])
+      setTotalPages(respSorteos.data?.totalPages || 1)
+      setTotalItems(respSorteos.data?.totalItems || 0)
+    } catch (error) {
+      error
+    }
+  }
+
+  // Carga inicial estática para los componentes selectores de la matriz
+  const fetchFiltrosData = async () => {
+    try {
+      const [respCatalogos, respCifras] = await Promise.all([
         catalogoAPI.listarTodos(),
         cifraAPI.listarTodas(),
       ])
-      setSorteos(respSorteos.data?.sorteos || [])
       setCatalogos(respCatalogos.data?.catalogos || [])
       setCifras(respCifras.data?.cifras || [])
     } catch (error) {
       error
     }
   }
+
+  // Se ejecuta cada vez que cambia la página actual o se manipula algún filtro
+  useEffect(() => {
+    fetchDataSorteos()
+  }, [currentPage, catalogoFilter, jornadaFilter, cifraFilter, statusFilter, dateFilter])
+
+  // Resetear a página 1 automáticamente cuando cambie cualquier filtro
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [catalogoFilter, jornadaFilter, cifraFilter, statusFilter, dateFilter])
 
   const handleSave = async (formData) => {
     try {
@@ -147,7 +161,7 @@ const Sorteos = () => {
       }
 
       setShowModal(false)
-      fetchData()
+      fetchDataSorteos()
     } catch (error) {
       const msg = error.response?.data?.message || 'Error al procesar el sorteo'
       Swal.fire({
@@ -166,7 +180,7 @@ const Sorteos = () => {
   }
 
   useEffect(() => {
-    fetchData()
+    fetchFiltrosData()
   }, [])
 
   return (
@@ -305,10 +319,10 @@ const Sorteos = () => {
         </div>
       </motion.div>
 
-      {/* CONTADOR */}
+      {/* CONTADOR EN BASE A DATA DEL SERVIDOR */}
       <div className="mb-4 text-right pr-4 hidden lg:block">
         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-          {filteredSorteos.length} Sorteos filtrados
+          {totalItems} Sorteos filtrados
         </span>
       </div>
 
@@ -334,8 +348,8 @@ const Sorteos = () => {
             </thead>
             <tbody className="divide-y divide-white/[0.03]">
               <AnimatePresence mode="popLayout" initial={false}>
-                {currentData.length > 0 ? (
-                  currentData.map((sorteo) => (
+                {sorteos.length > 0 ? (
+                  sorteos.map((sorteo) => (
                     <motion.tr
                       key={sorteo.id}
                       variants={rowVariants}
@@ -455,9 +469,9 @@ const Sorteos = () => {
           </table>
         </div>
 
-        {/* --- PAGINACIÓN --- */}
+        {/* --- PAGINACIÓN CON EL HOOK INTEGRADO --- */}
         {totalPages > 1 && (
-          <div className="p-6 border-t border-white/5 bg-white/[0.01] flex justify-between items-center">
+          <div className="p-6 border-t border-white/5 bg-white/[0.01] flex justify-between items-center select-none">
             <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
               Página {currentPage} de {totalPages}
             </p>
@@ -465,31 +479,43 @@ const Sorteos = () => {
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all"
+                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all cursor-pointer"
               >
                 <LuChevronLeft size={20} />
               </button>
 
-              <div className="flex gap-1">
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${
-                      currentPage === i + 1
-                        ? 'bg-luck-gold text-black'
-                        : 'text-zinc-500 hover:bg-white/5'
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+              <div className="flex gap-1 items-center">
+                {pageNumbers.map((page, index) => {
+                  if (page === 'ellipsis-left' || page === 'ellipsis-right') {
+                    return (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="w-8 h-8 flex items-center justify-center text-zinc-600 text-[11px] font-black"
+                      >
+                        ...
+                      </span>
+                    )
+                  }
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
+                        currentPage === page
+                          ? 'bg-luck-gold text-black'
+                          : 'text-zinc-500 hover:bg-white/5'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                })}
               </div>
 
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
-                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all"
+                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all cursor-pointer"
               >
                 <LuChevronRight size={20} />
               </button>
