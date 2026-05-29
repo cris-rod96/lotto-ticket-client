@@ -10,6 +10,7 @@ import {
   LuTrendingUp,
   LuTrophy,
 } from 'react-icons/lu'
+
 const ResultadoTable = ({
   containerVariants,
   rowVariants,
@@ -34,7 +35,9 @@ const ResultadoTable = ({
               <th className="p-6">Sorteo</th>
               <th className="p-6">Fecha / Hora</th>
               <th className="p-6">Ventas</th>
-              <th className="p-6">Premios</th>
+              <th className="p-6">Monto Premio</th>
+              <th className="p-6">Monto Pagado</th>
+              <th className="p-6">Por Pagar</th>
               <th className="p-6">Utilidad Neta</th>
               <th className="p-6 text-right">Acciones</th>
             </tr>
@@ -44,8 +47,8 @@ const ResultadoTable = ({
               {loading ? (
                 <tr>
                   <td
-                    colSpan="6"
-                    className="p-20 text-center animate-pulse text-zinc-500 font-black italic"
+                    colSpan="8"
+                    className="p-20 text-center animate-pulse text-zinc-500 font-black"
                   >
                     CARGANDO...
                   </td>
@@ -54,7 +57,10 @@ const ResultadoTable = ({
                 currentData.map((res) => {
                   const sorteo = res.Sorteo
                   const recaudado = parseFloat(sorteo?.montoRecaudado || 0)
-                  const premios = parseFloat(sorteo?.montoPorPagar || 0)
+                  const pagado = parseFloat(sorteo?.montoPagado || 0)
+                  const porPagar = parseFloat(sorteo?.montoPorPagar || 0)
+                  const montoPremio = pagado + porPagar
+
                   const utilidad = parseFloat(sorteo?.utilidadNeta || 0)
                   const esPositivo = utilidad >= 0
 
@@ -86,20 +92,37 @@ const ResultadoTable = ({
                           {sorteo?.horaSorteo}
                         </span>
                       </td>
-                      <td className="p-6 text-white font-black italic tracking-tighter">
+
+                      {/* VENTAS: Blanco limpio sin cursiva */}
+                      <td className="p-6 text-white font-black tracking-tighter">
                         ${recaudado.toFixed(2)}
                       </td>
-                      <td className="p-6 text-luck-gold font-black italic tracking-tighter">
-                        ${premios.toFixed(2)}
+
+                      {/* MONTO PREMIO TOTAL: Dorado */}
+                      <td className="p-6 text-luck-gold font-black tracking-tighter">
+                        ${montoPremio.toFixed(2)}
                       </td>
+
+                      {/* MONTO PAGADO: Cian templado diferenciador */}
+                      <td className="p-6 text-cyan-400 font-black tracking-tighter">
+                        ${pagado.toFixed(2)}
+                      </td>
+
+                      {/* POR PAGAR: Naranja/Ámbar cálido de advertencia de saldo */}
+                      <td className="p-6 text-orange-400 font-black tracking-tighter">
+                        ${porPagar.toFixed(2)}
+                      </td>
+
+                      {/* UTILIDAD NETA: Esmeralda o Rose vibrante según balance */}
                       <td className="p-6">
                         <div
-                          className={`flex items-center gap-2 font-black italic ${esPositivo ? 'text-emerald-400' : 'text-red-400'}`}
+                          className={`flex items-center gap-2 font-black ${esPositivo ? 'text-emerald-400' : 'text-rose-400'}`}
                         >
                           {esPositivo ? <LuTrendingUp size={18} /> : <LuTrendingDown size={18} />}$
                           {utilidad.toFixed(2)}
                         </div>
                       </td>
+
                       <td className="p-6">
                         <div className="flex justify-end gap-2">
                           <button
@@ -131,7 +154,7 @@ const ResultadoTable = ({
               ) : (
                 /* ESTADO VACÍO */
                 <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <td colSpan="6" className="p-32 text-center">
+                  <td colSpan="8" className="p-32 text-center">
                     <div className="flex flex-col items-center justify-center opacity-20">
                       <LuInbox size={60} className="mb-4 text-luck-gold" />
                       <p className="text-xs font-black uppercase tracking-[0.4em] text-white">
@@ -151,7 +174,7 @@ const ResultadoTable = ({
 
       {/* PAGINACIÓN */}
       {totalPages > 1 && (
-        <div className="p-6 border-t border-white/5 bg-white/[0.01] flex justify-between items-center">
+        <div className="p-6 border-t border-white/5 bg-white/[0.01] flex justify-between items-center select-none">
           <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
             Página {currentPage} de {totalPages}
           </p>
@@ -159,7 +182,7 @@ const ResultadoTable = ({
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => p - 1)}
-              className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all"
+              className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all cursor-pointer"
             >
               <LuChevronLeft size={20} />
             </button>
@@ -169,7 +192,7 @@ const ResultadoTable = ({
                 <button
                   key={i}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${
+                  className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
                     currentPage === i + 1
                       ? 'bg-luck-gold text-black'
                       : 'text-zinc-500 hover:bg-white/5'
@@ -182,8 +205,8 @@ const ResultadoTable = ({
 
             <button
               disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((p) => p - 1)}
-              className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all"
+              onClick={() => setCurrentPage((p) => p + 1)}
+              className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all cursor-pointer"
             >
               <LuChevronRight size={20} />
             </button>
