@@ -61,30 +61,54 @@ const Tickets = () => {
   const [sorteos, setSorteos] = useState([])
   const [suertes, setSuertes] = useState([])
   const [puntosVenta, setPuntosVenta] = useState([])
-  const [tickets, setTickets] = useState([])
 
-  // Paginación
+  // ESTADOS DE SERVIDOR PARA TICKETS Y PAGINACIÓN
+  const [tickets, setTickets] = useState([])
+  const [totalItems, setTotalItems] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 8
 
-  const fetchData = async () => {
-    setLoading(true)
+  // 1. CARGA INICIAL DE CATÁLOGOS/ESTÁTICOS (Solo se ejecuta una vez al montar)
+  const fetchInitialData = async () => {
     try {
-      const [respSorteos, respTickets, respPuntosVenta, respSuertes] = await Promise.all([
+      const [respSorteos, respPuntosVenta, respSuertes] = await Promise.all([
         sorteoAPI.listarAbiertos(),
-        ticketAPI.listarTodos(),
         puntosVentaAPI.listarTodos(),
         suerteAPI.listarTodas(),
       ])
       setSorteos(respSorteos.data?.sorteos || [])
-      setTickets(respTickets.data.tickets || [])
       setPuntosVenta(respPuntosVenta.data.puntosVentas || [])
       setSuertes(respSuertes.data.suertes || [])
     } catch (error) {
-      console.error('Error al cargar datos:', error)
+      console.error('Error al cargar catálogos iniciales:', error)
+    }
+  }
+
+  // 2. CONSULTA DINÁMICA DE TICKETS AL SERVIDOR (Paginada y Filtrada)
+  const fetchTicketsPaginados = async () => {
+    setLoading(true)
+    try {
+      // Mapeamos los filtros del frontend a las Query Strings esperadas por el Backend
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        PuntoVentaId: filterPuntoVenta,
+        fechaSorteo: filterFecha,
+        estadoLiquidacion: filterEstado,
+      }
+
+      const response = await ticketAPI.listarTodos(params)
+
+      // Asignamos los estados destructurados desde el nuevo JSON del servidor
+      setTickets(response.data?.tickets || [])
+      setTotalItems(response.data?.totalItems || 0)
+      setTotalPages(response.data?.totalPages || 1)
+    } catch (error) {
+      console.error('Error al cargar tickets paginados:', error)
       Swal.fire({
         title: 'Error',
-        text: 'No se pudo sincronizar la información de tickets',
+        text: 'No se pudo sincronizar la información de tickets con el servidor',
         icon: 'error',
       })
     } finally {
@@ -92,9 +116,19 @@ const Tickets = () => {
     }
   }
 
+  // Disparadores de carga de datos
   useEffect(() => {
-    fetchData()
+    fetchInitialData()
   }, [])
+
+  useEffect(() => {
+    fetchTicketsPaginados()
+  }, [currentPage, filterPuntoVenta, filterFecha, filterEstado])
+
+  // Resetear a la página 1 en caso de alterar cualquier criterio de búsqueda
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filterPuntoVenta, filterFecha, filterEstado])
 
   const handleConfirmarPagoReal = async (ticketId, puntoVentaId, cajaId) => {
     Swal.fire({
@@ -118,7 +152,7 @@ const Tickets = () => {
           customClass: { popup: 'rounded-[2rem]' },
         })
         setCaja(response.data.caja)
-        fetchData()
+        fetchTicketsPaginados()
 
         return response.data
       }
@@ -245,7 +279,7 @@ const Tickets = () => {
             icon: 'success',
             confirmButtonColor: '#EAB308',
           })
-          fetchData()
+          fetchTicketsPaginados()
         }
       } catch (error) {
         Swal.fire({
@@ -258,47 +292,11 @@ const Tickets = () => {
     }
   }
 
-  // OBTENER FECHAS ÚNICAS DISPONIBLES EN LOS TICKETS PARA EL SELECT
+  // OBTENER FECHAS ÚNICAS DISPONIBLES EN LOS SORTEOS ACTIVOS PARA EL SELECT
   const fechasDisponibles = useMemo(() => {
-    const fechas = tickets.map((t) => t.Sorteo?.fechaSorteo).filter((fecha) => !!fecha)
+    const fechas = sorteos.map((s) => s.fechaSorteo).filter((fecha) => !!fecha)
     return [...new Set(fechas)].sort().reverse()
-  }, [tickets])
-
-  // LÓGICA DE FILTRADO MULTI-CRITERIO
-  const filtered = useMemo(() => {
-    return tickets.filter((t) => {
-      // 1. Filtro de Punto de Venta
-      const matchesPV = filterPuntoVenta === 'Todos' || t.PuntoVentaId === filterPuntoVenta
-
-      // 2. Filtro de Fecha del Sorteo
-      const matchesFecha = filterFecha === 'Todos' || t.Sorteo?.fechaSorteo === filterFecha
-
-      // 3. Filtro de Resultados y Estados Financieros
-      let matchesEstado = false
-      if (filterEstado === 'Todos') {
-        matchesEstado = true
-      } else if (filterEstado === 'Ganador_Pendiente') {
-        matchesEstado = t.resultado === 'Ganador' && t.estado === 'Pendiente'
-      } else if (filterEstado === 'Ganador_Pagado') {
-        matchesEstado = t.resultado === 'Ganador' && t.estado === 'Pagado'
-      } else {
-        matchesEstado = t.resultado === filterEstado
-      }
-
-      return matchesPV && matchesFecha && matchesEstado
-    })
-  }, [tickets, filterPuntoVenta, filterFecha, filterEstado])
-
-  const totalPages = Math.ceil(filtered.length / itemsPerPage)
-
-  const currentData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage
-    return filtered.slice(start, start + itemsPerPage)
-  }, [filtered, currentPage])
-
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [filterPuntoVenta, filterFecha, filterEstado])
+  }, [sorteos])
 
   // FORMATEAR FECHAS EN EL SELECT DE FORMA VISUAL (DD/MM/YYYY)
   const formatVisualFecha = (dateString) => {
@@ -307,47 +305,31 @@ const Tickets = () => {
     return `${day}/${month}/${year}`
   }
 
-  // ==========================================================================
   // CÁLCULO DE NÚMEROS DE PÁGINA COMPACTO (SLIDING WINDOW)
-  // ==========================================================================
   const renderPageNumbers = useMemo(() => {
     const pages = []
-    const maxVisibleButtons = 5 // Número máximo de botones numéricos a mostrar en el centro
+    const maxVisibleButtons = 5
 
     if (totalPages <= maxVisibleButtons + 2) {
-      // Si el total de páginas es pequeño, muéstralas todas sin elipsis
       for (let i = 1; i <= totalPages; i++) pages.push(i)
     } else {
-      // Determinar los límites de los botones centrales
       let startPage = Math.max(2, currentPage - 2)
       let endPage = Math.min(totalPages - 1, currentPage + 2)
 
-      // Ajustar si la ventana choca con los extremos
       if (currentPage <= 3) {
         endPage = maxVisibleButtons
       } else if (currentPage >= totalPages - 2) {
         startPage = totalPages - maxVisibleButtons + 1
       }
 
-      // Siempre incluir la primera página
       pages.push(1)
+      if (startPage > 2) pages.push('ellipsis-left')
 
-      // Elipsis izquierda si es necesario
-      if (startPage > 2) {
-        pages.push('ellipsis-left')
-      }
-
-      // Insertar los botones del bloque central
       for (let i = startPage; i <= endPage; i++) {
         pages.push(i)
       }
 
-      // Elipsis derecha si es necesario
-      if (endPage < totalPages - 1) {
-        pages.push('ellipsis-right')
-      }
-
-      // Siempre incluir la última página
+      if (endPage < totalPages - 1) pages.push('ellipsis-right')
       pages.push(totalPages)
     }
     return pages
@@ -456,7 +438,7 @@ const Tickets = () => {
           </span>
           <div className="w-full text-center px-6 py-3.5 bg-white/[0.02] border border-white/5 rounded-2xl whitespace-nowrap flex items-center justify-center">
             <span className="text-[10px] font-black text-luck-gold uppercase tracking-[0.2em]">
-              {filtered.length} Coincidencias
+              {totalItems} Coincidencias
             </span>
           </div>
         </div>
@@ -491,8 +473,8 @@ const Tickets = () => {
                       Sincronizando con el servidor...
                     </td>
                   </tr>
-                ) : currentData.length > 0 ? (
-                  currentData.map((ticket) => (
+                ) : tickets.length > 0 ? (
+                  tickets.map((ticket) => (
                     <motion.tr
                       key={ticket.id}
                       variants={rowVariants}
@@ -587,23 +569,23 @@ const Tickets = () => {
                             <LuEye size={16} />
                           </button>
 
-                          {((ticket.resultado === 'Ganador' && ticket.estado === 'Pending') ||
-                            (ticket.resultado === 'Ganador' && ticket.estado === 'Pendiente')) && (
-                            <motion.button
-                              whileHover={{
-                                scale: 1.05,
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                              }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => {
-                                setTicketToPay(ticket)
-                                setIsPayModalOpen(true)
-                              }}
-                              className="flex items-center gap-2 px-4 py-2 border border-emerald-500/50 text-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                            >
-                              <LuCheck size={14} /> PAGAR
-                            </motion.button>
-                          )}
+                          {ticket.resultado === 'Ganador' &&
+                            (ticket.estado === 'Pending' || ticket.estado === 'Pendiente') && (
+                              <motion.button
+                                whileHover={{
+                                  scale: 1.05,
+                                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => {
+                                  setTicketToPay(ticket)
+                                  setIsPayModalOpen(true)
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 border border-emerald-500/50 text-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                              >
+                                <LuCheck size={14} /> PAGAR
+                              </motion.button>
+                            )}
 
                           {ticket.estado === 'Pagado' && (
                             <button
@@ -714,7 +696,7 @@ const Tickets = () => {
           puntosVenta={puntosVenta}
           sorteos={sorteos}
           usuario={user}
-          fetchData={fetchData}
+          fetchData={fetchTicketsPaginados}
           suertes={suertes}
         />
       )}

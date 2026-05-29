@@ -3,12 +3,13 @@ import { instance } from '../base.api'
 const model = 'tickets'
 
 const ticketAPI = {
-  listarTodos: async () => {
-    return instance.get(`/${model}/listar/todos`)
+  listarTodos: async (params = {}) => {
+    return instance.get(`/${model}/listar/todos`, { params })
   },
 
-  listarPorPuntoDeVenta: async (id) => {
-    return instance.get(`/${model}/listar/punto-de-venta/${id}`)
+  // Ahora acepta opcionalmente parámetros de paginación además del ID
+  listarPorPuntoDeVenta: async (id, params = {}) => {
+    return instance.get(`/${model}/listar/punto-de-venta/${id}`, { params })
   },
 
   vender: async (data) => {
