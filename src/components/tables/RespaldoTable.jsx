@@ -1,3 +1,4 @@
+import usePaginationWindow from '@/hooks/usePaginationWindow'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   LuChevronLeft,
@@ -17,12 +18,16 @@ const RespaldoTable = ({
   totalPages,
   handleCopiarLink,
 }) => {
+  const pageNumbers = usePaginationWindow(currentPage, totalPages)
+
   return (
     <motion.div
       variants={containerVariants}
-      className="bg-[#111615] border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl flex flex-col"
+      // min-h-[600px] evita que la tabla se encoja al cambiar de página o estar vacía
+      className="bg-[#111615] border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl flex flex-col min-h-[600px]"
     >
-      <div className="overflow-x-auto">
+      {/* custom-scrollbar oculta la barra visual manteniendo el scroll */}
+      <div className="overflow-x-auto custom-scrollbar">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-white/[0.02] text-zinc-600 uppercase text-[9px] font-black tracking-[0.2em]">
@@ -33,22 +38,24 @@ const RespaldoTable = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-white/[0.03]">
-            <AnimatePresence mode="popLayout" initial={false}>
+            <AnimatePresence mode="wait">
               {loading ? (
-                <tr>
+                <motion.tr key="loading" exit={{ opacity: 0 }}>
                   <td
                     colSpan="4"
                     className="p-24 text-center text-zinc-500 font-black text-xs uppercase tracking-widest animate-pulse"
                   >
                     Cargando historial de copias...
                   </td>
-                </tr>
+                </motion.tr>
               ) : currentData.length > 0 ? (
                 currentData.map((backup) => (
                   <motion.tr
                     key={backup.id}
                     variants={rowVariants}
-                    layout
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
                     className="group hover:bg-white/[0.01] transition-colors"
                   >
                     <td className="p-5 pl-10">
@@ -84,21 +91,17 @@ const RespaldoTable = ({
                     </td>
                     <td className="p-5 pr-10">
                       <div className="flex justify-end gap-2">
-                        {/* Botón para copiar enlace al portapapeles */}
                         <button
                           onClick={() => handleCopiarLink(backup.url)}
-                          title="Copiar enlace de descarga"
                           className="p-2 bg-zinc-900 border border-white/5 rounded-lg text-zinc-500 hover:text-luck-gold transition-colors"
                         >
                           <LuClipboard size={16} />
                         </button>
-                        {/* Enlace de descarga directo */}
                         <a
                           href={backup.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          title="Descargar archivo .sql"
-                          className="p-2 bg-zinc-900 border border-white/5 rounded-lg text-zinc-500 hover:text-emerald-500 transition-colors flex items-center justify-center"
+                          className="p-2 bg-zinc-900 border border-white/5 rounded-lg text-zinc-500 hover:text-emerald-500 transition-colors"
                         >
                           <LuCloudDownload size={16} />
                         </a>
@@ -107,69 +110,60 @@ const RespaldoTable = ({
                   </motion.tr>
                 ))
               ) : (
-                <tr>
+                <motion.tr
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
                   <td colSpan="4" className="p-16 text-center">
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="flex flex-col items-center justify-center max-w-sm mx-auto"
-                    >
-                      {/* Icono Premium con Ondas de Fondo */}
-                      <div className="relative mb-5 flex items-center justify-center">
-                        <div className="absolute w-16 h-16 bg-luck-gold/5 rounded-full blur-xl animate-pulse" />
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-b from-[#1a1f1e] to-[#111615] border border-white/5 flex items-center justify-center text-luck-gold/40 shadow-inner">
-                          <LuDatabase size={24} className="animate-pulse duration-1000" />
-                        </div>
-                      </div>
-
-                      {/* Textos Informativos */}
-                      <h3 className="text-white font-black text-xs uppercase tracking-wider mb-1">
-                        Sin copias de seguridad
+                    <div className="flex flex-col items-center justify-center">
+                      <LuDatabase size={32} className="text-zinc-800 mb-4" />
+                      <h3 className="text-white font-black text-xs uppercase tracking-widest">
+                        Sin registros
                       </h3>
-                      <p className="text-[11px] text-zinc-500 max-w-[280px] leading-relaxed">
-                        No se registran respaldos en el sistema para los criterios de filtrado
-                        seleccionados.
-                      </p>
-                    </motion.div>
+                    </div>
                   </td>
-                </tr>
+                </motion.tr>
               )}
             </AnimatePresence>
           </tbody>
         </table>
       </div>
 
-      {/* Paginación */}
+      {/* Paginación Inteligente */}
       {totalPages > 1 && (
-        <div className="p-5 border-t border-white/5 bg-white/[0.01] flex justify-between items-center">
+        <div className="mt-auto p-5 border-t border-white/5 bg-white/[0.01] flex justify-between items-center select-none">
           <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
             Pág {currentPage} de {totalPages}
           </span>
-          <div className="flex gap-1">
+          <div className="flex gap-1 items-center">
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => p - 1)}
-              className="p-2 bg-zinc-900 rounded-lg text-zinc-500 hover:text-luck-gold disabled:opacity-30 disabled:pointer-events-none"
+              className="p-2 bg-zinc-900 rounded-lg text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all"
             >
               <LuChevronLeft size={16} />
             </button>
-            {Array.from({ length: totalPages }).map((_, i) => (
+            {pageNumbers.map((page, index) => (
               <button
-                key={i}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`w-8 h-8 rounded-lg text-[10px] font-bold ${
-                  currentPage === i + 1
+                key={index}
+                onClick={() =>
+                  page !== 'ellipsis-left' && page !== 'ellipsis-right' && setCurrentPage(page)
+                }
+                className={`w-8 h-8 rounded-lg text-[10px] font-bold transition-all ${
+                  currentPage === page
                     ? 'bg-luck-gold text-black'
                     : 'text-zinc-600 hover:bg-white/5'
                 }`}
               >
-                {i + 1}
+                {typeof page === 'number' ? page : '...'}
               </button>
             ))}
             <button
               disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((p) => p - 1)}
-              className="p-2 bg-zinc-900 rounded-lg text-zinc-500 hover:text-luck-gold disabled:opacity-30 disabled:pointer-events-none"
+              onClick={() => setCurrentPage((p) => p + 1)}
+              className="p-2 bg-zinc-900 rounded-lg text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all"
             >
               <LuChevronRight size={16} />
             </button>

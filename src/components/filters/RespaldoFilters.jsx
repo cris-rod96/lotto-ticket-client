@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { LuCalendar, LuX } from 'react-icons/lu'
 
-const RespaldoFilters = ({ filterDate, setFilterDate, filteredRespaldos }) => {
+const RespaldoFilters = ({ filterDate, setFilterDate, totalItems }) => {
   return (
     <motion.div className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 flex justify-between items-center gap-4">
       <div className="flex items-center gap-3 w-full max-w-md">
@@ -13,7 +13,7 @@ const RespaldoFilters = ({ filterDate, setFilterDate, filteredRespaldos }) => {
           />
           <input
             type="date"
-            onClick={(e) => e.target.showPicker?.()} // Abre el calendario al dar clic en cualquier lado del input
+            onClick={(e) => e.target.showPicker?.()}
             className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white focus:outline-none focus:border-luck-gold/50 text-xs transition-all scheme-dark cursor-pointer font-mono 
             [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
             value={filterDate}
@@ -36,9 +36,9 @@ const RespaldoFilters = ({ filterDate, setFilterDate, filteredRespaldos }) => {
         )}
       </div>
 
-      {/* Contador de registros */}
+      {/* Contador de registros (AHORA DINÁMICO DEL SERVIDOR) */}
       <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest px-4 whitespace-nowrap">
-        {filteredRespaldos.length} {filteredRespaldos.length === 1 ? 'Respaldo' : 'Respaldos'}
+        {totalItems} {totalItems === 1 ? 'Respaldo encontrado' : 'Respaldos encontrados'}
       </span>
     </motion.div>
   )

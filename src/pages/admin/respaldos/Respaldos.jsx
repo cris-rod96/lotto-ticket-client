@@ -20,9 +20,8 @@ const Respaldos = () => {
   const {
     filterDate,
     setFilterDate,
-    filteredRespaldos,
     loading,
-    currentData,
+    currentData, // Estos ya vienen paginados desde el servidor
     currentPage,
     setCurrentPage,
     totalPages,
@@ -36,7 +35,8 @@ const Respaldos = () => {
       <RespaldoFilters
         filterDate={filterDate}
         setFilterDate={setFilterDate}
-        filteredRespaldos={filteredRespaldos}
+        // Nota: si RespaldoFilters necesita totalItems,
+        // podrías añadirlo al hook y pasarlo aquí.
       />
 
       <RespaldoTable
