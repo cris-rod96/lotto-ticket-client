@@ -73,7 +73,7 @@ const Tickets = () => {
   const fetchInitialData = async () => {
     try {
       const [respSorteos, respPuntosVenta, respSuertes] = await Promise.all([
-        sorteoAPI.listarAbiertos(),
+        sorteoAPI.listarAbiertos({ estado: 'Abierto' }),
         puntosVentaAPI.listarTodos(),
         suerteAPI.listarTodas(),
       ])
