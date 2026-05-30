@@ -3,6 +3,7 @@ import FlyerResultadosModal from '@/components/FlyerResultadosModal'
 import ResultadoModal from '@/components/ResultadoModal'
 import { motion } from 'framer-motion'
 
+import ActualizarResultadoModal from '@/components/ActualizarResultadoModal'
 import ResultadoFilters from '@/components/filters/ResultadoFilters'
 import ResultadoHeader from '@/components/headers/ResultadoHeader'
 import ResultadoTable from '@/components/tables/ResultadoTable'
@@ -44,6 +45,10 @@ const Resultados = () => {
     selectedResultado,
     showFlyerModal,
     groupedFlyerData,
+    showEditModal,
+    setShowEditModal,
+    selectedEditResultado,
+    handleActualizarResultado,
   } = useResultados()
 
   const handleGenerarReporteGanadores = async (resultado) => {
@@ -116,7 +121,16 @@ const Resultados = () => {
         totalPages={totalPages}
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
+        handleActualizarResultado={handleActualizarResultado}
       />
+      {showEditModal && (
+        <ActualizarResultadoModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          fetchData={fetchData}
+          sorteoData={selectedEditResultado}
+        />
+      )}
 
       {showModal && (
         <ResultadoModal

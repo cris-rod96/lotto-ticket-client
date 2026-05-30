@@ -7,6 +7,7 @@ import {
   LuFileText,
   LuImage,
   LuInbox,
+  LuRefreshCcw,
   LuTrendingDown,
   LuTrendingUp,
   LuTrophy,
@@ -18,6 +19,7 @@ const ResultadoTable = ({
   handleOpenDetalle,
   handlePrepareFlyer,
   handleGenerarReporteGanadores,
+  handleActualizarResultado,
   totalPages,
   currentPage,
   setCurrentPage,
@@ -123,6 +125,13 @@ const ResultadoTable = ({
                           className="p-3 bg-zinc-900 rounded-xl text-blue-400"
                         >
                           <LuFileText size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleActualizarResultado(res)}
+                          className="p-3 bg-zinc-900 rounded-xl text-yellow-500 hover:text-yellow-400 border border-yellow-500/20"
+                          title="Recalcular resultado"
+                        >
+                          <LuRefreshCcw size={16} />
                         </button>
                       </td>
                     </tr>

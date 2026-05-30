@@ -8,6 +8,9 @@ const useResultados = () => {
   const [selectedResultado, setSelectedResultado] = useState(null)
   const [groupedFlyerData, setGroupedFlyerData] = useState(null)
 
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [selectedEditResultado, setSelectedEditResultado] = useState(null)
+
   // NUEVOS ESTADOS PARA FILTROS SELECTORES
   const [jornadaFilter, setJornadaFilter] = useState('Todos')
   const [utilidadFilter, setUtilidadFilter] = useState('Todos')
@@ -19,6 +22,11 @@ const useResultados = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1) // Ahora viene de la API
   const itemsPerPage = 6 // Tu limit fijo
+
+  const handleActualizarResultado = (resultado) => {
+    setSelectedEditResultado(resultado)
+    setShowEditModal(true)
+  }
 
   // Modificamos fetchData para que escuche la página y el límite
   const fetchData = async () => {
@@ -101,6 +109,11 @@ const useResultados = () => {
     selectedResultado,
     showFlyerModal,
     groupedFlyerData,
+
+    showEditModal,
+    setShowEditModal,
+    selectedEditResultado,
+    handleActualizarResultado,
   }
 }
 

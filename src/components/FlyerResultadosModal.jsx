@@ -23,13 +23,34 @@ const FlyerResultadosModal = ({ isOpen, onClose, data }) => {
 
   const { resultados3, resultados2, maxFilas } = useMemo(() => {
     if (!data?.DetallesResultados) return { resultados3: [], resultados2: [], maxFilas: 0 }
-    const r3 = data.DetallesResultados.filter(
-      (d) => (d.Sorteo?.Cifra?.cantidad || d.numeroGanador?.length) === 3
-    ).sort((a, b) => (a.prioridad || 0) - (b.prioridad || 0))
-    const r2 = data.DetallesResultados.filter(
-      (d) => (d.Sorteo?.Cifra?.cantidad || d.numeroGanador?.length) === 2
-    ).sort((a, b) => (a.prioridad || 0) - (b.prioridad || 0))
-    return { resultados3: r3, resultados2: r2, maxFilas: Math.max(r3.length, r2.length, 8) }
+
+    // Diccionario de orden
+    const orden = {
+      PRIMERA: 0,
+      SEGUNDA: 1,
+      TERCERA: 2,
+      CUARTA: 3,
+      QUINTA: 4,
+      SEXTA: 5,
+      SEPTIMA: 6,
+      OCTAVA: 7,
+    }
+
+    // Función para obtener el índice de orden
+    const getOrden = (str) => {
+      const palabra = str?.toUpperCase().split(' ')[0]
+      return orden[palabra] ?? 99
+    }
+
+    // Filtramos y ordenamos basándonos en la descripción de la suerte, NO en la longitud
+    const ordenados = [...data.DetallesResultados].sort(
+      (a, b) => getOrden(a.Suerte?.descripcion) - getOrden(b.Suerte?.descripcion)
+    )
+
+    const resultados2 = ordenados.filter((d) => d.numeroGanador?.length === 2)
+    const resultados3 = ordenados.filter((d) => d.numeroGanador?.length === 3)
+
+    return { resultados3, resultados2, maxFilas: 8 }
   }, [data])
 
   if (!isOpen || !data) return null

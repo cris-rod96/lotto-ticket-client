@@ -7,6 +7,11 @@ const resultadoAPI = {
     return instance.post(`/${model}/registrar`, data)
   },
 
+  actualizar: async (data) => {
+    console.log(data)
+    return instance.put(`/${model}/actualizar`, data)
+  },
+
   listar: async (filtros = {}) => {
     // Desestructuramos los nuevos filtros
     const { fecha, jornada, utilidad, page, limit } = filtros

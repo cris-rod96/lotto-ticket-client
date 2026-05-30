@@ -102,6 +102,7 @@ const Tickets = () => {
 
       // Asignamos los estados destructurados desde el nuevo JSON del servidor
       setTickets(response.data?.tickets || [])
+      console.log(response.data?.tickets)
       setTotalItems(response.data?.totalItems || 0)
       setTotalPages(response.data?.totalPages || 1)
     } catch (error) {
