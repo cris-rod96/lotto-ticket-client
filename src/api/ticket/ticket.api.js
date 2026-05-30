@@ -9,6 +9,7 @@ const ticketAPI = {
 
   // Ahora acepta opcionalmente parámetros de paginación además del ID
   listarPorPuntoDeVenta: async (id, params = {}) => {
+    console.log(params)
     return instance.get(`/${model}/listar/punto-de-venta/${id}`, { params })
   },
 

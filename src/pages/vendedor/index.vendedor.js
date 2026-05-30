@@ -1,6 +1,7 @@
 import CajasVendedor from './cajas/Cajas'
 import DashboardVendedor from './dashboard/Dashboard'
-import SorteosVendedor from './sorteos/Sorteos'
+import ResultadosVendedor from './resultados/ResultadosVendedor'
+import SorteosVendedor from './sorteos/SorteosVendedor'
 import TicketsVendedor from './tickets/Tickets'
 
-export { CajasVendedor, DashboardVendedor, SorteosVendedor, TicketsVendedor }
+export { CajasVendedor, DashboardVendedor, ResultadosVendedor, SorteosVendedor, TicketsVendedor }

@@ -1,5 +1,5 @@
 import { pdf } from '@react-pdf/renderer'
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import {
   LuCalendar,
@@ -7,17 +7,19 @@ import {
   LuChevronLeft,
   LuChevronRight,
   LuEye,
+  LuFilter,
   LuInbox,
   LuPlus,
   LuReceipt,
-  LuSearch,
+  LuStore,
   LuTicket,
+  LuTrash2,
   LuUser,
 } from 'react-icons/lu'
 import Swal from 'sweetalert2'
 
 import { sorteoAPI, suerteAPI, ticketAPI } from '@/api/index.api'
-import DetalleJugadasModal from '@/components/DetalleJugadasModal' // Importación del nuevo modal
+import DetalleJugadasModal from '@/components/DetalleJugadasModal'
 import ModalPagoTicketVendedor from '@/components/ModalPagoTicketVendedor'
 import TicketModalVendedor from '@/components/TicketModalVendedor'
 import Title from '@/components/Titlte'
@@ -25,6 +27,7 @@ import { useAuthStore } from '@/store/useAuthStore'
 import { useCajaStore } from '@/store/useCajaStore'
 import ComprobantePagoTemplate from '@/templates/ComprobanteTemplate'
 import TicketTemplate from '@/templates/TicketTemplate'
+import { AnimatePresence } from 'framer-motion'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -42,50 +45,62 @@ const Tickets = () => {
   const [showModal, setShowModal] = useState(false)
   const [isPayModalOpen, setIsPayModalOpen] = useState(false)
   const [ticketToPay, setTicketToPay] = useState(null)
-
-  // ESTADOS PARA EL NUEVO MODAL DE DETALLES
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [selectedTicketDetails, setSelectedTicketDetails] = useState(null)
 
-  // FILTROS DEL VENDEDOR
-  const [searchTerm, setSearchTerm] = useState('')
   const [filterFecha, setFilterFecha] = useState('Todos')
-  const [resultFilter, setResultFilter] = useState('Todos')
+  const [filterEstado, setFilterEstado] = useState('Todos')
 
-  // Datos fijos del vendedor autenticado
   const { user } = useAuthStore()
   const caja = useCajaStore((state) => state.caja)
   const setCaja = useCajaStore((state) => state.setCaja)
 
   const [sorteos, setSorteos] = useState([])
   const [suertes, setSuertes] = useState([])
-  const [tickets, setTickets] = useState([])
 
-  // Paginación
+  // ESTADOS DE PAGINACIÓN DESDE SERVIDOR
+  const [tickets, setTickets] = useState([])
+  const [totalItems, setTotalItems] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 8
 
-  const fetchData = async () => {
+  const fetchTickets = async () => {
     setLoading(true)
     try {
-      const [respSorteos, respTickets, respSuertes] = await Promise.all([
-        sorteoAPI.listarAbiertos(),
-        ticketAPI.listarPorPuntoDeVenta(user.PuntoVentaId),
-        suerteAPI.listarTodas(),
-      ])
+      // Cargamos catálogos iniciales solo si están vacíos
+      if (sorteos.length === 0) {
+        const [respSorteos, respSuertes] = await Promise.all([
+          sorteoAPI.listarAbiertos({ estado: 'Todos' }),
+          suerteAPI.listarTodas(),
+        ])
+        setSorteos(respSorteos.data?.sorteos || [])
+        console.log(respSorteos.data)
+        setSuertes(respSuertes.data.suertes || [])
+        console.log(respSuertes.data.suertes)
+      }
 
-      setSorteos(respSorteos.data?.sorteos || [])
-      setSuertes(respSuertes.data.suertes || [])
-      setTickets(respTickets.data.tickets || [])
+      console.log(filterFecha, filterEstado)
+
+      // Petición paginada al servidor - Ajustado a tu estructura de respuesta
+      const response = await ticketAPI.listarPorPuntoDeVenta(user.PuntoVentaId, {
+        page: currentPage,
+        limit: itemsPerPage,
+        // ESTA ES LA CORRECCIÓN:
+        fecha: filterFecha !== 'Todos' ? filterFecha : undefined,
+        estado: filterEstado !== 'Todos' ? filterEstado : undefined,
+      })
+
+      // Accedemos a la respuesta según la estructura que me pasaste:
+      setTickets(response.data.data || []) // Los tickets están en response.data.data
+      setTotalItems(response.data.pagination.totalItems || 0)
+      setTotalPages(response.data.pagination.totalPages || 1)
     } catch (error) {
       Swal.fire({
         title: 'Error',
         text: 'No se pudo sincronizar tus ventas del día',
         icon: 'error',
         confirmButtonColor: '#ef4444',
-        customClass: {
-          popup: 'rounded-[2rem] border border-black/5',
-        },
       })
     } finally {
       setLoading(false)
@@ -94,276 +109,204 @@ const Tickets = () => {
 
   useEffect(() => {
     if (user?.PuntoVentaId) {
-      fetchData()
+      fetchTickets()
     }
-  }, [user])
+  }, [user, currentPage, filterEstado, filterFecha])
+
+  // Reset a página 1 si cambian filtros (cuando implementes filtrado avanzado)
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filterEstado, filterFecha])
+
+  const renderPageNumbers = useMemo(() => {
+    const pages = []
+    const maxVisibleButtons = 5
+    if (totalPages <= maxVisibleButtons + 2) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i)
+    } else {
+      let startPage = Math.max(2, currentPage - 2)
+      let endPage = Math.min(totalPages - 1, currentPage + 2)
+      if (currentPage <= 3) endPage = maxVisibleButtons
+      else if (currentPage >= totalPages - 2) startPage = totalPages - maxVisibleButtons + 1
+      pages.push(1)
+      if (startPage > 2) pages.push('ellipsis-left')
+      for (let i = startPage; i <= endPage; i++) pages.push(i)
+      if (endPage < totalPages - 1) pages.push('ellipsis-right')
+      pages.push(totalPages)
+    }
+    return pages
+  }, [totalPages, currentPage])
 
   const handleConfirmarPagoReal = async (ticketId, puntoVentaId, cajaId) => {
     Swal.fire({
       title: 'PROCESANDO PAGO...',
       allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading()
-      },
-      customClass: { popup: 'rounded-[2rem] border border-black/5' },
+      didOpen: () => Swal.showLoading(),
     })
-
     try {
       const response = await ticketAPI.pagarTicket(ticketId, user.id, cajaId)
-
       if (response.status === 200) {
         setIsPayModalOpen(false)
-
-        await Swal.fire({
-          title: '¡PAGO EXITOSO!',
-          text: response.data?.message || response.message || 'Se registró el cobro correctamente.',
-          icon: 'success',
-          confirmButtonColor: '#EAB308',
-          customClass: { popup: 'rounded-[2rem] border border-black/5' },
-        })
-
+        await Swal.fire({ title: '¡PAGO EXITOSO!', icon: 'success', confirmButtonColor: '#EAB308' })
         setCaja(response.data.caja)
-        fetchData()
-
+        fetchTickets()
         return response.data
       }
-      return null
     } catch (error) {
-      Swal.fire({
-        title: 'ERROR EN PAGO',
-        text: error.response?.data?.message || error.message,
-        icon: 'error',
-        confirmButtonColor: '#ef4444',
-        customClass: { popup: 'rounded-[2rem] border border-black/5' },
-      })
-      return null
+      Swal.fire({ title: 'ERROR', text: error.response?.data?.message, icon: 'error' })
     }
   }
 
   const handlePrintTicket = async (ticket) => {
     try {
-      Swal.fire({
-        title: 'PREPARANDO TICKET...',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
-        customClass: { popup: 'rounded-[2rem]' },
-      })
-
       const doc = <TicketTemplate ticket={ticket} suertes={suertes} />
       const blob = await pdf(doc).toBlob()
       const url = URL.createObjectURL(blob)
-
       const iframe = document.createElement('iframe')
       iframe.style.display = 'none'
       iframe.src = url
       document.body.appendChild(iframe)
-
       iframe.onload = () => {
-        iframe.contentWindow.focus()
         iframe.contentWindow.print()
-
-        setTimeout(() => {
-          document.body.removeChild(iframe)
-          URL.revokeObjectURL(url)
-        }, 2000)
-        Swal.close()
+        document.body.removeChild(iframe)
+        URL.revokeObjectURL(url)
       }
     } catch (error) {
-      console.error('Error de impresión:', error)
-      Swal.fire({
-        title: 'Error de impresión',
-        icon: 'error',
-        confirmButtonColor: '#ef4444',
-        customClass: { popup: 'rounded-[2rem] border border-black/5' },
-      })
+      console.error(error)
     }
   }
 
   const handlePrintComprobante = async (ticket) => {
     try {
-      Swal.fire({
-        title: 'GENERANDO COMPROBANTE...',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
-        customClass: { popup: 'rounded-[2rem]' },
-      })
-
-      const { pdf } = await import('@react-pdf/renderer')
       const doc = <ComprobantePagoTemplate ticket={ticket} />
       const blob = await pdf(doc).toBlob()
       const url = URL.createObjectURL(blob)
-
       const iframe = document.createElement('iframe')
       iframe.style.position = 'fixed'
-      iframe.style.right = '0'
-      iframe.style.bottom = '0'
       iframe.style.width = '0'
       iframe.style.height = '0'
-      iframe.style.border = '0'
       iframe.src = url
       document.body.appendChild(iframe)
-
       iframe.onload = () => {
-        iframe.contentWindow.focus()
         iframe.contentWindow.print()
-
-        setTimeout(() => {
-          document.body.removeChild(iframe)
-          URL.revokeObjectURL(url)
-        }, 3000)
-        Swal.close()
+        document.body.removeChild(iframe)
+        URL.revokeObjectURL(url)
       }
     } catch (error) {
-      console.error('Error al generar comprobante:', error)
-      Swal.fire({
-        title: 'Error de impresión',
-        text: 'No se pudo generar el comprobante de pago',
-        icon: 'error',
-        confirmButtonColor: '#ef4444',
-        customClass: { popup: 'rounded-[2rem]' },
-      })
+      console.error(error)
     }
   }
 
-  // OBTENER FECHAS ÚNICAS DISPONIBLES EN LOS TICKETS ASIGNADOS AL VENDEDOR
-  const fechasDisponibles = useMemo(() => {
-    const fechas = tickets.map((t) => t.Sorteo?.fechaSorteo).filter((fecha) => !!fecha)
-    return [...new Set(fechas)].sort().reverse()
-  }, [tickets])
-
-  // LÓGICA DE FILTRADO MULTI-CRITERIO OPTIMIZADA
-  const filtered = useMemo(() => {
-    return tickets.filter((t) => {
-      // 1. Coincidencia por texto
-      const matchesSearch =
-        t.codigo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.Sorteo?.Catalogo?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.Cliente?.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
-
-      // 2. Coincidencia por Fecha del Sorteo
-      const matchesFecha = filterFecha === 'Todos' || t.Sorteo?.fechaSorteo === filterFecha
-
-      // 3. Coincidencia por Estado de liquidación
-      let matchesResult = false
-      if (resultFilter === 'Todos') {
-        matchesResult = true
-      } else if (resultFilter === 'Ganador_Pendiente') {
-        matchesResult = t.resultado === 'Ganador' && t.estado === 'Pendiente'
-      } else if (resultFilter === 'Ganador_Pagado') {
-        matchesResult = t.resultado === 'Ganador' && t.estado === 'Pagado'
-      } else {
-        matchesResult = t.resultado === resultFilter
-      }
-
-      return matchesSearch && matchesFecha && matchesResult
-    })
-  }, [tickets, searchTerm, filterFecha, resultFilter])
-
-  const totalPages = Math.ceil(filtered.length / itemsPerPage)
-
-  const currentData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage
-    return filtered.slice(start, start + itemsPerPage)
-  }, [filtered, currentPage])
-
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm, filterFecha, resultFilter])
-
-  // FORMATO VISUAL DE FECHA (DD/MM/YYYY)
   const formatVisualFecha = (dateString) => {
     if (!dateString) return ''
     const [year, month, day] = dateString.split('-')
     return `${day}/${month}/${year}`
   }
 
+  const fechasDisponibles = useMemo(() => {
+    const fechas = sorteos.map((s) => s.fechaSorteo).filter((fecha) => !!fecha)
+    return [...new Set(fechas)].sort().reverse()
+  }, [sorteos])
+
+  const handleAnularTicket = async (ticket) => {
+    const result = await Swal.fire({
+      title: '¿Anular Ticket?',
+      text: `¿Estás seguro de anular el ticket #${ticket.codigo}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#374151',
+      confirmButtonText: 'Sí, Anular',
+      cancelButtonText: 'Cancelar',
+    })
+
+    if (result.isConfirmed) {
+      try {
+        await ticketAPI.anularTicket(ticket.id) // Asegúrate que tu API tenga este endpoint
+        Swal.fire('Anulado', 'El ticket ha sido anulado correctamente', 'success')
+        fetchTickets()
+      } catch (error) {
+        Swal.fire('Error', 'No se pudo anular el ticket', 'error')
+      }
+    }
+  }
+
   return (
     <motion.div initial="hidden" animate="visible" className="w-full pb-10">
       <div className="flex justify-between items-center mb-10">
-        <Title
-          titulo="Punto de Venta - Tickets"
-          descripcion="Emisión de comprobantes y cobro de premios autorizados"
-        />
+        <Title titulo="Punto de Venta - Tickets" descripcion="Gestión de ventas y premios" />
         <motion.button
-          whileHover={{ scale: 1.02, backgroundColor: '#EAB308' }}
-          whileTap={{ scale: 0.98 }}
           onClick={() => setShowModal(true)}
-          className="bg-luck-gold text-black font-black py-4 px-8 rounded-2xl flex items-center gap-2 uppercase text-xs shadow-lg shadow-luck-gold/20 italic"
+          className="bg-luck-gold text-black font-black py-4 px-8 rounded-2xl flex items-center gap-2 uppercase text-xs shadow-lg italic"
         >
-          <LuPlus size={20} strokeWidth={4} /> Emitir Ticket
+          <LuPlus size={20} /> Emitir Ticket
         </motion.button>
       </div>
 
-      {/* BLOQUE DE FILTROS DEL VENDEDOR INTEGRADO Y ADAPTADO */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 grid grid-cols-1 md:grid-cols-4 gap-4 items-center"
+        className="bg-[#111615] border border-white/5 p-5 rounded-3xl mb-8 flex flex-wrap gap-4 items-end"
       >
-        {/* Input Buscador */}
-        <div className="relative w-full md:col-span-2">
-          <LuSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
-          <input
-            type="text"
-            placeholder="Buscar mis tickets por código o cliente..."
-            className="w-full bg-black/40 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-luck-gold/30 transition-all placeholder:text-zinc-600 text-xs font-bold"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        {/* Selector de Fecha del Sorteo */}
-        <div className="w-full">
+        {/* Selector de Fecha */}
+        <div className="flex flex-col gap-2 min-w-[200px]">
+          <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider flex items-center gap-1">
+            <LuCalendar size={10} /> Fecha del Sorteo
+          </label>
           <select
             value={filterFecha}
             onChange={(e) => setFilterFecha(e.target.value)}
-            className="w-full bg-black/40 border border-white/5 text-zinc-300 rounded-2xl py-4 px-4 text-xs font-bold focus:outline-none focus:border-luck-gold/30 transition-all cursor-pointer uppercase tracking-wider"
+            className="w-full bg-black/40 border border-white/5 text-white rounded-2xl py-3.5 px-4 text-xs font-medium focus:outline-none focus:border-luck-gold/30 transition-all cursor-pointer uppercase tracking-wide"
           >
-            <option value="Todos" className="bg-[#111615] text-white">
+            <option value="Todos" className="bg-[#111615]">
               Todas las Fechas
             </option>
             {fechasDisponibles.map((fecha) => (
-              <option key={fecha} value={fecha} className="bg-[#111615] text-white">
+              <option key={fecha} value={fecha} className="bg-[#111615]">
                 {formatVisualFecha(fecha)}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Selector de Estado / Resultados */}
-        <div className="w-full flex items-center gap-4">
+        {/* Selector de Estado */}
+        <div className="flex flex-col gap-2 min-w-[200px]">
+          <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider flex items-center gap-1">
+            <LuFilter size={10} /> Estado de Liquidación
+          </label>
           <select
-            value={resultFilter}
-            onChange={(e) => setResultFilter(e.target.value)}
-            className="w-full bg-black/40 border border-white/5 text-zinc-300 rounded-2xl py-4 px-5 text-xs font-bold focus:outline-none focus:border-luck-gold/30 transition-all cursor-pointer uppercase tracking-wider"
+            value={filterEstado}
+            onChange={(e) => setFilterEstado(e.target.value)}
+            className="w-full bg-black/40 border border-white/5 text-white rounded-2xl py-3.5 px-4 text-xs font-medium focus:outline-none focus:border-luck-gold/30 transition-all cursor-pointer uppercase tracking-wide"
           >
-            <option value="Todos" className="bg-[#111615] text-white">
+            <option value="Todos" className="bg-[#111615]">
               Todos los resultados
             </option>
-            <option value="Pendiente" className="bg-[#111615] text-white">
+            <option value="Pendiente" className="bg-[#111615]">
               Pendiente
             </option>
-            <option value="Ganador_Pendiente" className="bg-[#111615] text-emerald-500 font-black">
+            <option value="Ganador_Pendiente" className="bg-[#111615]">
               Ganadores por Pagar
             </option>
-            <option value="Ganador_Pagado" className="bg-[#111615] text-zinc-400">
+            <option value="Ganador_Pagado" className="bg-[#111615]">
               Ganadores Ya Pagados
             </option>
-            <option value="No Ganador" className="bg-[#111615] text-white">
+            <option value="No Ganador" className="bg-[#111615]">
               No Ganador
             </option>
           </select>
+        </div>
 
-          {/* Contador de Tickets de la sucursal */}
-          <div className="px-6 py-4 bg-white/[0.02] border border-white/5 rounded-2xl whitespace-nowrap min-w-[110px] text-center">
-            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">
-              {filtered.length} Und.
+        {/* Contador a la derecha */}
+        <div className="ml-auto">
+          <div className="px-6 py-3.5 bg-white/[0.02] border border-white/5 rounded-2xl whitespace-nowrap flex items-center justify-center">
+            <span className="text-[10px] font-black text-luck-gold uppercase tracking-[0.2em]">
+              {totalItems} Coincidencias
             </span>
           </div>
         </div>
       </motion.div>
 
-      {/* Tabla con Estilo Unificado */}
       <motion.div
         variants={containerVariants}
         className="bg-[#111615] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
@@ -374,7 +317,7 @@ const Tickets = () => {
               <tr className="bg-white/[0.02] text-zinc-500 uppercase text-[9px] font-black tracking-[0.2em]">
                 <th className="p-7 pl-10 text-luck-gold">Referencia</th>
                 <th className="p-7">Sorteo / Jornada</th>
-                <th className="p-7">Cliente</th>
+                <th className="p-7">Origen / Cliente</th>
                 <th className="p-7">Resultado</th>
                 <th className="p-7">Premio</th>
                 <th className="p-7">Estado Pago</th>
@@ -389,11 +332,11 @@ const Tickets = () => {
                       colSpan="7"
                       className="p-20 text-center animate-pulse text-zinc-500 font-black italic uppercase text-xs"
                     >
-                      Cargando terminal de ventas...
+                      Sincronizando con el servidor...
                     </td>
                   </tr>
-                ) : currentData.length > 0 ? (
-                  currentData.map((ticket) => (
+                ) : tickets.length > 0 ? (
+                  tickets.map((ticket) => (
                     <motion.tr
                       key={ticket.id}
                       variants={rowVariants}
@@ -424,9 +367,16 @@ const Tickets = () => {
                       </td>
 
                       <td className="p-7">
-                        <div className="flex items-center gap-2 text-zinc-300 font-bold text-[11px] uppercase">
-                          <LuUser size={14} className="text-zinc-600" />
-                          {ticket?.Cliente?.nombre || 'Consumidor Final'}
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2 text-zinc-300 font-bold text-[11px] uppercase">
+                            <LuStore size={14} className="text-zinc-600" />
+                            {ticket?.PuntosVentum?.nombre ||
+                              ticket?.PuntosVenta?.nombre ||
+                              'Matriz'}
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-bold">
+                            <LuUser size={12} /> {ticket?.Cliente?.nombre || 'Consumidor Final'}
+                          </div>
                         </div>
                       </td>
 
@@ -470,7 +420,6 @@ const Tickets = () => {
 
                       <td className="p-7 pr-10">
                         <div className="flex justify-end gap-2">
-                          {/* BOTÓN RECIÉN AÑADIDO: VER NUMEROS JUGADOS EN MODAL */}
                           <button
                             onClick={() => {
                               setSelectedTicketDetails(ticket)
@@ -482,28 +431,29 @@ const Tickets = () => {
                             <LuEye size={16} />
                           </button>
 
-                          {ticket.resultado === 'Ganador' && ticket.estado === 'Pendiente' && (
-                            <motion.button
-                              whileHover={{
-                                scale: 1.05,
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                              }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => {
-                                setTicketToPay(ticket)
-                                setIsPayModalOpen(true)
-                              }}
-                              className="flex items-center gap-2 px-4 py-2 border border-emerald-500/50 text-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                            >
-                              <LuCheck size={14} /> PAGAR PREMIO
-                            </motion.button>
-                          )}
+                          {ticket.resultado === 'Ganador' &&
+                            (ticket.estado === 'Pending' || ticket.estado === 'Pendiente') && (
+                              <motion.button
+                                whileHover={{
+                                  scale: 1.05,
+                                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => {
+                                  setTicketToPay(ticket)
+                                  setIsPayModalOpen(true)
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 border border-emerald-500/50 text-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                              >
+                                <LuCheck size={14} /> PAGAR
+                              </motion.button>
+                            )}
 
                           {ticket.estado === 'Pagado' && (
                             <button
                               onClick={() => handlePrintComprobante(ticket)}
                               className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-emerald-500 hover:bg-emerald-500 hover:text-black transition-all"
-                              title="Imprimir Recibo"
+                              title="Imprimir Comprobante"
                             >
                               <LuReceipt size={16} />
                             </button>
@@ -512,9 +462,17 @@ const Tickets = () => {
                           <button
                             onClick={() => handlePrintTicket(ticket)}
                             className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-luck-gold transition-colors"
-                            title="Imprimir Copia Ticket"
+                            title="Re-imprimir Ticket"
                           >
                             <LuTicket size={16} />
+                          </button>
+
+                          <button
+                            className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-600 hover:text-red-500 transition-colors"
+                            onClick={() => handleAnularTicket(ticket)}
+                            title="Anular Ticket"
+                          >
+                            <LuTrash2 size={16} />
                           </button>
                         </div>
                       </td>
@@ -526,7 +484,7 @@ const Tickets = () => {
                       <div className="flex flex-col items-center justify-center opacity-10">
                         <LuInbox size={60} className="mb-4 text-white" />
                         <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white">
-                          No se encontraron tickets
+                          Sin registros encontrados
                         </p>
                       </div>
                     </td>
@@ -537,9 +495,9 @@ const Tickets = () => {
           </table>
         </div>
 
-        {/* Paginación */}
+        {/* CONTROLES DE PAGINACIÓN OPTIMIZADOS (FIXED BLOCKS) */}
         {totalPages > 1 && (
-          <div className="p-8 border-t border-white/5 bg-black/[0.1] flex justify-between items-center">
+          <div className="p-8 border-t border-white/5 bg-black/[0.1] flex justify-between items-center select-none">
             <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">
               Página {currentPage} de {totalPages}
             </span>
@@ -547,29 +505,44 @@ const Tickets = () => {
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all"
+                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all cursor-pointer disabled:cursor-not-allowed"
               >
                 <LuChevronLeft size={18} />
               </button>
-              <div className="flex gap-1">
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-[9px] font-black transition-all ${
-                      currentPage === i + 1
-                        ? 'bg-luck-gold text-black'
-                        : 'text-zinc-600 hover:bg-white/5'
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+
+              <div className="flex items-center gap-1">
+                {renderPageNumbers.map((page, index) => {
+                  if (page === 'ellipsis-left' || page === 'ellipsis-right') {
+                    return (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="w-8 h-8 flex items-center justify-center text-zinc-600 text-[11px] font-black"
+                      >
+                        ...
+                      </span>
+                    )
+                  }
+
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded-lg text-[9px] font-black transition-all cursor-pointer ${
+                        currentPage === page
+                          ? 'bg-luck-gold text-black'
+                          : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                })}
               </div>
+
               <button
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p - 1)}
-                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all"
+                onClick={() => setCurrentPage((p) => p + 1)}
+                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 transition-all cursor-pointer disabled:cursor-not-allowed"
               >
                 <LuChevronRight size={18} />
               </button>
@@ -584,12 +557,11 @@ const Tickets = () => {
           onClose={() => setShowModal(false)}
           sorteos={sorteos}
           usuario={user}
-          fetchData={fetchData}
+          fetchData={fetchTickets}
           suertes={suertes}
         />
       )}
-
-      {isPayModalOpen && caja && (
+      {isPayModalOpen && (
         <ModalPagoTicketVendedor
           isOpen={isPayModalOpen}
           onClose={() => setIsPayModalOpen(false)}
@@ -600,14 +572,9 @@ const Tickets = () => {
           handlePrintComprobante={handlePrintComprobante}
         />
       )}
-
-      {/* RENDERIZADO DEL NUEVO MODAL DE DESGLOSE */}
       <DetalleJugadasModal
         isOpen={isDetailsOpen}
-        onClose={() => {
-          setIsDetailsOpen(false)
-          setSelectedTicketDetails(null)
-        }}
+        onClose={() => setIsDetailsOpen(false)}
         ticket={selectedTicketDetails}
       />
     </motion.div>

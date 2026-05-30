@@ -7,13 +7,16 @@ const resultadoAPI = {
     return instance.post(`/${model}/registrar`, data)
   },
 
-  // Modificamos listar para que acepte un objeto de filtros (con valores vacíos por defecto)
   listar: async (filtros = {}) => {
-    const { fecha, page, limit } = filtros
+    // Desestructuramos los nuevos filtros
+    const { fecha, jornada, utilidad, page, limit } = filtros
 
     return instance.get(`/${model}/listar/todos`, {
       params: {
-        fecha: fecha || undefined, // Si no hay fecha, no la envía en la URL
+        // Usamos || undefined para que axios no incluya estos parámetros si son nulos/vacíos
+        fecha: fecha || undefined,
+        jornada: jornada !== 'Todos' ? jornada : undefined,
+        utilidad: utilidad !== 'Todos' ? utilidad : undefined,
         page: page || 1,
         limit: limit || 10,
       },

@@ -19,6 +19,7 @@ import NotFound from './notFound/NotFound.jsx'
 import {
   CajasVendedor,
   DashboardVendedor,
+  ResultadosVendedor,
   SorteosVendedor,
   TicketsVendedor,
 } from './vendedor/index.vendedor.js'
@@ -37,6 +38,7 @@ export {
   Reportes,
   Respaldos,
   Resultados,
+  ResultadosVendedor,
   Roles,
   Sorteos,
   SorteosVendedor,

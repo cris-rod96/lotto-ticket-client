@@ -32,6 +32,7 @@ const Cajas = () => {
         ])
         setCajas(respHistorial.data.cajas || [])
         const activa = respActual.data.caja || null
+        console.log(activa)
         setCaja(activa)
         if (activa) setCajaSeleccionada(activa)
       } catch (error) {
@@ -72,7 +73,12 @@ const Cajas = () => {
       />
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <CajasVendedorStats user={user} caja={caja} formatter={formatter} soloMisMovimientos={soloMisMovimientos} />
+        <CajasVendedorStats
+          user={user}
+          caja={caja}
+          formatter={formatter}
+          soloMisMovimientos={soloMisMovimientos}
+        />
 
         <CajasVendedorTable
           tipoVista={filtroVista}

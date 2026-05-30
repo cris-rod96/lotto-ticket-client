@@ -1,5 +1,5 @@
 import { resultadoAPI } from '@/api/index.api'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const useResultados = () => {
   const [showModal, setShowModal] = useState(false)
@@ -27,13 +27,13 @@ const useResultados = () => {
       const resp = await resultadoAPI.listar({
         page: currentPage,
         limit: itemsPerPage,
-        // Nota: si en un futuro añades un input para filtrar por fecha, lo agregas aquí como fecha: fechaState
+        jornada: jornadaFilter !== 'Todos' ? jornadaFilter : undefined, // Filtro enviado al back
+        utilidad: utilidadFilter !== 'Todos' ? utilidadFilter : undefined, // Filtro enviado al back
       })
 
-      // Axios devuelve la estructura que creamos en el controlador: { data, totalPages, currentPage, totalItems }
       const restData = resp.data || {}
-
       setResultados(restData.data || [])
+      console.log(resp.data)
       setTotalPages(restData.totalPages || 1)
     } catch (error) {
       console.error(error)
@@ -48,20 +48,22 @@ const useResultados = () => {
   }, [currentPage])
 
   // Filtrado en el frontend sobre la data paginada que nos devolvió el servidor
-  const currentData = useMemo(() => {
-    return resultados.filter((r) => {
-      const jornadaSorteo = r.Sorteo?.jornada || ''
-      const utilidadNeta = parseFloat(r.Sorteo?.utilidadNeta || 0)
+  // const currentData = useMemo(() => {
+  //   return resultados.filter((r) => {
+  //     const jornadaSorteo = r.Sorteo?.jornada || ''
+  //     const utilidadNeta = parseFloat(r.Sorteo?.utilidadNeta || 0)
 
-      const matchesJornada = jornadaFilter === 'Todos' || jornadaSorteo === jornadaFilter
+  //     const matchesJornada = jornadaFilter === 'Todos' || jornadaSorteo === jornadaFilter
 
-      let matchesUtilidad = true
-      if (utilidadFilter === 'Positiva') matchesUtilidad = utilidadNeta >= 0
-      if (utilidadFilter === 'Negativa') matchesUtilidad = utilidadNeta < 0
+  //     let matchesUtilidad = true
+  //     if (utilidadFilter === 'Positiva') matchesUtilidad = utilidadNeta >= 0
+  //     if (utilidadFilter === 'Negativa') matchesUtilidad = utilidadNeta < 0
 
-      return matchesJornada && matchesUtilidad
-    })
-  }, [resultados, jornadaFilter, utilidadFilter])
+  //     return matchesJornada && matchesUtilidad
+  //   })
+  // }, [resultados, jornadaFilter, utilidadFilter])
+
+  const currentData = resultados
 
   // Resetear página automáticamente al cambiar los filtros visuales de la UI
   useEffect(() => {

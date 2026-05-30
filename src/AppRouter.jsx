@@ -18,6 +18,7 @@ import {
   Reportes,
   Respaldos,
   Resultados,
+  ResultadosVendedor,
   Roles,
   Sorteos,
   SorteosVendedor,
@@ -76,7 +77,7 @@ const AppRouter = () => {
               <Route path="/tickets" element={<TicketsVendedor />} />
               <Route path="/mis-sorteos" element={<SorteosVendedor />} />
               <Route path="/cajas" element={<CajasVendedor />} />
-              <Route path="/resultados" element={<Resultados />} />
+              <Route path="/resultados" element={<ResultadosVendedor />} />
             </Route>
           )}
 
