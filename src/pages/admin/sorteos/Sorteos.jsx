@@ -108,6 +108,7 @@ const Sorteos = () => {
       const respSorteos = await sorteoAPI.listarTodos(params)
 
       setSorteos(respSorteos.data?.sorteos || [])
+      console.log(respSorteos.data?.sorteos)
       setTotalPages(respSorteos.data?.totalPages || 1)
       setTotalItems(respSorteos.data?.totalItems || 0)
     } catch (error) {
@@ -127,6 +128,15 @@ const Sorteos = () => {
     } catch (error) {
       error
     }
+  }
+
+  const calcularTotalPremios = (tickets) => {
+    if (!tickets || tickets.length === 0) return 0
+
+    // Convertimos a número (Number) y sumamos el campo montoTotalPremio
+    return tickets.reduce((acc, ticket) => {
+      return acc + (parseFloat(ticket.montoTotalPremio) || 0)
+    }, 0)
   }
 
   // Se ejecuta cada vez que cambia la página actual o se manipula algún filtro
@@ -337,13 +347,14 @@ const Sorteos = () => {
               <tr className="bg-white/[0.02] text-zinc-500 uppercase text-[11px] font-bold tracking-[0.15em]">
                 <th className="p-7">Sorteo</th>
                 <th className="p-7">Lotería / País</th>
-                <th className="p-7 text-center">Cifras</th>
-                <th className="p-7 text-center">Jornada</th>
-                <th className="p-7">Fecha / Hora</th>
+                <th className="p-7 ">Configuración</th>
+                <th className="p-7 text-center">Fecha</th>
                 <th className="p-7 text-center">Estado</th>
                 <th className="p-7 text-center">Tickets</th>
                 <th className="p-7 text-center">Recaudado</th>
-                <th className="p-7 text-right">Acciones</th>
+                <th className="p-7 text-center">Premios</th>
+                <th className="p-7 text-center">Ganancias</th>
+                <th className="p-7 text-center">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.03]">
@@ -377,15 +388,18 @@ const Sorteos = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="p-7 text-center">
-                        <div className="inline-flex w-9 h-9 rounded-xl bg-zinc-900 border border-white/5 items-center justify-center text-zinc-300 font-black text-xs shadow-lg">
-                          {sorteo?.Cifra?.cantidad}
+                      <td className="p-7 ">
+                        <div className="flex flex-col gap-2 items-center">
+                          {/* Jornada */}
+                          <span className="text-zinc-400 font-black bg-zinc-950 px-3 py-1 rounded-lg border border-white/5 text-[9px] uppercase tracking-widest">
+                            {sorteo.jornada}
+                          </span>
+                          {/* Cifras */}
+                          <div className="flex items-center gap-1 text-[10px] text-zinc-500 font-bold">
+                            <LuLayers size={12} className="text-luck-gold/50" />
+                            {sorteo?.Cifra?.cantidad} Cifras
+                          </div>
                         </div>
-                      </td>
-                      <td className="p-7 text-center">
-                        <span className="text-zinc-400 font-black bg-zinc-950 px-3 py-1.5 rounded-lg border border-white/5 text-[9px] uppercase tracking-widest">
-                          {sorteo.jornada}
-                        </span>
                       </td>
                       <td className="p-7">
                         <div className="flex flex-col gap-1.5">
@@ -428,6 +442,21 @@ const Sorteos = () => {
                             {formatCurrency(sorteo.montoRecaudado || 0.0)}
                           </span>
                         </div>
+                      </td>
+
+                      <td className="p-7 text-center">
+                        <span className="text-gray-300 font-black text-sm font-mono">
+                          {formatCurrency(calcularTotalPremios(sorteo.Tickets))}
+                        </span>
+                      </td>
+                      <td className="p-7 text-center">
+                        <span
+                          className={`${calcularTotalPremios(sorteo.Tickets) - sorteo.montoRecaudado >= 0 ? 'text-green-400' : 'text-red-400'} font-black text-sm font-mono`}
+                        >
+                          {formatCurrency(
+                            calcularTotalPremios(sorteo.Tickets) - sorteo.montoRecaudado
+                          )}
+                        </span>
                       </td>
 
                       <td className="p-7">
