@@ -1,6 +1,6 @@
-import { cajaAPI, movimientoAPI, sorteoAPI, ticketAPI } from '@/api/index.api'
+import { cajaAPI, movimientoAPI, sorteoAPI, statsAPI } from '@/api/index.api' // Añadí statsAPI
 import Title from '@/components/Titlte'
-import { VENDEDOR_DASHBOARD_ITEMS } from '@/data/Items' // Importamos tus ítems operativos
+import { VENDEDOR_DASHBOARD_ITEMS } from '@/data/Items'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useCajaStore } from '@/store/useCajaStore'
 import { motion } from 'framer-motion'
@@ -37,39 +37,33 @@ const DashboardVendedor = () => {
       setLoadingMsg('Sincronizando tu terminal...')
 
       try {
-        // Solo pedimos lo que el vendedor necesita ver
-        const [respTicket, respSorteo, respCaja, respCajaAbierta, respMovimientos] =
+        // 1. Peticiones paralelas para datos operativos esenciales
+        const [respStats, respSorteo, respCaja, respCajaAbierta, respMovimientos] =
           await Promise.all([
-            ticketAPI.listarTodos(), // El backend debería filtrar por usuario/punto en el token
+            statsAPI.listarVendedorEstadisticas(user.PuntoVentaId), // LLAMADA OPTIMIZADA
             sorteoAPI.listarTodos(),
             cajaAPI.listarPorPuntoVenta(user.PuntoVentaId),
             cajaAPI.obtenerCajaAbierta(user.PuntoVentaId),
             movimientoAPI.listarPorPuntoVenta(user.PuntoVentaId),
           ])
 
-        const tickets = respTicket.data.tickets || []
+        const s = respStats.data.stats // Datos ya procesados por el backend
         const sorteos = respSorteo.data.sorteos || []
         const movimientos = respMovimientos.data.movimientos || []
         const cajas = respCaja.data.cajas || []
 
         setCajas(cajas)
 
-        // Sincronizar estado de caja local
         const cajaActiva = respCajaAbierta.data?.caja
         if (cajaActiva) setCaja(cajaActiva)
 
         const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
-        const hoy = new Date().toLocaleDateString('en-CA')
 
-        // Cálculo de mis ventas de hoy
-        const ventasHoy = tickets
-          .filter((t) => new Date(t.createdAt).toLocaleDateString('en-CA') === hoy)
-          .reduce((acc, t) => acc + parseFloat(t.valor || 0), 0)
-
+        // Mapeo directo al estado
         setStats({
           'Vender Ticket': {
-            p: formatter.format(ventasHoy),
-            s: 'Vendido hoy',
+            p: formatter.format(s.ventasHoy || 0),
+            s: `${s.ticketsHoy || 0} tickets emitidos hoy`,
           },
           'Mis Sorteos': {
             p: sorteos.filter((s) => s.estado === 'Activo').length,
@@ -95,9 +89,9 @@ const DashboardVendedor = () => {
       }
     }
 
-    if (token) fetchVendedorData()
+    if (token && user?.PuntoVentaId) fetchVendedorData()
     return () => setIsLoading(false)
-  }, [token, user?.PuntoVentaId, setIsLoading, setLoadingMsg, setCaja])
+  }, [token, user?.PuntoVentaId, setIsLoading, setLoadingMsg, setCaja, setCajas])
 
   return (
     <div className="w-full pb-10">

@@ -102,18 +102,18 @@ const VendedorLayout = () => {
         <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
           {/* LOGO E INFO DE PUNTO DE VENTA */}
           <div className="flex items-center gap-3">
-            <img
-              src="/logo_principal.png"
-              alt="El Golpe de la Suerte"
-              className="h-9 w-auto object-contain"
-            />
-            {user?.PuntoVenta?.nombre && (
-              <div className="hidden md:block text-left border-l border-white/10 pl-3">
-                <p className="text-[10px] font-bold text-luck-gold uppercase tracking-wider">
-                  {user.PuntoVenta.nombre}
-                </p>
-              </div>
-            )}
+            <NavLink to={'/'} className="cursor-pointer">
+              <img
+                src="/logo_principal.png"
+                alt="El Golpe de la Suerte"
+                className="h-9 w-auto object-contain"
+              />
+            </NavLink>
+            <div className="hidden md:block text-left border-l border-white/10 pl-3">
+              <p className="text-[10px] font-bold text-luck-gold uppercase tracking-wider">
+                Golpe de la Suerte
+              </p>
+            </div>
           </div>
 
           {/* NAVEGACIÓN ESTILO TABS */}

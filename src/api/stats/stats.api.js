@@ -7,6 +7,10 @@ const statsAPI = {
     return instance.get(`/${model}/listar`)
   },
 
+  listarVendedorEstadisticas: async (id) => {
+    return instance.get(`/${model}/listar/punto-venta/${id}`)
+  },
+
   // Nuevas estadísticas parametrizadas para el módulo de reportes
   obtenerReporteFinanciero: async (dateFilter, puntoVentaId) => {
     return instance.get(`/${model}/reporte-financiero`, {
