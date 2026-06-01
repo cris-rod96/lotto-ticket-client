@@ -75,12 +75,8 @@ const Tickets = () => {
           suerteAPI.listarTodas(),
         ])
         setSorteos(respSorteos.data?.sorteos || [])
-        console.log(respSorteos.data)
         setSuertes(respSuertes.data.suertes || [])
-        console.log(respSuertes.data.suertes)
       }
-
-      console.log(filterFecha, filterEstado)
 
       // Petición paginada al servidor - Ajustado a tu estructura de respuesta
       const response = await ticketAPI.listarPorPuntoDeVenta(user.PuntoVentaId, {
@@ -145,11 +141,27 @@ const Tickets = () => {
     })
     try {
       const response = await ticketAPI.pagarTicket(ticketId, user.id, cajaId)
+
       if (response.status === 200) {
         setIsPayModalOpen(false)
-        await Swal.fire({ title: '¡PAGO EXITOSO!', icon: 'success', confirmButtonColor: '#EAB308' })
+
+        // 1. Éxito visual
+        await Swal.fire({
+          title: '¡PAGO EXITOSO!',
+          icon: 'success',
+          confirmButtonColor: '#EAB308',
+        })
+
+        // 2. Sincronizamos estado
         setCaja(response.data.caja)
         fetchTickets()
+
+        // 3. ¡AQUÍ ESTÁ LA MAGIA! Disparamos la impresión automáticamente
+        // Usamos el ticket que acabamos de pagar.
+        // Si el servidor te devuelve el ticket actualizado en response.data.ticket, úsalo.
+        // Si no, usamos el ticketToPay que ya teníamos en el estado.
+        handlePrintComprobante(response.data.ticket || ticketToPay)
+
         return response.data
       }
     } catch (error) {
@@ -159,41 +171,104 @@ const Tickets = () => {
 
   const handlePrintTicket = async (ticket) => {
     try {
+      Swal.fire({
+        title: 'PREPARANDO TICKET...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+        customClass: { popup: 'rounded-[2rem]' },
+      })
+
       const doc = <TicketTemplate ticket={ticket} suertes={suertes} />
       const blob = await pdf(doc).toBlob()
       const url = URL.createObjectURL(blob)
+
       const iframe = document.createElement('iframe')
       iframe.style.display = 'none'
       iframe.src = url
       document.body.appendChild(iframe)
+
       iframe.onload = () => {
+        iframe.contentWindow.focus()
         iframe.contentWindow.print()
-        document.body.removeChild(iframe)
-        URL.revokeObjectURL(url)
+
+        setTimeout(() => {
+          document.body.removeChild(iframe)
+          URL.revokeObjectURL(url)
+        }, 2000)
+        Swal.close()
       }
     } catch (error) {
-      console.error(error)
+      console.error('Error al imprimir ticket:', error)
+      Swal.fire({
+        title: 'Error de impresión',
+        icon: 'error',
+      })
     }
   }
 
+  // const handlePrintComprobante = async (ticket) => {
+  //   try {
+  //     const doc = <ComprobantePagoTemplate ticket={ticket} user={user} />
+  //     const blob = await pdf(doc).toBlob()
+  //     const url = URL.createObjectURL(blob)
+  //     const iframe = document.createElement('iframe')
+  //     iframe.style.position = 'fixed'
+  //     iframe.style.width = '0'
+  //     iframe.style.height = '0'
+  //     iframe.src = url
+  //     document.body.appendChild(iframe)
+  //     iframe.onload = () => {
+  //       iframe.contentWindow.print()
+  //       document.body.removeChild(iframe)
+  //       URL.revokeObjectURL(url)
+  //     }
+  //   } catch (error) {
+  //     console.error(error)
+  //   }
+  // }
+
   const handlePrintComprobante = async (ticket) => {
     try {
-      const doc = <ComprobantePagoTemplate ticket={ticket} />
+      Swal.fire({
+        title: 'GENERANDO COMPROBANTE...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+        customClass: { popup: 'rounded-[2rem]' },
+      })
+
+      const doc = <ComprobantePagoTemplate ticket={ticket} user={user} />
       const blob = await pdf(doc).toBlob()
       const url = URL.createObjectURL(blob)
+
       const iframe = document.createElement('iframe')
       iframe.style.position = 'fixed'
+      iframe.style.right = '0'
+      iframe.style.bottom = '0'
       iframe.style.width = '0'
       iframe.style.height = '0'
+      iframe.style.border = '0'
       iframe.src = url
       document.body.appendChild(iframe)
+
       iframe.onload = () => {
+        iframe.contentWindow.focus()
         iframe.contentWindow.print()
-        document.body.removeChild(iframe)
-        URL.revokeObjectURL(url)
+
+        setTimeout(() => {
+          document.body.removeChild(iframe)
+          URL.revokeObjectURL(url)
+        }, 3000)
+        Swal.close()
       }
     } catch (error) {
-      console.error(error)
+      console.error('Error al generar comprobante:', error)
+      Swal.fire({
+        title: 'Error de impresión',
+        text: 'No se pudo generar el comprobante de pago',
+        icon: 'error',
+        confirmButtonColor: '#ef4444',
+        customClass: { popup: 'rounded-[2rem]' },
+      })
     }
   }
 

@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   },
 })
 
-const ComprobantePagoTemplate = ({ ticket }) => {
+const ComprobantePagoTemplate = ({ ticket, user }) => {
   if (!ticket) return null
 
   const receiptHeight = 420
@@ -117,9 +117,7 @@ const ComprobantePagoTemplate = ({ ticket }) => {
           <Image src="/logo_principal.png" style={styles.logo} />
           <Text style={styles.title}>RECIBO DE PAGO</Text>
           <Text style={styles.infoText}>{ticket.PuntosVentum?.nombre || 'PUNTO DE VENTA'}</Text>
-          <Text style={styles.infoText}>
-            Vendedor: {ticket.Usuario?.nombresCompletos?.split(' ')[0]}
-          </Text>
+          <Text style={styles.infoText}>Usuario: {user.nombresCompletos?.split(' ')[0]}</Text>
         </View>
 
         <View style={styles.divider} />

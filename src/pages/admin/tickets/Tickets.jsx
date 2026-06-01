@@ -102,7 +102,6 @@ const Tickets = () => {
 
       // Asignamos los estados destructurados desde el nuevo JSON del servidor
       setTickets(response.data?.tickets || [])
-      console.log(response.data?.tickets)
       setTotalItems(response.data?.totalItems || 0)
       setTotalPages(response.data?.totalPages || 1)
     } catch (error) {
@@ -216,7 +215,7 @@ const Tickets = () => {
         customClass: { popup: 'rounded-[2rem]' },
       })
 
-      const doc = <ComprobantePagoTemplate ticket={ticket} />
+      const doc = <ComprobantePagoTemplate ticket={ticket} user={user} />
       const blob = await pdf(doc).toBlob()
       const url = URL.createObjectURL(blob)
 
