@@ -451,10 +451,10 @@ const Sorteos = () => {
                       </td>
                       <td className="p-7 text-center">
                         <span
-                          className={`${calcularTotalPremios(sorteo.Tickets) - sorteo.montoRecaudado >= 0 ? 'text-green-400' : 'text-red-400'} font-black text-sm font-mono`}
+                          className={`${sorteo.montoRecaudado - calcularTotalPremios(sorteo.Tickets) >= 0 ? 'text-green-400' : 'text-red-400'} font-black text-sm font-mono`}
                         >
                           {formatCurrency(
-                            calcularTotalPremios(sorteo.Tickets) - sorteo.montoRecaudado
+                            sorteo.montoRecaudado - calcularTotalPremios(sorteo.Tickets)
                           )}
                         </span>
                       </td>

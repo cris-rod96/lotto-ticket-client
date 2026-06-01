@@ -9,6 +9,7 @@ import {
   LuChevronRight,
   LuClock,
   LuFilter,
+  LuGlobe,
   LuInbox,
   LuLayers,
   LuShuffle,
@@ -41,6 +42,22 @@ const SorteosVendedor = () => {
   const [totalItems, setTotalItems] = useState(0)
   const itemsPerPage = 5
   const pageNumbers = usePaginationWindow(currentPage, totalPages)
+
+  const formatCurrency = (val) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(val || 0)
+  }
+
+  const calcularTotalPremios = (tickets) => {
+    if (!tickets || tickets.length === 0) return 0
+
+    // Convertimos a número (Number) y sumamos el campo montoTotalPremio
+    return tickets.reduce((acc, ticket) => {
+      return acc + (parseFloat(ticket.montoTotalPremio) || 0)
+    }, 0)
+  }
 
   const fetchDataSorteos = async () => {
     try {
@@ -167,111 +184,190 @@ const SorteosVendedor = () => {
       {/* TABLA ANIMADA */}
       <motion.div
         variants={containerVariants}
-        className="bg-[#111615] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl"
+        className="bg-[#111615] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
       >
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-white/[0.02] text-zinc-500 uppercase text-[11px] font-bold tracking-[0.15em]">
-              <th className="p-7">Sorteo</th>
-              <th className="p-7">Lotería / País</th>
-              <th className="p-7 text-center">Cifras</th>
-              <th className="p-7 text-center">Jornada</th>
-              <th className="p-7">Fecha / Hora</th>
-              <th className="p-7 text-center">Estado</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/[0.03]">
-            <AnimatePresence mode="popLayout">
-              {sorteos.length > 0 ? (
-                sorteos.map((s) => (
-                  <motion.tr
-                    key={s.id}
-                    variants={rowVariants}
-                    layout
-                    className="group hover:bg-white/[0.01]"
-                  >
-                    <td className="p-7">
-                      <div className="w-12 h-12 rounded-2xl bg-luck-gold/10 border border-luck-gold/20 flex items-center justify-center text-luck-gold font-black text-sm">
-                        #{s.numero}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-white/[0.02] text-zinc-500 uppercase text-[11px] font-bold tracking-[0.15em]">
+                <th className="p-7">Sorteo</th>
+                <th className="p-7">Lotería / País</th>
+                <th className="p-7 ">Configuración</th>
+                <th className="p-7 text-center">Fecha</th>
+                <th className="p-7 text-center">Estado</th>
+                <th className="p-7 text-center">Tickets</th>
+                <th className="p-7 text-center">Recaudado</th>
+                <th className="p-7 text-center">Premios</th>
+                <th className="p-7 text-center">Ganancias</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/[0.03]">
+              <AnimatePresence mode="popLayout" initial={false}>
+                {sorteos.length > 0 ? (
+                  sorteos.map((sorteo) => (
+                    <motion.tr
+                      key={sorteo.id}
+                      variants={rowVariants}
+                      layout
+                      className="group hover:bg-white/[0.01] transition-colors"
+                    >
+                      <td className="p-7">
+                        <div className="flex items-center gap-4">
+                          <motion.div
+                            whileHover={{ scale: 1.1, rotate: 5 }}
+                            className="w-12 h-12 rounded-2xl bg-luck-gold/10 border border-luck-gold/20 flex items-center justify-center text-luck-gold font-black text-sm shadow-inner"
+                          >
+                            #{sorteo.numero}
+                          </motion.div>
+                        </div>
+                      </td>
+                      <td className="p-7">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-zinc-200 font-bold text-[13px] uppercase tracking-wide">
+                            {sorteo?.Catalogo?.nombre}
+                          </span>
+                          <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-black uppercase">
+                            <LuGlobe size={12} className="text-luck-gold/50" />{' '}
+                            {sorteo?.Catalogo?.pais}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-7 ">
+                        <div className="flex flex-col gap-2 items-center">
+                          {/* Jornada */}
+                          <span className="text-zinc-400 font-black bg-zinc-950 px-3 py-1 rounded-lg border border-white/5 text-[9px] uppercase tracking-widest">
+                            {sorteo.jornada}
+                          </span>
+                          {/* Cifras */}
+                          <div className="flex items-center gap-1 text-[10px] text-zinc-500 font-bold">
+                            <LuLayers size={12} className="text-luck-gold/50" />
+                            {sorteo?.Cifra?.cantidad} Cifras
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-7">
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-center gap-2 text-[12px] text-zinc-200 font-bold">
+                            <LuCalendar size={14} className="text-luck-gold" /> {sorteo.fechaSorteo}
+                          </div>
+                          <div className="flex items-center gap-2 text-[11px] text-zinc-500 font-mono">
+                            <LuClock size={14} /> {sorteo.horaSorteo}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-7 text-center">
+                        <span
+                          className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${
+                            sorteo.estado === 'Abierto'
+                              ? 'bg-green-500/5 text-green-500 border-green-500/20'
+                              : sorteo.estado === 'Cerrado'
+                                ? 'bg-orange-500/5 text-orange-500 border-orange-500/20'
+                                : 'bg-red-500/5 text-red-500 border-red-500/20'
+                          }`}
+                        >
+                          {sorteo.estado}
+                        </span>
+                      </td>
+
+                      <td className="p-7 text-center">
+                        <div className="flex flex-col items-center">
+                          <span className="text-white font-black text-lg">
+                            {sorteo?.Tickets?.length || 0}
+                          </span>
+                          <span className="text-[9px] text-zinc-500 uppercase font-black tracking-widest">
+                            Vendidos
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="p-7 text-center">
+                        <div className="inline-block bg-white/5 border border-white/5 px-4 py-2 rounded-2xl">
+                          <span className="text-luck-gold font-black text-sm font-mono">
+                            {formatCurrency(sorteo.montoRecaudado || 0.0)}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="p-7 text-center">
+                        <span className="text-gray-300 font-black text-sm font-mono">
+                          {formatCurrency(calcularTotalPremios(sorteo.Tickets))}
+                        </span>
+                      </td>
+                      <td className="p-7 text-center">
+                        <span
+                          className={`${sorteo.montoRecaudado - calcularTotalPremios(sorteo.Tickets) >= 0 ? 'text-green-400' : 'text-red-400'} font-black text-sm font-mono`}
+                        >
+                          {formatCurrency(
+                            sorteo.montoRecaudado - calcularTotalPremios(sorteo.Tickets)
+                          )}
+                        </span>
+                      </td>
+                    </motion.tr>
+                  ))
+                ) : (
+                  <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <td colSpan="9" className="p-32 text-center">
+                      <div className="flex flex-col items-center justify-center opacity-20">
+                        <LuInbox size={60} className="mb-4 text-luck-gold" />
+                        <p className="text-xs font-black uppercase tracking-[0.4em] text-white">
+                          No se encontraron sorteos
+                        </p>
                       </div>
-                    </td>
-                    <td className="p-7">
-                      <span className="text-zinc-200 font-bold text-[13px] uppercase">
-                        {s.Catalogo?.nombre}
-                      </span>
-                      <div className="text-[10px] text-zinc-500 uppercase">{s.Catalogo?.pais}</div>
-                    </td>
-                    <td className="p-7 text-center">
-                      <div className="inline-flex w-9 h-9 rounded-xl bg-zinc-900 items-center justify-center text-zinc-300 font-black text-xs">
-                        {s.Cifra?.cantidad}
-                      </div>
-                    </td>
-                    <td className="p-7 text-center">
-                      <span className="text-zinc-400 font-black bg-zinc-950 px-3 py-1.5 rounded-lg text-[9px] uppercase">
-                        {s.jornada}
-                      </span>
-                    </td>
-                    <td className="p-7 text-[12px] text-zinc-200 font-bold">
-                      {s.fechaSorteo}
-                      <br />
-                      <span className="text-[11px] text-zinc-500 font-mono">{s.horaSorteo}</span>
-                    </td>
-                    <td className="p-7 text-center">
-                      <span
-                        className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase border ${s.estado === 'Abierto' ? 'bg-green-500/5 text-green-500 border-green-500/20' : 'bg-red-500/5 text-red-500 border-red-500/20'}`}
-                      >
-                        {s.estado}
-                      </span>
                     </td>
                   </motion.tr>
-                ))
-              ) : (
-                <tr className="opacity-20">
-                  <td
-                    colSpan="6"
-                    className="p-32 text-center text-white font-black uppercase tracking-[0.4em]"
-                  >
-                    <LuInbox size={60} className="mx-auto mb-4" /> No se encontraron sorteos
-                  </td>
-                </tr>
-              )}
-            </AnimatePresence>
-          </tbody>
-        </table>
+                )}
+              </AnimatePresence>
+            </tbody>
+          </table>
+        </div>
 
-        {/* PAGINACIÓN CORREGIDA SIN "ellipsis-right" */}
+        {/* --- PAGINACIÓN CON EL HOOK INTEGRADO --- */}
         {totalPages > 1 && (
-          <div className="p-6 border-t border-white/5 bg-white/[0.01] flex justify-between items-center">
+          <div className="p-6 border-t border-white/5 bg-white/[0.01] flex justify-between items-center select-none">
             <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
               Página {currentPage} de {totalPages}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="p-2.5 bg-zinc-900 rounded-xl text-zinc-500 hover:text-luck-gold"
+                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all cursor-pointer"
               >
                 <LuChevronLeft size={20} />
               </button>
-              {pageNumbers.map((p, i) =>
-                p === 'ellipsis-left' || p === 'ellipsis-right' ? (
-                  <span key={i} className="w-8 flex justify-center text-zinc-600 font-black">
-                    ...
-                  </span>
-                ) : (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(p)}
-                    className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${currentPage === p ? 'bg-luck-gold text-black' : 'text-zinc-500 hover:bg-white/5'}`}
-                  >
-                    {p}
-                  </button>
-                )
-              )}
+
+              <div className="flex gap-1 items-center">
+                {pageNumbers.map((page, index) => {
+                  if (page === 'ellipsis-left' || page === 'ellipsis-right') {
+                    return (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="w-8 h-8 flex items-center justify-center text-zinc-600 text-[11px] font-black"
+                      >
+                        ...
+                      </span>
+                    )
+                  }
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
+                        currentPage === page
+                          ? 'bg-luck-gold text-black'
+                          : 'text-zinc-500 hover:bg-white/5'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                })}
+              </div>
+
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
-                className="p-2.5 bg-zinc-900 rounded-xl text-zinc-500 hover:text-luck-gold"
+                className="p-2.5 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-10 disabled:hover:text-zinc-500 transition-all cursor-pointer"
               >
                 <LuChevronRight size={20} />
               </button>
