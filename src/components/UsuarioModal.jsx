@@ -6,6 +6,7 @@ import Modal from './Modal'
 
 const UsuarioModal = ({ isOpen, onClose, initialData, roles, puntosVenta, fetchData }) => {
   const [loading, setLoading] = useState(false)
+
   const initialState = {
     nombresCompletos: '',
     alias: '',
@@ -20,17 +21,24 @@ const UsuarioModal = ({ isOpen, onClose, initialData, roles, puntosVenta, fetchD
   const handleSave = async (e) => {
     e.preventDefault()
     setLoading(true)
+
+    // Preparamos los datos para enviar
+    // Si la clave está vacía, la eliminamos del objeto para que el backend no la procese
+    const dataToSend = { ...formData }
+    if (dataToSend.clave === '') {
+      delete dataToSend.clave
+    }
+
     try {
       if (initialData) {
-        await usuarioAPI.actualizarInformacion(initialData.id, formData)
-
+        await usuarioAPI.actualizarInformacion(initialData.id, dataToSend)
         Swal.fire({
           icon: 'success',
           title: 'Información actualizada',
           text: 'La información del usuario ha sido actualizada',
         })
       } else {
-        await usuarioAPI.agregar(formData)
+        await usuarioAPI.agregar(dataToSend)
         Swal.fire({
           icon: 'success',
           title: 'Registro creado',
@@ -51,13 +59,12 @@ const UsuarioModal = ({ isOpen, onClose, initialData, roles, puntosVenta, fetchD
     }
   }
 
-  // Cargar datos al editar
   useEffect(() => {
     if (initialData) {
       setFormData({
         nombresCompletos: initialData.nombresCompletos || '',
         alias: initialData.alias || '',
-        clave: '', // no mostrar nunca la clave existente
+        clave: '', // Siempre vacío al editar
         RolId: initialData.RolId || '',
         PuntoVentaId: initialData.PuntoVentaId || '',
         activo: initialData.activo ?? true,
@@ -108,23 +115,21 @@ const UsuarioModal = ({ isOpen, onClose, initialData, roles, puntosVenta, fetchD
           </div>
         </div>
 
-        {/* Contraseña SOLO AL CREAR */}
-        {!initialData && (
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-zinc-600 tracking-widest ml-1">
-              Contraseña
-            </label>
-            <input
-              type="password"
-              required
-              className="w-full bg-zinc-900 border border-white/5 rounded-xl p-3 text-sm text-white 
-                         focus:border-luck-gold/30 outline-none transition-all"
-              placeholder="Contraseña inicial"
-              value={formData.clave}
-              onChange={(e) => setFormData({ ...formData, clave: e.target.value })}
-            />
-          </div>
-        )}
+        {/* Contraseña (Opcional al editar) */}
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-black uppercase text-zinc-600 tracking-widest ml-1">
+            {initialData ? 'Nueva Contraseña (Opcional)' : 'Contraseña'}
+          </label>
+          <input
+            type="password"
+            required={!initialData}
+            className="w-full bg-zinc-900 border border-white/5 rounded-xl p-3 text-sm text-white 
+                       focus:border-luck-gold/30 outline-none transition-all"
+            placeholder={initialData ? 'Dejar vacío para mantener la actual' : 'Contraseña inicial'}
+            value={formData.clave}
+            onChange={(e) => setFormData({ ...formData, clave: e.target.value })}
+          />
+        </div>
 
         {/* Rol y Punto de Venta */}
         <div className="grid grid-cols-2 gap-4">
@@ -173,7 +178,6 @@ const UsuarioModal = ({ isOpen, onClose, initialData, roles, puntosVenta, fetchD
           <label className="text-[10px] font-black uppercase text-zinc-600 tracking-widest ml-1">
             Estado del Usuario
           </label>
-
           <div
             className="flex items-center gap-3 cursor-pointer select-none"
             onClick={() => setFormData({ ...formData, activo: !formData.activo })}
@@ -199,13 +203,12 @@ const UsuarioModal = ({ isOpen, onClose, initialData, roles, puntosVenta, fetchD
           </div>
         </div>
 
-        {/* Botón */}
         <button
           disabled={loading}
           type="submit"
           className="w-full bg-luck-gold hover:bg-yellow-600 text-black font-black py-4 rounded-xl transition-all active:scale-95 uppercase text-xs tracking-[0.2em] shadow-lg shadow-luck-gold/10 mt-4"
         >
-          {loading ? 'GUARDANDO' : 'GUARDAR'}
+          {loading ? 'GUARDANDO...' : 'GUARDAR'}
         </button>
       </form>
     </Modal>
