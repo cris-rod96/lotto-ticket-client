@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
   prizeNameCol: {
     width: '70%',
     fontSize: '8pt',
-    fontFamily: 'Helvetica-Bold', // Énfasis solicitado
+    fontFamily: 'Helvetica-Bold',
   },
   prizeValueCol: {
     width: '30%',
@@ -62,7 +62,17 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   footer: { marginTop: '10pt', alignItems: 'center' },
-  expiryDate: { fontSize: '8.5pt', fontFamily: 'Helvetica-Bold', marginTop: '2pt' },
+  // NUEVO ESTILO: Texto "Generado" más visible y en negrita
+  generatedText: {
+    fontSize: '8pt',
+    fontFamily: 'Helvetica-Bold',
+    marginBottom: '4pt',
+  },
+  expiryDate: {
+    fontSize: '9.5pt',
+    fontFamily: 'Helvetica-Bold',
+    marginBottom: '4pt',
+  },
   securityCode: { fontSize: '13pt', fontFamily: 'Courier-Bold', letterSpacing: '1pt' },
 })
 
@@ -146,12 +156,15 @@ const TicketTemplate = ({ ticket, suertes }) => {
           </View>
 
           <View style={styles.footer} break={false}>
-            <Text style={{ fontSize: '7pt', color: '#666' }}>
+            {/* Texto "Generado" mejorado */}
+            <Text style={styles.generatedText}>
               Generado: {new Date(ticket.createdAt).toLocaleString('es-EC')}
             </Text>
+
             <Text style={styles.expiryDate}>
               {ticket.fechaCaducidad ? `CADUCA EL ${ticket.fechaCaducidad}` : 'CADUCA EN 6 DÍAS'}
             </Text>
+
             <View
               style={{
                 marginTop: 8,

@@ -51,6 +51,13 @@ const styles = StyleSheet.create({
   footer: { marginTop: '20pt', alignItems: 'center' },
   codeLabel: { fontSize: '7pt', marginBottom: '2pt' },
   securityCode: { fontSize: '14pt', fontFamily: 'Courier-Bold' },
+  // NUEVO ESTILO: Impreso visible
+  printedDate: {
+    fontSize: '7.5pt',
+    fontFamily: 'Helvetica-Bold',
+    marginTop: '12pt',
+    color: '#000',
+  },
   prizeBlock: {
     marginBottom: '10pt',
     backgroundColor: '#f9f9f9',
@@ -63,11 +70,9 @@ const styles = StyleSheet.create({
 const ComprobantePagoTemplate = ({ ticket, user }) => {
   if (!ticket) return null
 
-  // Filtramos todas las jugadas que fueron premiadas
   const jugadasGanadoras =
     ticket.DetallesTickets?.filter((d) => parseFloat(d.montoPremio) > 0) || []
 
-  // Cálculo de altura dinámica (Base 420 + extra por cada premio)
   const receiptHeight = 420 + jugadasGanadoras.length * 60
 
   const formatDate = (dateStr) => {
@@ -78,7 +83,6 @@ const ComprobantePagoTemplate = ({ ticket, user }) => {
   return (
     <Document>
       <Page size={[226, receiptHeight]} style={styles.page}>
-        {/* ENCABEZADO */}
         <View style={styles.header}>
           <Image src="/logo_principal.png" style={styles.logo} />
           <Text style={styles.title}>RECIBO DE PAGO</Text>
@@ -88,7 +92,6 @@ const ComprobantePagoTemplate = ({ ticket, user }) => {
 
         <View style={styles.divider} />
 
-        {/* TOTAL PAGADO */}
         <View style={styles.paymentBox}>
           <Text style={styles.amountLabel}>PREMIO TOTAL PAGADO</Text>
           <Text style={styles.amountValue}>
@@ -96,7 +99,6 @@ const ComprobantePagoTemplate = ({ ticket, user }) => {
           </Text>
         </View>
 
-        {/* DETALLES */}
         <View style={styles.detailsSection}>
           <View style={styles.detailRow}>
             <Text style={styles.label}>TICKET REF:</Text>
@@ -109,7 +111,6 @@ const ComprobantePagoTemplate = ({ ticket, user }) => {
             </Text>
           </View>
 
-          {/* LISTADO DE PREMIOS */}
           <View
             style={{ marginTop: '10pt', borderTopWidth: 1, borderColor: '#000', paddingTop: '5pt' }}
           >
@@ -117,12 +118,9 @@ const ComprobantePagoTemplate = ({ ticket, user }) => {
               DETALLE DE PREMIOS:
             </Text>
             {jugadasGanadoras.map((jugada, index) => {
-              // Obtenemos el registro de suerte desde el resultado del sorteo
               const dr = ticket.Sorteo?.Resultado?.DetallesResultados?.find(
                 (d) => d.numeroGanador === jugada.numeroJugado
               )
-
-              // Obtenemos el factor multiplicador (prem) del punto de venta actual
               const detalleSuerte = dr?.Suerte?.DetallesSuertes?.[0]
               const factor = detalleSuerte ? parseFloat(detalleSuerte.prem) : 0
               const nombreSuerte = dr?.Suerte?.descripcion || 'PREMIO GANADOR'
@@ -157,7 +155,6 @@ const ComprobantePagoTemplate = ({ ticket, user }) => {
 
         <View style={styles.divider} />
 
-        {/* FIRMA */}
         <View style={styles.signatureSection}>
           <View style={styles.signatureLine} />
           <Text style={styles.infoText}>FIRMA DE CONFORMIDAD</Text>
@@ -166,13 +163,11 @@ const ComprobantePagoTemplate = ({ ticket, user }) => {
           </Text>
         </View>
 
-        {/* FOOTER */}
         <View style={styles.footer}>
           <Text style={styles.codeLabel}>CÓDIGO DE VALIDACIÓN</Text>
           <Text style={styles.securityCode}>{ticket.codigo?.substring(0, 12)}</Text>
-          <Text style={[styles.infoText, { fontSize: '6pt', marginTop: '10pt', color: '#666' }]}>
-            Impreso: {new Date().toLocaleString('es-EC')}
-          </Text>
+          {/* Texto impreso mejorado */}
+          <Text style={styles.printedDate}>IMPRESO: {new Date().toLocaleString('es-EC')}</Text>
         </View>
       </Page>
     </Document>
