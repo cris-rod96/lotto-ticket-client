@@ -8,6 +8,7 @@ import ResultadoFilters from '@/components/filters/ResultadoFilters'
 import ResultadoHeader from '@/components/headers/ResultadoHeader'
 import ResultadoTable from '@/components/tables/ResultadoTable'
 import useResultados from '@/hooks/useResultados'
+import { useAuthStore } from '@/store/useAuthStore'
 import ReporteGanadoresPDF from '@/utils/pdf/reporteGanadores'
 import { pdf } from '@react-pdf/renderer'
 
@@ -51,6 +52,8 @@ const Resultados = () => {
     handleActualizarResultado,
   } = useResultados()
 
+  const { esAdministrador } = useAuthStore()
+
   const handleGenerarReporteGanadores = async (resultado) => {
     try {
       const doc = <ReporteGanadoresPDF data={resultado} />
@@ -69,6 +72,7 @@ const Resultados = () => {
   }
 
   const handlePrepareFlyer = (resultado) => {
+    console.log('Resultado admin antes de prepararla: ', resultado)
     const numSorteo = resultado.Sorteo?.numero
     const jornada = resultado.Sorteo?.jornada
     const nombreCatalogo = resultado.Sorteo?.Catalogo?.nombre
@@ -122,6 +126,7 @@ const Resultados = () => {
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         handleActualizarResultado={handleActualizarResultado}
+        isAdmin={esAdministrador}
       />
       {showEditModal && (
         <ActualizarResultadoModal

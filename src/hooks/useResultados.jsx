@@ -55,22 +55,6 @@ const useResultados = () => {
     fetchData()
   }, [currentPage])
 
-  // Filtrado en el frontend sobre la data paginada que nos devolvió el servidor
-  // const currentData = useMemo(() => {
-  //   return resultados.filter((r) => {
-  //     const jornadaSorteo = r.Sorteo?.jornada || ''
-  //     const utilidadNeta = parseFloat(r.Sorteo?.utilidadNeta || 0)
-
-  //     const matchesJornada = jornadaFilter === 'Todos' || jornadaSorteo === jornadaFilter
-
-  //     let matchesUtilidad = true
-  //     if (utilidadFilter === 'Positiva') matchesUtilidad = utilidadNeta >= 0
-  //     if (utilidadFilter === 'Negativa') matchesUtilidad = utilidadNeta < 0
-
-  //     return matchesJornada && matchesUtilidad
-  //   })
-  // }, [resultados, jornadaFilter, utilidadFilter])
-
   const currentData = resultados
 
   // Resetear página automáticamente al cambiar los filtros visuales de la UI

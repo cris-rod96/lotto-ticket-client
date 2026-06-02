@@ -1,25 +1,14 @@
-import DetalleResultadoModal from '@/components/DetalleResultadoModal'
 import ResultadoFilters from '@/components/filters/ResultadoFilters'
 import FlyerResultadosModal from '@/components/FlyerResultadosModal'
-import ResultadoHeaderVendedor from '@/components/headers/ResultadoHeaderVendedor' // Versión sin botón
-import ResultadoTable from '@/components/tables/ResultadoTable'
-import useResultados from '@/hooks/useResultados'
-import ReporteGanadoresPDF from '@/utils/pdf/reporteGanadores'
-import { pdf } from '@react-pdf/renderer'
+import ResultadoHeaderVendedor from '@/components/headers/ResultadoHeaderVendedor'
+import ResultadoVendedorTable from '@/components/tables/ResultadoVendedorTable'
+import useResultadosPorPunto from '@/hooks/useResultadosPorPunto'
+import { useAuthStore } from '@/store/useAuthStore'
 import { motion } from 'framer-motion'
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
-}
-const rowVariants = {
-  hidden: { x: -10, opacity: 0 },
-  visible: { x: 0, opacity: 1 },
-  exit: { opacity: 0, scale: 0.95 },
-}
-
 const ResultadosVendedor = () => {
-  // Nota: El hook ahora hace todo el filtrado en el servidor
+  const { user } = useAuthStore()
+
   const {
     setGroupedFlyerData,
     setShowFlyerModal,
@@ -29,35 +18,46 @@ const ResultadosVendedor = () => {
     setUtilidadFilter,
     loading,
     currentData,
-    handleOpenDetalle,
     totalPages,
     currentPage,
     setCurrentPage,
-    showDetalle,
-    setShowDetalle,
-    selectedResultado,
     showFlyerModal,
     groupedFlyerData,
-  } = useResultados()
+  } = useResultadosPorPunto(user?.PuntoVentaId)
 
-  const handleGenerarReporteGanadores = async (resultado) => {
-    const doc = <ReporteGanadoresPDF data={resultado} />
-    const blob = await pdf(doc).toBlob()
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `Reporte_${resultado.Sorteo?.Catalogo?.nombre}_${resultado.Sorteo?.numero}.pdf`
-    link.click()
-  }
-
-  // Lógica optimizada para preparar el flyer
   const handlePrepareFlyer = (resultado) => {
-    setGroupedFlyerData(resultado) // Los datos ya vienen filtrados por el servidor
+    console.log('Resultado admin antes de prepararla: ', resultado)
+    const numSorteo = resultado.Sorteo?.numero
+    const jornada = resultado.Sorteo?.jornada
+    const nombreCatalogo = resultado.Sorteo?.Catalogo?.nombre
+
+    // Filtra sobre los resultados de la página actual
+    const registrosRelacionados = currentData.filter(
+      (r) =>
+        r.Sorteo?.numero === numSorteo &&
+        r.Sorteo?.jornada === jornada &&
+        r.Sorteo?.Catalogo?.nombre === nombreCatalogo
+    )
+
+    const dataUnificada = {
+      ...resultado,
+      // Si por alguna razón el par está en otra página, garantizamos que al menos use los detalles del registro actual
+      DetallesResultados:
+        registrosRelacionados.length > 0
+          ? registrosRelacionados.flatMap((r) => r.DetallesResultados || [])
+          : resultado.DetallesResultados || [],
+      cifrasDisponibles:
+        registrosRelacionados.length > 0
+          ? registrosRelacionados.map((r) => r.Sorteo?.Cifra?.cantidad)
+          : [resultado.Sorteo?.Cifra?.cantidad],
+    }
+
+    setGroupedFlyerData(dataUnificada)
     setShowFlyerModal(true)
   }
 
   return (
-    <motion.div initial="hidden" animate="visible" className="w-full pb-10">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full pb-10">
       <ResultadoHeaderVendedor />
 
       <ResultadoFilters
@@ -68,26 +68,14 @@ const ResultadosVendedor = () => {
         setUtilidadFilter={setUtilidadFilter}
       />
 
-      <ResultadoTable
-        containerVariants={containerVariants}
-        rowVariants={rowVariants}
+      <ResultadoVendedorTable
         loading={loading}
         currentData={currentData}
-        handleOpenDetalle={handleOpenDetalle}
         handlePrepareFlyer={handlePrepareFlyer}
-        handleGenerarReporteGanadores={handleGenerarReporteGanadores}
         totalPages={totalPages}
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
       />
-
-      {showDetalle && (
-        <DetalleResultadoModal
-          isOpen={showDetalle}
-          onClose={() => setShowDetalle(false)}
-          data={selectedResultado}
-        />
-      )}
 
       {showFlyerModal && (
         <FlyerResultadosModal

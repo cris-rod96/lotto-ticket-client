@@ -1,29 +1,14 @@
 import usePaginationWindow from '@/hooks/usePaginationWindow'
 import { AnimatePresence } from 'framer-motion'
-import {
-  LuChevronLeft,
-  LuChevronRight,
-  LuEye,
-  LuFileText,
-  LuImage,
-  LuInbox,
-  LuRefreshCcw,
-  LuTrendingDown,
-  LuTrendingUp,
-  LuTrophy,
-} from 'react-icons/lu'
+import { LuChevronLeft, LuChevronRight, LuImage, LuInbox, LuTrophy } from 'react-icons/lu'
 
-const ResultadoTable = ({
+const ResultadoVendedorTable = ({
   currentData,
   loading,
-  handleOpenDetalle,
   handlePrepareFlyer,
-  handleGenerarReporteGanadores,
-  handleActualizarResultado,
   totalPages,
   currentPage,
   setCurrentPage,
-  isAdmin,
 }) => {
   const pageNumbers = usePaginationWindow(currentPage, totalPages)
 
@@ -36,10 +21,9 @@ const ResultadoTable = ({
               <th className="p-6">Sorteo</th>
               <th className="p-6">Fecha / Hora</th>
               <th className="p-6">Ventas</th>
-              <th className="p-6">Monto Premio</th>
-              <th className="p-6">Monto Pagado</th>
-              <th className="p-6">Por Pagar</th>
-              <th className="p-6">Utilidad Neta</th>
+              <th className="p-6">Total Premios</th>
+              <th className="p-6">Monto por Pagar</th>
+              <th className="p-6">Utilidad</th>
               <th className="p-6 text-right">Acciones</th>
             </tr>
           </thead>
@@ -48,7 +32,7 @@ const ResultadoTable = ({
               {loading ? (
                 <tr key="loading">
                   <td
-                    colSpan="8"
+                    colSpan="7"
                     className="p-32 text-center text-zinc-500 font-black tracking-[0.2em]"
                   >
                     <div className="flex flex-col items-center justify-center min-h-[300px]">
@@ -60,8 +44,12 @@ const ResultadoTable = ({
                 currentData.map((res) => {
                   const sorteo = res?.Sorteo || {}
                   const cat = sorteo?.Catalogo || {}
-                  const cifra = sorteo?.Cifra || {}
-                  const util = parseFloat(sorteo?.utilidadNeta || 0)
+                  const cifra = sorteo?.Cifra || {} // Accedemos a la cifra aquí
+
+                  // Cálculo de Utilidad
+                  const ventas = parseFloat(res.totalVentas || 0)
+                  const premios = parseFloat(res.totalPremios || 0)
+                  const utilidad = ventas - premios
 
                   return (
                     <tr key={res.id} className="hover:bg-white/[0.01]">
@@ -84,65 +72,39 @@ const ResultadoTable = ({
                           {sorteo.horaSorteo || '---'}
                         </span>
                       </td>
-                      <td className="p-6 font-black">
-                        ${parseFloat(sorteo.montoRecaudado || 0).toFixed(2)}
-                      </td>
+                      <td className="p-6 font-black">${ventas.toFixed(2)}</td>
+                      <td className="p-6 text-emerald-400 font-black">${premios.toFixed(2)}</td>
                       <td className="p-6 text-luck-gold font-black">
-                        $
-                        {(
-                          parseFloat(sorteo.montoPagado || 0) +
-                          parseFloat(sorteo.montoPorPagar || 0)
-                        ).toFixed(2)}
+                        ${parseFloat(res.montoPorPagar || 0).toFixed(2)}
                       </td>
-                      <td className="p-6 font-black text-cyan-400">
-                        ${parseFloat(sorteo.montoPagado || 0).toFixed(2)}
+
+                      {/* Celda de Utilidad */}
+                      <td
+                        className={`p-6 font-black ${
+                          utilidad > 0
+                            ? 'text-emerald-500'
+                            : utilidad < 0
+                              ? 'text-rose-500'
+                              : 'text-zinc-500'
+                        }`}
+                      >
+                        ${utilidad.toFixed(2)}
                       </td>
-                      <td className="p-6 font-black text-orange-400">
-                        ${parseFloat(sorteo.montoPorPagar || 0).toFixed(2)}
-                      </td>
-                      <td className="p-6">
-                        <div
-                          className={`flex items-center gap-2 font-black ${util >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
-                        >
-                          {util >= 0 ? <LuTrendingUp size={16} /> : <LuTrendingDown size={16} />} $
-                          {util.toFixed(2)}
-                        </div>
-                      </td>
+
                       <td className="p-6 flex justify-end gap-2">
                         <button
-                          onClick={() => handleOpenDetalle(res)}
-                          className="p-3 bg-zinc-900 rounded-xl text-zinc-400 hover:text-luck-gold"
-                        >
-                          <LuEye size={16} />
-                        </button>
-                        <button
                           onClick={() => handlePrepareFlyer(res)}
-                          className="p-3 bg-zinc-900 rounded-xl text-emerald-400"
+                          className="p-3 bg-zinc-900 rounded-xl text-emerald-400 hover:bg-emerald-500/10 transition-colors"
                         >
-                          <LuImage size={16} />
+                          <LuImage size={18} />
                         </button>
-                        <button
-                          onClick={() => handleGenerarReporteGanadores(res)}
-                          className="p-3 bg-zinc-900 rounded-xl text-blue-400"
-                        >
-                          <LuFileText size={16} />
-                        </button>
-                        {isAdmin && (
-                          <button
-                            onClick={() => handleActualizarResultado(res)}
-                            className="p-3 bg-zinc-900 rounded-xl text-yellow-500 hover:text-yellow-400 border border-yellow-500/20"
-                            title="Recalcular resultado"
-                          >
-                            <LuRefreshCcw size={16} />
-                          </button>
-                        )}
                       </td>
                     </tr>
                   )
                 })
               ) : (
                 <tr key="empty">
-                  <td colSpan="8" className="h-[400px]">
+                  <td colSpan="7" className="h-[400px]">
                     <div className="flex flex-col items-center justify-center w-full h-full">
                       <LuInbox size={80} className="mb-4 text-luck-gold opacity-30" />
                       <p className="text-sm font-black uppercase tracking-[0.4em] text-white opacity-40">
@@ -157,6 +119,7 @@ const ResultadoTable = ({
         </table>
       </div>
 
+      {/* Paginación... */}
       {totalPages > 1 && (
         <div className="mt-auto p-6 border-t border-white/5 bg-white/[0.01] flex justify-between items-center">
           <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
@@ -195,4 +158,4 @@ const ResultadoTable = ({
   )
 }
 
-export default ResultadoTable
+export default ResultadoVendedorTable

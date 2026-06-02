@@ -27,6 +27,19 @@ const resultadoAPI = {
       },
     })
   },
+
+  listarPorPunto: async (filtros = {}) => {
+    // Aquí recibimos puntoVentaId, page y limit
+    const { puntoVentaId, page, limit } = filtros
+
+    return instance.get(`/${model}/listar/por-punto`, {
+      params: {
+        puntoVentaId: puntoVentaId || undefined,
+        page: page || 1,
+        limit: limit || 6,
+      },
+    })
+  },
 }
 
 export default resultadoAPI
