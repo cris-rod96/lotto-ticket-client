@@ -4,6 +4,7 @@ const model = 'tickets'
 
 const ticketAPI = {
   listarTodos: async (params = {}) => {
+    console.log(params)
     return instance.get(`/${model}/listar/todos`, { params })
   },
 
