@@ -51,7 +51,6 @@ const styles = StyleSheet.create({
   footer: { marginTop: '20pt', alignItems: 'center' },
   codeLabel: { fontSize: '7pt', marginBottom: '2pt' },
   securityCode: { fontSize: '14pt', fontFamily: 'Courier-Bold' },
-  // NUEVO ESTILO: Impreso visible
   printedDate: {
     fontSize: '7.5pt',
     fontFamily: 'Helvetica-Bold',
@@ -70,10 +69,36 @@ const styles = StyleSheet.create({
 const ComprobantePagoTemplate = ({ ticket, user }) => {
   if (!ticket) return null
 
+  // Mapa de ordenamiento reutilizado
+  const ordenSuertes = {
+    'PRIMERA SUERTE': 1,
+    'SEGUNDA SUERTE': 2,
+    'TERCERA SUERTE': 3,
+    'CUARTA SUERTE': 4,
+    'QUINTA SUERTE': 5,
+    'SEXTA SUERTE': 6,
+    'SEPTIMA SUERTE': 7,
+    'OCTAVA SUERTE': 8,
+  }
+
+  // Filtramos y ordenamos igual que en el modal
   const jugadasGanadoras =
     ticket.DetallesTickets?.filter((d) => parseFloat(d.montoPremio) > 0) || []
 
-  const receiptHeight = 420 + jugadasGanadoras.length * 60
+  const jugadasOrdenadas = [...jugadasGanadoras].sort((a, b) => {
+    const drA = ticket.Sorteo?.Resultado?.DetallesResultados?.find(
+      (d) => d.numeroGanador === a.numeroJugado
+    )
+    const drB = ticket.Sorteo?.Resultado?.DetallesResultados?.find(
+      (d) => d.numeroGanador === b.numeroJugado
+    )
+    return (
+      (ordenSuertes[drA?.Suerte?.descripcion] || 99) -
+      (ordenSuertes[drB?.Suerte?.descripcion] || 99)
+    )
+  })
+
+  const receiptHeight = 420 + jugadasOrdenadas.length * 60
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A'
@@ -117,7 +142,7 @@ const ComprobantePagoTemplate = ({ ticket, user }) => {
             <Text style={[styles.label, { marginBottom: '8pt', textAlign: 'center' }]}>
               DETALLE DE PREMIOS:
             </Text>
-            {jugadasGanadoras.map((jugada, index) => {
+            {jugadasOrdenadas.map((jugada, index) => {
               const dr = ticket.Sorteo?.Resultado?.DetallesResultados?.find(
                 (d) => d.numeroGanador === jugada.numeroJugado
               )
@@ -166,7 +191,6 @@ const ComprobantePagoTemplate = ({ ticket, user }) => {
         <View style={styles.footer}>
           <Text style={styles.codeLabel}>CÓDIGO DE VALIDACIÓN</Text>
           <Text style={styles.securityCode}>{ticket.codigo?.substring(0, 12)}</Text>
-          {/* Texto impreso mejorado */}
           <Text style={styles.printedDate}>IMPRESO: {new Date().toLocaleString('es-EC')}</Text>
         </View>
       </Page>
