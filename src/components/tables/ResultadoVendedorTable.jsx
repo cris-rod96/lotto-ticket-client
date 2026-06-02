@@ -22,7 +22,8 @@ const ResultadoVendedorTable = ({
               <th className="p-6">Fecha / Hora</th>
               <th className="p-6">Ventas</th>
               <th className="p-6">Total Premios</th>
-              <th className="p-6">Monto por Pagar</th>
+              <th className="p-6">Monto Pagado</th>
+              <th className="p-6">Por Pagar</th>
               <th className="p-6">Utilidad</th>
               <th className="p-6 text-right">Acciones</th>
             </tr>
@@ -32,7 +33,7 @@ const ResultadoVendedorTable = ({
               {loading ? (
                 <tr key="loading">
                   <td
-                    colSpan="7"
+                    colSpan="8"
                     className="p-32 text-center text-zinc-500 font-black tracking-[0.2em]"
                   >
                     <div className="flex flex-col items-center justify-center min-h-[300px]">
@@ -44,12 +45,16 @@ const ResultadoVendedorTable = ({
                 currentData.map((res) => {
                   const sorteo = res?.Sorteo || {}
                   const cat = sorteo?.Catalogo || {}
-                  const cifra = sorteo?.Cifra || {} // Accedemos a la cifra aquí
+                  const cifra = sorteo?.Cifra || {}
 
-                  // Cálculo de Utilidad
+                  // Cálculos
                   const ventas = parseFloat(res.totalVentas || 0)
-                  const premios = parseFloat(res.totalPremios || 0)
-                  const utilidad = ventas - premios
+                  const totalPremios = parseFloat(res.totalPremios || 0)
+                  const montoPorPagar = parseFloat(res.montoPorPagar || 0)
+
+                  // Nuevo cálculo: Monto Pagado
+                  const montoPagado = totalPremios - montoPorPagar
+                  const utilidad = ventas - totalPremios
 
                   return (
                     <tr key={res.id} className="hover:bg-white/[0.01]">
@@ -73,12 +78,17 @@ const ResultadoVendedorTable = ({
                         </span>
                       </td>
                       <td className="p-6 font-black">${ventas.toFixed(2)}</td>
-                      <td className="p-6 text-emerald-400 font-black">${premios.toFixed(2)}</td>
-                      <td className="p-6 text-luck-gold font-black">
-                        ${parseFloat(res.montoPorPagar || 0).toFixed(2)}
+                      <td className="p-6 text-emerald-400 font-black">
+                        ${totalPremios.toFixed(2)}
                       </td>
 
-                      {/* Celda de Utilidad */}
+                      {/* Monto Pagado */}
+                      <td className="p-6 text-blue-400 font-black">${montoPagado.toFixed(2)}</td>
+
+                      {/* Por Pagar */}
+                      <td className="p-6 text-luck-gold font-black">${montoPorPagar.toFixed(2)}</td>
+
+                      {/* Utilidad */}
                       <td
                         className={`p-6 font-black ${
                           utilidad > 0
@@ -104,7 +114,7 @@ const ResultadoVendedorTable = ({
                 })
               ) : (
                 <tr key="empty">
-                  <td colSpan="7" className="h-[400px]">
+                  <td colSpan="8" className="h-[400px]">
                     <div className="flex flex-col items-center justify-center w-full h-full">
                       <LuInbox size={80} className="mb-4 text-luck-gold opacity-30" />
                       <p className="text-sm font-black uppercase tracking-[0.4em] text-white opacity-40">
@@ -119,7 +129,7 @@ const ResultadoVendedorTable = ({
         </table>
       </div>
 
-      {/* Paginación... */}
+      {/* Paginación */}
       {totalPages > 1 && (
         <div className="mt-auto p-6 border-t border-white/5 bg-white/[0.01] flex justify-between items-center">
           <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">

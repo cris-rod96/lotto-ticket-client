@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LuCircleCheck, LuDollarSign, LuLoader, LuX } from 'react-icons/lu'
+import { LuCircleCheck, LuDollarSign, LuInfo, LuLoader, LuX } from 'react-icons/lu'
 
 const ModalPagoTicketVendedor = ({
   isOpen,
@@ -12,37 +12,65 @@ const ModalPagoTicketVendedor = ({
 }) => {
   const [loading, setLoading] = useState(false)
 
+  // Mapa para definir el orden de las suertes
+  const ordenSuertes = {
+    'PRIMERA SUERTE': 1,
+    'SEGUNDA SUERTE': 2,
+    'TERCERA SUERTE': 3,
+    'CUARTA SUERTE': 4,
+    'QUINTA SUERTE': 5,
+    'SEXTA SUERTE': 6,
+    'SEPTIMA SUERTE': 7,
+    'OCTAVA SUERTE': 8,
+  }
+
+  // Filtramos jugadas premiadas
+  const jugadasGanadoras =
+    ticket?.DetallesTickets?.filter((d) => parseFloat(d.montoPremio) > 0) || []
+
+  // Ordenamos usando el mapa
+  const jugadasOrdenadas = [...jugadasGanadoras].sort((a, b) => {
+    const drA = ticket.Sorteo?.Resultado?.DetallesResultados?.find(
+      (d) => d.numeroGanador === a.numeroJugado
+    )
+    const drB = ticket.Sorteo?.Resultado?.DetallesResultados?.find(
+      (d) => d.numeroGanador === b.numeroJugado
+    )
+    const valA = ordenSuertes[drA?.Suerte?.descripcion] || 99
+    const valB = ordenSuertes[drB?.Suerte?.descripcion] || 99
+    return valA - valB
+  })
+
   const handleExecutePayment = async () => {
     setLoading(true)
     try {
-      // Ejecutamos la confirmación del padre y esperamos su respuesta
       const data = await onConfirm(ticket.id, usuario.PuntoVentaId, caja.id)
-
-      // Si el pago fue exitoso y el backend retornó el ticket estructurado, disparamos la impresión
       if (data && data.ticket) {
         await handlePrintComprobante(data.ticket)
       }
     } catch (err) {
-      console.error('Error en el flujo de confirmación e impresión:', err)
+      console.error('Error:', err)
     } finally {
       setLoading(false)
     }
   }
 
+  if (!isOpen) return null
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-      <div className="bg-[#0c0d0d] border border-white/10 w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
-        {/* Header simple */}
-        <div className="flex justify-between items-start mb-8">
+      <div className="bg-[#0c0d0d] border border-white/10 w-full max-w-md rounded-[2.5rem] p-6 shadow-2xl flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
               <LuDollarSign size={20} />
             </div>
             <div>
-              <h3 className="text-white font-black italic text-xl uppercase tracking-tighter">
+              <h3 className="text-white font-black italic text-lg uppercase tracking-tighter">
                 Confirmar Pago
               </h3>
-              <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mt-0.5">
+              <p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest">
                 Ticket: #{ticket?.codigo}
               </p>
             </div>
@@ -50,56 +78,80 @@ const ModalPagoTicketVendedor = ({
           <button
             onClick={onClose}
             disabled={loading}
-            className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-500 hover:text-white transition-colors disabled:opacity-20"
+            className="text-zinc-500 hover:text-white transition-colors"
           >
-            <LuX size={20} />
+            <LuX size={24} />
           </button>
         </div>
 
-        <div className="space-y-6">
-          {/* Monto del Premio */}
-          <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-[2rem] p-6 text-center">
-            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] block mb-2">
-              Valor a entregar al cliente
-            </span>
-            <span className="text-5xl font-black text-white italic tracking-tighter">
-              ${parseFloat(ticket?.montoTotalPremio).toFixed(2)}
+        {/* Monto Total */}
+        <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-[2rem] p-5 text-center mb-4">
+          <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] block mb-1">
+            Total a entregar
+          </span>
+          <span className="text-4xl font-black text-white italic tracking-tighter">
+            ${parseFloat(ticket?.montoTotalPremio || 0).toFixed(2)}
+          </span>
+        </div>
+
+        {/* Desglose Scrollable */}
+        <div className="flex-1 overflow-y-auto pr-2 space-y-3 mb-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+          <div className="flex items-center gap-2 text-zinc-400 mb-1">
+            <LuInfo size={12} />
+            <span className="text-[9px] font-black uppercase tracking-widest">
+              Desglose detallado:
             </span>
           </div>
 
-          {/* Info del Punto de Venta */}
-          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4">
-            <div className="flex justify-between items-center">
-              <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">
-                Sucursal:
-              </span>
-              <span className="text-[9px] font-black text-luck-gold uppercase italic">
-                {usuario?.PuntoVenta?.nombre || 'Terminal Activa'}
-              </span>
-            </div>
-          </div>
+          {jugadasOrdenadas.map((jugada, idx) => {
+            const dr = ticket.Sorteo?.Resultado?.DetallesResultados?.find(
+              (d) => d.numeroGanador === jugada.numeroJugado
+            )
+            const factor = dr?.Suerte?.DetallesSuertes?.[0]?.prem
+              ? parseFloat(dr.Suerte.DetallesSuertes[0].prem)
+              : 0
+            const nombreSuerte = dr?.Suerte?.descripcion || 'PREMIO'
 
-          {/* Botón de Acción Directa */}
-          <button
-            disabled={!caja?.id || loading}
-            onClick={handleExecutePayment}
-            className="w-full bg-luck-gold hover:bg-yellow-500 disabled:opacity-20 text-black font-black py-5 rounded-2xl flex items-center justify-center gap-3 uppercase text-[11px] italic tracking-widest transition-all shadow-lg shadow-luck-gold/10 active:scale-95"
-          >
-            {loading ? (
-              <LuLoader className="animate-spin" size={20} />
-            ) : (
-              <LuCircleCheck size={20} strokeWidth={3} />
-            )}
-            {loading ? 'Procesando Pago...' : 'Registrar Desembolso'}
-          </button>
+            return (
+              <div
+                key={idx}
+                className="bg-white/[0.03] border border-white/5 p-5 rounded-2xl flex justify-between items-center hover:bg-white/[0.06] transition-colors"
+              >
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[11px] font-black text-white uppercase tracking-wider">
+                    {nombreSuerte}
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-medium">
+                    N° {jugada.numeroJugado} • Apuesta: $
+                    {parseFloat(jugada.montoApostado).toFixed(2)}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[9px] text-emerald-500 font-black block">
+                    PAGA (x{factor.toFixed(0)})
+                  </span>
+                  <span className="text-lg font-black text-white italic">
+                    ${parseFloat(jugada.montoPremio).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
 
-          {/* Mensaje de error solo si la base de datos no encuentra caja alguna para esa sucursal */}
-          {!caja?.id && (
-            <p className="text-[9px] text-red-500 font-black uppercase text-center">
-              Error de sistema: No se detectó una caja activa para este punto.
-            </p>
+        {/* Botón de Acción */}
+        <button
+          disabled={!caja?.id || loading}
+          onClick={handleExecutePayment}
+          className="w-full bg-yellow-500 hover:bg-yellow-400 disabled:opacity-30 text-black font-black py-4 rounded-2xl flex items-center justify-center gap-3 uppercase text-[12px] italic tracking-widest transition-all shadow-[0_0_20px_rgba(234,179,8,0.2)]"
+        >
+          {loading ? (
+            <LuLoader className="animate-spin" size={20} />
+          ) : (
+            <LuCircleCheck size={20} strokeWidth={3} />
           )}
-        </div>
+          {loading ? 'Procesando...' : 'Registrar Desembolso'}
+        </button>
       </div>
     </div>
   )
