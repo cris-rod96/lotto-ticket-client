@@ -71,7 +71,7 @@ const Tickets = () => {
       // Cargamos catálogos iniciales solo si están vacíos
       if (sorteos.length === 0) {
         const [respSorteos, respSuertes] = await Promise.all([
-          sorteoAPI.listarAbiertos({ estado: 'Abierto' }),
+          sorteoAPI.listarAbiertos({ estado: 'Todos' }),
           suerteAPI.listarTodas(),
         ])
         setSorteos(respSorteos.data?.sorteos || [])
@@ -86,7 +86,7 @@ const Tickets = () => {
         fecha: filterFecha !== 'Todos' ? filterFecha : undefined,
         estado: filterEstado !== 'Todos' ? filterEstado : undefined,
       })
-
+      console.log(response.data)
       // Accedemos a la respuesta según la estructura que me pasaste:
       setTickets(response.data.data || []) // Los tickets están en response.data.data
       setTotalItems(response.data.pagination.totalItems || 0)
@@ -322,23 +322,24 @@ const Tickets = () => {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#111615] border border-white/5 p-5 rounded-3xl mb-8 flex flex-wrap gap-4 items-end"
+        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 shadow-xl flex flex-wrap items-center gap-4"
       >
         {/* Selector de Fecha */}
-        <div className="flex flex-col gap-2 min-w-[200px]">
-          <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider flex items-center gap-1">
-            <LuCalendar size={10} /> Fecha del Sorteo
-          </label>
+        <div className="relative w-full sm:w-64">
+          <LuCalendar
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold"
+            size={18}
+          />
           <select
             value={filterFecha}
             onChange={(e) => setFilterFecha(e.target.value)}
-            className="w-full bg-black/40 border border-white/5 text-white rounded-2xl py-3.5 px-4 text-xs font-medium focus:outline-none focus:border-luck-gold/30 transition-all cursor-pointer uppercase tracking-wide"
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
           >
-            <option value="Todos" className="bg-[#111615]">
+            <option value="Todos" className="bg-[#1a1f1e] text-white">
               Todas las Fechas
             </option>
             {fechasDisponibles.map((fecha) => (
-              <option key={fecha} value={fecha} className="bg-[#111615]">
+              <option key={fecha} value={fecha} className="bg-[#1a1f1e] text-white">
                 {formatVisualFecha(fecha)}
               </option>
             ))}
@@ -346,40 +347,36 @@ const Tickets = () => {
         </div>
 
         {/* Selector de Estado */}
-        <div className="flex flex-col gap-2 min-w-[200px]">
-          <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider flex items-center gap-1">
-            <LuFilter size={10} /> Estado de Liquidación
-          </label>
+        <div className="relative w-full sm:w-64">
+          <LuFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
           <select
             value={filterEstado}
             onChange={(e) => setFilterEstado(e.target.value)}
-            className="w-full bg-black/40 border border-white/5 text-white rounded-2xl py-3.5 px-4 text-xs font-medium focus:outline-none focus:border-luck-gold/30 transition-all cursor-pointer uppercase tracking-wide"
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
           >
-            <option value="Todos" className="bg-[#111615]">
+            <option value="Todos" className="bg-[#1a1f1e] text-white">
               Todos los resultados
             </option>
-            <option value="Pendiente" className="bg-[#111615]">
+            <option value="Pendiente" className="bg-[#1a1f1e] text-white">
               Pendiente
             </option>
-            <option value="Ganador_Pendiente" className="bg-[#111615]">
+            <option value="Ganador_Pendiente" className="bg-[#1a1f1e] text-white">
               Ganadores por Pagar
             </option>
-            <option value="Ganador_Pagado" className="bg-[#111615]">
+            <option value="Ganador_Pagado" className="bg-[#1a1f1e] text-white">
               Ganadores Ya Pagados
             </option>
-            <option value="No Ganador" className="bg-[#111615]">
+            <option value="No Ganador" className="bg-[#1a1f1e] text-white">
               No Ganador
             </option>
           </select>
         </div>
 
         {/* Contador a la derecha */}
-        <div className="ml-auto">
-          <div className="px-6 py-3.5 bg-white/[0.02] border border-white/5 rounded-2xl whitespace-nowrap flex items-center justify-center">
-            <span className="text-[10px] font-black text-luck-gold uppercase tracking-[0.2em]">
-              {totalItems} Coincidencias
-            </span>
-          </div>
+        <div className="ml-auto hidden sm:block px-6 py-3.5 bg-white/[0.02] border border-white/5 rounded-2xl">
+          <span className="text-[10px] font-black text-luck-gold uppercase tracking-[0.2em]">
+            {totalItems} Coincidencias
+          </span>
         </div>
       </motion.div>
 

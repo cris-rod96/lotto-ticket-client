@@ -69,3 +69,21 @@ body::-webkit-scrollbar-thumb:active {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+.custom-date-input {
+  color-scheme: dark; /* Esto obliga al navegador a usar el tema oscuro para el calendario */
+}
+
+.custom-date-input::-webkit-calendar-picker-indicator {
+  display: block;
+  background: transparent;
+  bottom: 0;
+  color: transparent;
+  cursor: pointer;
+  height: auto;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: auto;
+}

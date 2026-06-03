@@ -86,31 +86,35 @@ const CajasVendedor = () => {
         )}
       </div>
 
-      <div className="flex gap-4 mb-6 bg-[#111615] p-4 rounded-2xl border border-white/10 items-center">
-        <LuFilter className="text-luck-gold ml-2" />
-        <div className="flex items-center gap-2 bg-zinc-900 px-4 py-2 rounded-xl border border-white/5">
+      <div className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-6 shadow-xl flex items-center gap-4">
+        <LuFilter className="text-luck-gold ml-2" size={18} />
+
+        <div className="relative w-full sm:w-48">
           <input
             ref={dateInicioRef}
             type="date"
-            className="bg-transparent text-white text-xs font-bold uppercase outline-none cursor-pointer [color-scheme:dark]"
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 px-4 text-white text-sm font-bold uppercase outline-none cursor-pointer focus:border-luck-gold/50 transition-all custom-date-input"
             onChange={(e) => setFilters({ ...filters, fechaInicio: e.target.value, page: 1 })}
           />
         </div>
-        <span className="text-zinc-600 font-black">A</span>
-        <div className="flex items-center gap-2 bg-zinc-900 px-4 py-2 rounded-xl border border-white/5">
+
+        <span className="text-zinc-600 font-black uppercase text-sm">A</span>
+
+        <div className="relative w-full sm:w-48">
           <input
             ref={dateFinRef}
             type="date"
-            className="bg-transparent text-white text-xs font-bold uppercase outline-none cursor-pointer [color-scheme:dark]"
+            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 px-4 text-white text-sm font-bold uppercase outline-none cursor-pointer focus:border-luck-gold/50 transition-all custom-date-input"
             onChange={(e) => setFilters({ ...filters, fechaFin: e.target.value, page: 1 })}
           />
         </div>
+
         <button
           onClick={handleReset}
-          className="ml-auto flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-red-500/20 text-zinc-500 hover:text-red-500 border border-white/5 rounded-xl transition-all"
+          className="ml-auto flex items-center gap-2 px-6 py-3.5 bg-[#1a1f1e] hover:bg-red-500/10 text-zinc-500 hover:text-red-500 border border-white/10 rounded-2xl transition-all"
         >
           <LuRotateCcw size={14} />
-          <span className="text-[10px] font-black uppercase">Limpiar</span>
+          <span className="text-[10px] font-black uppercase tracking-widest">Limpiar</span>
         </button>
       </div>
 
