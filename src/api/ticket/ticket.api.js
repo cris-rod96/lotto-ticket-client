@@ -4,13 +4,11 @@ const model = 'tickets'
 
 const ticketAPI = {
   listarTodos: async (params = {}) => {
-    console.log(params)
     return instance.get(`/${model}/listar/todos`, { params })
   },
 
   // Ahora acepta opcionalmente parámetros de paginación además del ID
   listarPorPuntoDeVenta: async (id, params = {}) => {
-    console.log(params)
     return instance.get(`/${model}/listar/punto-de-venta/${id}`, { params })
   },
 

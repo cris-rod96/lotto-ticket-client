@@ -5,7 +5,6 @@ import {
   LuHistory,
   LuTrendingDown,
   LuTrendingUp,
-  LuUser,
 } from 'react-icons/lu'
 
 const CajasVendedorTable = ({
@@ -24,70 +23,65 @@ const CajasVendedorTable = ({
   const tieneDatos = data && data.length > 0
 
   return (
-    <div className="bg-[#111615] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl">
-      {/* Header de la Tabla */}
-      <div className="p-8 border-b border-white/5 bg-white/[0.01] flex justify-between items-center">
+    <div className="bg-[#111615] border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+      {/* Header Compacto */}
+      <div className="px-6 py-4 border-b border-white/5 bg-black/20 flex justify-between items-center">
         <div>
-          <h3 className="text-[11px] font-black text-white uppercase tracking-[0.3em] flex items-center gap-2">
-            <LuHistory size={16} className="text-luck-gold" />
+          <h3 className="text-[10px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+            <LuHistory size={14} className="text-luck-gold" />
             {esMovimientos ? 'Registro de Operaciones' : 'Historial de Cajas'}
           </h3>
-          <p className="text-[9px] text-zinc-500 uppercase font-bold mt-1 tracking-widest">
-            {esMovimientos
-              ? 'Detalle de entradas y salidas de efectivo'
-              : 'Listado de sesiones registradas'}
-          </p>
         </div>
 
         <div className="flex items-center gap-4">
           {esMovimientos && (
             <button
               onClick={() => setSoloMisMovimientos(!soloMisMovimientos)}
-              className={`px-4 py-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${
+              className={`px-3 py-1 rounded-lg border text-[9px] font-black uppercase transition-all ${
                 soloMisMovimientos
                   ? 'bg-luck-gold/10 border-luck-gold/30 text-luck-gold'
-                  : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white'
+                  : 'border-white/5 text-zinc-500'
               }`}
             >
-              {soloMisMovimientos ? 'Viendo: Solo Mío' : 'Viendo: Todo'}
+              {soloMisMovimientos ? 'Solo Mío' : 'Todo'}
             </button>
           )}
 
           {totalPages > 1 && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <button
                 disabled={currentPage === 1}
                 onClick={() => onPageChange(currentPage - 1)}
-                className="p-2 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-20 transition-all"
+                className="p-1.5 hover:bg-white/5 rounded-lg text-zinc-500 disabled:opacity-20"
               >
-                <LuChevronLeft size={16} />
+                <LuChevronLeft size={14} />
               </button>
-              <span className="text-[10px] font-black text-white px-2">
+              <span className="text-[9px] font-black text-white px-2">
                 {currentPage} / {totalPages}
               </span>
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => onPageChange(currentPage + 1)}
-                className="p-2 bg-zinc-900 border border-white/5 rounded-xl text-zinc-500 hover:text-luck-gold disabled:opacity-20 transition-all"
+                className="p-1.5 hover:bg-white/5 rounded-lg text-zinc-500 disabled:opacity-20"
               >
-                <LuChevronRight size={16} />
+                <LuChevronRight size={14} />
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Tabla */}
+      {/* Tabla Compacta */}
       {tieneDatos ? (
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="text-zinc-500 uppercase text-[9px] font-black tracking-[0.2em] bg-zinc-900/50">
-                <th className="p-6 pl-10">Fecha / Hora</th>
-                <th className="p-6">Operación</th>
-                <th className="p-6 text-center">Responsable</th>
-                <th className="p-6">Descripción</th>
-                <th className="p-6 text-right pr-10">Monto</th>
+              <tr className="text-[8px] text-zinc-600 uppercase tracking-widest bg-black/30">
+                <th className="p-4 pl-6">Fecha</th>
+                <th className="p-4">Operación</th>
+                <th className="p-4 text-center">Responsable</th>
+                <th className="p-4">Descripción</th>
+                <th className="p-4 text-right pr-6">Monto</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.03]">
@@ -98,44 +92,47 @@ const CajasVendedorTable = ({
                   <tr
                     key={item.id}
                     onClick={() => !esMovimientos && onSelectCaja(item)}
-                    className={`group hover:bg-white/[0.02] transition-colors ${!esMovimientos ? 'cursor-pointer' : ''}`}
+                    className={`group hover:bg-white/[0.02] ${!esMovimientos ? 'cursor-pointer' : ''}`}
                   >
-                    <td className="p-6 pl-10">
-                      <span className="text-white font-bold text-sm block">
+                    <td className="p-4 pl-6">
+                      <span className="text-white font-bold text-[10px] block">
                         {new Date(item.createdAt).toLocaleDateString()}
                       </span>
-                      <span className="text-[8px] text-zinc-600 font-black uppercase tracking-widest">
-                        {new Date(item.createdAt).toLocaleTimeString()}
+                      <span className="text-[8px] text-zinc-600 font-bold">
+                        {new Date(item.createdAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </span>
                     </td>
-                    <td className="p-6">
+                    <td className="p-4">
                       <div
-                        className={`flex items-center gap-2 font-black text-[10px] uppercase ${isIngreso ? 'text-emerald-500' : 'text-red-500'}`}
+                        className={`flex items-center gap-2 text-[10px] font-bold uppercase ${isIngreso ? 'text-emerald-500' : 'text-red-500'}`}
                       >
                         {esMovimientos ? (
                           isIngreso ? (
-                            <LuTrendingUp size={14} />
+                            <LuTrendingUp size={12} />
                           ) : (
-                            <LuTrendingDown size={14} />
+                            <LuTrendingDown size={12} />
                           )
                         ) : (
-                          <div className="w-2 h-2 rounded-full bg-luck-gold" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-luck-gold" />
                         )}
                         {esMovimientos ? item.categoria : item.estado}
                       </div>
                     </td>
-                    <td className="p-6 text-center">
+                    <td className="p-4 text-center">
                       <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[9px] font-black uppercase ${esMio ? 'bg-luck-gold/10 text-luck-gold' : 'bg-white/5 text-zinc-500'}`}
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-[8px] font-black uppercase ${esMio ? 'bg-luck-gold/10 text-luck-gold' : 'bg-white/5 text-zinc-500'}`}
                       >
-                        <LuUser size={10} /> {item.Usuario?.nombresCompletos || 'Sistema'}
+                        {item.Usuario?.nombresCompletos || 'Sistema'}
                       </span>
                     </td>
-                    <td className="p-6 text-zinc-400 text-[11px] italic max-w-[200px] truncate">
-                      {esMovimientos ? item.descripcion : `Caja: ${item.id.slice(0, 8)}`}
+                    <td className="p-4 text-zinc-400 text-[10px] italic max-w-[150px] truncate">
+                      {esMovimientos ? item.descripcion : `Caja #${item.id.slice(0, 4)}`}
                     </td>
                     <td
-                      className={`p-6 text-right pr-10 font-mono font-bold text-sm ${esMovimientos ? (isIngreso ? 'text-emerald-500' : 'text-red-500') : 'text-white'}`}
+                      className={`p-4 text-right pr-6 font-mono text-[11px] font-bold ${esMovimientos ? (isIngreso ? 'text-emerald-500' : 'text-red-500') : 'text-white'}`}
                     >
                       {esMovimientos && (isIngreso ? '+' : '-')}{' '}
                       {formatter.format(parseFloat(item.monto || item.saldoActual || 0))}
@@ -147,13 +144,11 @@ const CajasVendedorTable = ({
           </table>
         </div>
       ) : (
-        <div className="p-20 flex flex-col items-center justify-center text-center">
-          <div className="p-4 bg-zinc-900 rounded-2xl mb-4 text-zinc-600 border border-white/5">
-            <LuCircleAlert size={28} />
-          </div>
-          <h4 className="text-white font-black text-xs uppercase tracking-[0.2em]">
+        <div className="p-12 text-center text-zinc-600">
+          <LuCircleAlert size={24} className="mx-auto mb-2 opacity-50" />
+          <p className="text-[9px] uppercase font-bold tracking-widest">
             Sin registros encontrados
-          </h4>
+          </p>
         </div>
       )}
     </div>

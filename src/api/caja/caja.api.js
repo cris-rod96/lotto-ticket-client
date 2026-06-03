@@ -1,4 +1,4 @@
-import { instance } from '../base.api'
+import { instance } from '@/api/base.api'
 
 const model = 'cajas'
 
@@ -6,15 +6,16 @@ const cajaAPI = {
   listarTodas: () => {
     return instance.get(`/${model}/listar/todas`)
   },
-  listarPorPuntoVenta: (id) => {
-    return instance.get(`/${model}/listar/punto-de-venta/${id}`)
+
+  listarPorPuntoVenta: async (id, params = {}) => {
+    console.log(params)
+    return instance.get(`/${model}/listar/punto-de-venta/${id}`, { params })
   },
 
   obtenerCajaAbierta: (id) => {
     return instance.get(`/${model}/obtener-abierta/punto-venta/${id}`)
   },
-
-  obtenerCajasAbiertas: () => {
+  obtenerAbiertas: () => {
     return instance.get(`/${model}/obtener-abiertas`)
   },
 
@@ -26,9 +27,8 @@ const cajaAPI = {
     return instance.patch(`/${model}/cerrar-caja/${id}`, data)
   },
 
-  registrarInyeccion: (id, data) => {
-    return instance.patch(`/${model}/cerrar-caja/${id}`, data)
+  registrarInyeccion: (data) => {
+    return instance.patch(`/${model}/registrar-inyeccion`, data)
   },
 }
-
 export default cajaAPI

@@ -7,8 +7,9 @@ const cajaAPI = {
     return instance.get(`/${model}/listar/todas`)
   },
 
-  listarPorPuntoDeVenta: (id) => {
-    return instance.get(`/${model}/listar/punto-de-venta/${id}`)
+  listarPorPuntoVenta: async (id, params = {}) => {
+    console.log(params)
+    return instance.get(`/${model}/listar/punto-de-venta/${id}`, { params })
   },
 
   obtenerCajaAbierta: (id) => {
