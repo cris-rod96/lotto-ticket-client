@@ -26,8 +26,9 @@ const cardVariants = {
 
 const Reportes = () => {
   // ESTADOS DE FILTROS: Ahora fechas personalizadas
-  const [fechaInicio, setFechaInicio] = useState(new Date().toISOString().split('T')[0])
-  const [fechaFin, setFechaFin] = useState(new Date().toISOString().split('T')[0])
+  const [fechaInicio, setFechaInicio] = useState(new Date().toLocaleDateString('en-CA'))
+  console.log(new Date().toLocaleDateString('en-CA'))
+  const [fechaFin, setFechaFin] = useState(new Date().toLocaleDateString('en-CA'))
   const [puntoVentaFilter, setPuntoVentaFilter] = useState('Todos')
 
   // ESTADOS DE DATOS REALES

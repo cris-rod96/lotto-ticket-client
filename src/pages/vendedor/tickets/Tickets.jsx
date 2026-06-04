@@ -71,7 +71,7 @@ const Tickets = () => {
       // Cargamos catálogos iniciales solo si están vacíos
       if (sorteos.length === 0) {
         const [respSorteos, respSuertes] = await Promise.all([
-          sorteoAPI.listarAbiertos({ estado: 'Todos' }),
+          sorteoAPI.listarAbiertos({ estado: 'Abierto' }),
           suerteAPI.listarTodas(),
         ])
         setSorteos(respSorteos.data?.sorteos || [])
