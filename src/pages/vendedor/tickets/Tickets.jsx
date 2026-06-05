@@ -56,6 +56,7 @@ const Tickets = () => {
   const setCaja = useCajaStore((state) => state.setCaja)
 
   const [sorteos, setSorteos] = useState([])
+  const [sorteosAbiertos, setSorteosAbiertos] = useState([])
   const [suertes, setSuertes] = useState([])
 
   // ESTADOS DE PAGINACIÓN DESDE SERVIDOR
@@ -65,13 +66,18 @@ const Tickets = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 8
 
+  useEffect(() => {
+    const filteredSorteos = sorteos.filter((s) => s.estado === 'Abierto')
+    setSorteosAbiertos(filteredSorteos)
+  }, [sorteos])
+
   const fetchTickets = async () => {
     setLoading(true)
     try {
       // Cargamos catálogos iniciales solo si están vacíos
       if (sorteos.length === 0) {
         const [respSorteos, respSuertes] = await Promise.all([
-          sorteoAPI.listarAbiertos({ estado: 'Abierto' }),
+          sorteoAPI.listarAbiertos({ estado: 'Todos' }),
           suerteAPI.listarTodas(),
         ])
         setSorteos(respSorteos.data?.sorteos || [])
@@ -322,58 +328,71 @@ const Tickets = () => {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 shadow-xl flex flex-wrap items-center gap-4"
+        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 shadow-xl flex flex-wrap items-end gap-6"
       >
         {/* Selector de Fecha */}
         <div className="relative w-full sm:w-64">
-          <LuCalendar
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold"
-            size={18}
-          />
-          <select
-            value={filterFecha}
-            onChange={(e) => setFilterFecha(e.target.value)}
-            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
-          >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">
-              Todas las Fechas
-            </option>
-            {fechasDisponibles.map((fecha) => (
-              <option key={fecha} value={fecha} className="bg-[#1a1f1e] text-white">
-                {formatVisualFecha(fecha)}
+          <label className="block text-[10px] font-black uppercase text-zinc-500 mb-2 ml-1 tracking-widest">
+            Filtrar por Fecha
+          </label>
+          <div className="relative">
+            <LuCalendar
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold pointer-events-none"
+              size={18}
+            />
+            <select
+              value={filterFecha}
+              onChange={(e) => setFilterFecha(e.target.value)}
+              className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
+            >
+              <option value="Todos" className="bg-[#1a1f1e] text-white">
+                Todas las Fechas
               </option>
-            ))}
-          </select>
+              {fechasDisponibles.map((fecha) => (
+                <option key={fecha} value={fecha} className="bg-[#1a1f1e] text-white">
+                  {formatVisualFecha(fecha)}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Selector de Estado */}
         <div className="relative w-full sm:w-64">
-          <LuFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold" size={18} />
-          <select
-            value={filterEstado}
-            onChange={(e) => setFilterEstado(e.target.value)}
-            className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
-          >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">
-              Todos los resultados
-            </option>
-            <option value="Pendiente" className="bg-[#1a1f1e] text-white">
-              Pendiente
-            </option>
-            <option value="Ganador_Pendiente" className="bg-[#1a1f1e] text-white">
-              Ganadores por Pagar
-            </option>
-            <option value="Ganador_Pagado" className="bg-[#1a1f1e] text-white">
-              Ganadores Ya Pagados
-            </option>
-            <option value="No Ganador" className="bg-[#1a1f1e] text-white">
-              No Ganador
-            </option>
-          </select>
+          <label className="block text-[10px] font-black uppercase text-zinc-500 mb-2 ml-1 tracking-widest">
+            Estado del Resultado
+          </label>
+          <div className="relative">
+            <LuFilter
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold pointer-events-none"
+              size={18}
+            />
+            <select
+              value={filterEstado}
+              onChange={(e) => setFilterEstado(e.target.value)}
+              className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
+            >
+              <option value="Todos" className="bg-[#1a1f1e] text-white">
+                Todos los resultados
+              </option>
+              <option value="Pendiente" className="bg-[#1a1f1e] text-white">
+                Pendiente
+              </option>
+              <option value="Ganador_Pendiente" className="bg-[#1a1f1e] text-white">
+                Ganadores por Pagar
+              </option>
+              <option value="Ganador_Pagado" className="bg-[#1a1f1e] text-white">
+                Ganadores Ya Pagados
+              </option>
+              <option value="No Ganador" className="bg-[#1a1f1e] text-white">
+                No Ganador
+              </option>
+            </select>
+          </div>
         </div>
 
         {/* Contador a la derecha */}
-        <div className="ml-auto hidden sm:block px-6 py-3.5 bg-white/[0.02] border border-white/5 rounded-2xl">
+        <div className="ml-auto hidden sm:flex items-center px-6 h-[50px] bg-white/[0.02] border border-white/5 rounded-2xl">
           <span className="text-[10px] font-black text-luck-gold uppercase tracking-[0.2em]">
             {totalItems} Coincidencias
           </span>
@@ -628,7 +647,7 @@ const Tickets = () => {
         <TicketModalVendedor
           isOpen={showModal}
           onClose={() => setShowModal(false)}
-          sorteos={sorteos}
+          sorteos={sorteosAbiertos}
           usuario={user}
           fetchData={fetchTickets}
           suertes={suertes}
