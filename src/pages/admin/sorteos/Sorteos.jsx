@@ -9,13 +9,12 @@ import {
   LuChevronLeft,
   LuChevronRight,
   LuClock,
-  LuFilter,
   LuGlobe,
   LuInbox,
   LuLayers,
   LuPencil,
   LuPlus,
-  LuShuffle,
+  LuSearch,
   LuTrash2,
 } from 'react-icons/lu'
 import Swal from 'sweetalert2'
@@ -39,6 +38,7 @@ const rowVariants = {
 }
 
 const Sorteos = () => {
+  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [selectedSorteo, setSelectedSorteo] = useState(null)
 
@@ -48,6 +48,9 @@ const Sorteos = () => {
   const [cifraFilter, setCifraFilter] = useState('Todos')
   const [statusFilter, setStatusFilter] = useState('Todos')
   const [dateFilter, setDateFilter] = useState('') // Formato YYYY-MM-DD o vacío
+
+  const [filterNUmero, setFilterNumero] = useState('')
+  const [debouncedNumero, setDebouncedNumero] = useState('')
 
   const [sorteos, setSorteos] = useState([])
   const [catalogos, setCatalogos] = useState([])
@@ -103,12 +106,12 @@ const Sorteos = () => {
         CifraId: cifraFilter,
         estado: statusFilter,
         fechaSorteo: dateFilter || undefined,
+        numero: debouncedNumero,
       }
 
       const respSorteos = await sorteoAPI.listarTodos(params)
 
       setSorteos(respSorteos.data?.sorteos || [])
-      console.log(respSorteos.data?.sorteos)
       setTotalPages(respSorteos.data?.totalPages || 1)
       setTotalItems(respSorteos.data?.totalItems || 0)
     } catch (error) {
@@ -142,12 +145,20 @@ const Sorteos = () => {
   // Se ejecuta cada vez que cambia la página actual o se manipula algún filtro
   useEffect(() => {
     fetchDataSorteos()
-  }, [currentPage, catalogoFilter, jornadaFilter, cifraFilter, statusFilter, dateFilter])
+  }, [
+    currentPage,
+    catalogoFilter,
+    jornadaFilter,
+    cifraFilter,
+    statusFilter,
+    dateFilter,
+    debouncedNumero,
+  ])
 
   // Resetear a página 1 automáticamente cuando cambie cualquier filtro
   useEffect(() => {
     setCurrentPage(1)
-  }, [catalogoFilter, jornadaFilter, cifraFilter, statusFilter, dateFilter])
+  }, [catalogoFilter, jornadaFilter, cifraFilter, statusFilter, dateFilter, debouncedNumero])
 
   const handleSave = async (formData) => {
     try {
@@ -193,6 +204,16 @@ const Sorteos = () => {
     fetchFiltrosData()
   }, [])
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedNumero(filterNUmero)
+    }, 500)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [filterNUmero])
+
   return (
     <motion.div initial="hidden" animate="visible" className="w-full pb-10">
       <div className="flex justify-between items-center mb-10">
@@ -217,115 +238,145 @@ const Sorteos = () => {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#111615] border border-white/5 p-3 rounded-2xl mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-center"
+        className="bg-[#111615] border border-white/5 p-5 rounded-3xl mb-8 flex flex-col gap-5"
       >
-        {/* SELECT 1: POR JUEGO (CATÁLOGO) */}
-        <div className="relative w-full">
-          <LuShuffle
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-luck-gold"
-            size={15}
-          />
-          <select
-            value={catalogoFilter}
-            onChange={(e) => setCatalogoFilter(e.target.value)}
-            className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-2 pl-9 pr-8 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold"
-          >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">
-              Todos los juegos
-            </option>
-            {catalogos.map((cat) => (
-              <option key={cat.id} value={cat.id} className="bg-[#1a1f1e] text-white">
-                {cat.nombre}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-col gap-2">
+          <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider flex items-center gap-1">
+            <LuSearch size={10} /> Buscar por Código (Mín. 3 caracteres)
+          </label>
+          <div className="relative w-full">
+            <input
+              type="text"
+              placeholder="Ej: TICKET-00123"
+              value={filterNUmero}
+              onChange={(e) => setFilterNumero(e.target.value)} // El cambio activa el useEffect del debounce
+              className="w-full bg-black/40 border border-white/5 text-white rounded-2xl py-4 px-6 text-sm font-medium focus:outline-none focus:border-luck-gold/30 transition-all placeholder:text-zinc-700 italic tracking-wide"
+            />
+            {loading && filterNUmero !== debouncedNumero && (
+              <div className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-luck-gold/20 border-t-luck-gold rounded-full animate-spin"></div>
+            )}
+          </div>
         </div>
 
-        {/* SELECT 2: POR JORNADA */}
-        <div className="relative w-full">
-          <LuClock className="absolute left-3 top-1/2 -translate-y-1/2 text-luck-gold" size={15} />
-          <select
-            value={jornadaFilter}
-            onChange={(e) => setJornadaFilter(e.target.value)}
-            className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-2 pl-9 pr-8 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold"
-          >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">
-              Todas las jornadas
-            </option>
-            <option value="Matutina" className="bg-[#1a1f1e] text-white">
-              Matutina
-            </option>
-            <option value="Vespertina" className="bg-[#1a1f1e] text-white">
-              Vespertina
-            </option>
-            <option value="Nocturna" className="bg-[#1a1f1e] text-white">
-              Nocturna
-            </option>
-          </select>
-        </div>
+        <div className="flex flex-wrap items-end gap-4">
+          {/* SELECT 1: POR JUEGO (CATÁLOGO) */}
+          <div className="flex-1 min-w-[150px] flex flex-col gap-2 relative">
+            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+              Catálogo
+            </label>
+            <div className="relative">
+              <select
+                value={catalogoFilter}
+                onChange={(e) => setCatalogoFilter(e.target.value)}
+                className="w-full bg-black border border-white/10 text-white rounded-2xl py-3.5 px-4 text-xs focus:outline-none focus:border-luck-gold/50 transition-all cursor-pointer appearance-none"
+              >
+                <option value="Todos" className="bg-[#1a1f1e] text-white">
+                  Todos los juegos
+                </option>
+                {catalogos.map((cat) => (
+                  <option key={cat.id} value={cat.id} className="bg-[#1a1f1e] text-white">
+                    {cat.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-        {/* SELECT 3: POR CIFRAS */}
-        <div className="relative w-full">
-          <LuLayers className="absolute left-3 top-1/2 -translate-y-1/2 text-luck-gold" size={15} />
-          <select
-            value={cifraFilter}
-            onChange={(e) => setCifraFilter(e.target.value)}
-            className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-2 pl-9 pr-8 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold"
-          >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">
-              Todas las cifras
-            </option>
-            {cifras.map((cif) => (
-              <option key={cif.id} value={cif.id} className="bg-[#1a1f1e] text-white">
-                {cif.cantidad} Cifras
-              </option>
-            ))}
-          </select>
-        </div>
+          {/* SELECT 2: POR JORNADA */}
+          <div className="flex-1 min-w-[150px] flex flex-col gap-2 relative">
+            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+              Jornadas
+            </label>
+            <div className="relative">
+              <select
+                value={jornadaFilter}
+                onChange={(e) => setJornadaFilter(e.target.value)}
+                className="w-full bg-black border border-white/10 text-white rounded-2xl py-3.5 px-4 text-xs focus:outline-none focus:border-luck-gold/50 transition-all cursor-pointer appearance-none"
+              >
+                <option value="Todos" className="bg-[#1a1f1e] text-white">
+                  Todas las jornadas
+                </option>
+                <option value="Matutina" className="bg-[#1a1f1e] text-white">
+                  Matutina
+                </option>
+                <option value="Vespertina" className="bg-[#1a1f1e] text-white">
+                  Vespertina
+                </option>
+                <option value="Nocturna" className="bg-[#1a1f1e] text-white">
+                  Nocturna
+                </option>
+              </select>
+            </div>
+          </div>
 
-        {/* SELECT 4: POR ESTADO */}
-        <div className="relative w-full">
-          <LuFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-luck-gold" size={15} />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-2 pl-9 pr-8 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs appearance-none cursor-pointer uppercase font-bold"
-          >
-            <option value="Todos" className="bg-[#1a1f1e] text-white">
-              Todos los estados
-            </option>
-            <option value="Abierto" className="bg-[#1a1f1e] text-white">
-              Abierto
-            </option>
-            <option value="Cerrado" className="bg-[#1a1f1e] text-white">
-              Cerrado
-            </option>
-            <option value="Finalizado" className="bg-[#1a1f1e] text-white">
-              Finalizado
-            </option>
-          </select>
-        </div>
+          {/* SELECT 3: POR CIFRAS */}
+          <div className="flex-1 min-w-[150px] flex flex-col gap-2 relative">
+            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+              Cifras
+            </label>
+            <div className="relative">
+              <select
+                value={cifraFilter}
+                onChange={(e) => setCifraFilter(e.target.value)}
+                className="w-full bg-black border border-white/10 text-white rounded-2xl py-3.5 px-4 text-xs cursor-pointer focus:outline-none focus:border-luck-gold/50 appearance-none pr-10"
+              >
+                <option value="Todos" className="bg-[#1a1f1e] text-white">
+                  Todas las cifras
+                </option>
+                {cifras.map((cif) => (
+                  <option key={cif.id} value={cif.id} className="bg-[#1a1f1e] text-white">
+                    {cif.cantidad} Cifras
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-        {/* NUEVO FILTRO 5: POR FECHA */}
-        <div className="relative w-full">
-          <LuCalendar
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-luck-gold"
-            size={15}
-          />
-          <input
-            type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="w-full bg-[#1a1f1e] border border-white/10 rounded-xl py-2 pl-9 pr-4 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-xs cursor-pointer uppercase font-bold text-center"
-          />
-          {dateFilter && (
-            <button
-              onClick={() => setDateFilter('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-zinc-500 hover:text-white font-black"
-            >
-              X
-            </button>
-          )}
+          {/* SELECT 4: POR ESTADO */}
+          <div className="flex-1 min-w-[150px] flex flex-col gap-2 relative">
+            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+              Estados
+            </label>
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full bg-black border border-white/10 text-white rounded-2xl py-3.5 px-4 text-xs cursor-pointer focus:outline-none focus:border-luck-gold/50 appearance-none pr-10"
+              >
+                <option value="Todos" className="bg-[#1a1f1e] text-white">
+                  Todos los estados
+                </option>
+                <option value="Abierto" className="bg-[#1a1f1e] text-white">
+                  Abierto
+                </option>
+                <option value="Cerrado" className="bg-[#1a1f1e] text-white">
+                  Cerrado
+                </option>
+                <option value="Finalizado" className="bg-[#1a1f1e] text-white">
+                  Finalizado
+                </option>
+              </select>
+            </div>
+          </div>
+
+          {/* NUEVO FILTRO 5: POR FECHA */}
+          <div className="flex-1 min-w-[150px] flex flex-col gap-2 relative">
+            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+              Fecha Sorteo
+            </label>
+            <div className="relative group">
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="w-full bg-black border border-white/10 text-white rounded-2xl py-3.5 px-4 text-xs focus:outline-none focus:border-luck-gold/50 transition-all cursor-pointer appearance-none"
+              />
+              <LuCalendar
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none cursor-pointer"
+                size={14}
+              />
+            </div>
+          </div>
         </div>
       </motion.div>
 

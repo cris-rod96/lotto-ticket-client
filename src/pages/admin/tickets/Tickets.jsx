@@ -414,7 +414,6 @@ const Tickets = () => {
           </div>
         </div>
 
-        {/* FILA 2: FECHAS, SELECTS Y CONTADOR (Compactado y Alineado) */}
         {/* FILA 2: FECHAS, SELECTS Y CONTADOR (CORREGIDO CON ICONOS) */}
         <div className="flex flex-wrap items-end gap-4">
           {/* Fecha Desde */}
