@@ -174,6 +174,8 @@ const Tickets = () => {
           confirmButtonColor: '#EAB308',
         })
 
+        console.log(response.data)
+
         // 2. Sincronizamos estado
         setCaja(response.data.caja)
         fetchTickets()
