@@ -8,7 +8,6 @@ const cajaAPI = {
   },
 
   listarPorPuntoVenta: async (id, params = {}) => {
-    console.log(params)
     return instance.get(`/${model}/listar/punto-de-venta/${id}`, { params })
   },
 

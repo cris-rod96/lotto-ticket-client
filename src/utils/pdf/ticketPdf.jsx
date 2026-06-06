@@ -38,7 +38,6 @@ export const generarTicketPDF = async (elementId, ticketCodigo) => {
 
     Swal.close()
   } catch (error) {
-    console.error('Error al generar PDF:', error)
-    Swal.fire('Error', 'No se pudo procesar el archivo', 'error')
+    Swal.fire('Error', error.message || 'No se pudo procesar el archivo', 'error')
   }
 }

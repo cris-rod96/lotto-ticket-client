@@ -38,7 +38,7 @@ const rowVariants = {
 }
 
 const Sorteos = () => {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [selectedSorteo, setSelectedSorteo] = useState(null)
 
@@ -97,6 +97,7 @@ const Sorteos = () => {
 
   // Carga independiente de Sorteos Paginados y Filtrados desde el Backend
   const fetchDataSorteos = async () => {
+    setLoading(true)
     try {
       const params = {
         page: currentPage,
@@ -115,7 +116,14 @@ const Sorteos = () => {
       setTotalPages(respSorteos.data?.totalPages || 1)
       setTotalItems(respSorteos.data?.totalItems || 0)
     } catch (error) {
-      error
+      const msg = error.response?.data?.message || 'Error al recuperar los sorteos'
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en la consulta',
+        text: msg,
+      })
+    } finally {
+      setLoading(false)
     }
   }
 

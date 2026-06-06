@@ -3,14 +3,14 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import {
   LuBanknote,
+  LuCircleAlert,
   LuCreditCard,
   LuLoader,
   LuPlus,
   LuTicket,
   LuTrash2,
-  LuX,
   LuUserPlus,
-  LuCircleAlert,
+  LuX,
 } from 'react-icons/lu'
 import Swal from 'sweetalert2'
 
@@ -142,7 +142,11 @@ const TicketModal = ({
           iframe.contentWindow.focus()
           iframe.contentWindow.print()
         } catch (printError) {
-          console.error('Fallo al invocar print() en el iframe:', printError)
+          Swal.fire({
+            icon: 'error',
+            title: 'Error al imprimir',
+            text: `Fallo al  invocar print() en el iframe: ${printError}`,
+          })
         }
 
         setTimeout(() => {
@@ -151,7 +155,11 @@ const TicketModal = ({
         }, 3000)
       }, 600)
     } catch (error) {
-      console.error('Error en la generación del búfer de impresión:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `'Error en la generación del búfer de impresión: ${error}`,
+      })
     }
   }
 
@@ -259,15 +267,18 @@ const TicketModal = ({
         <div className="flex-1 grid grid-cols-12 overflow-hidden">
           {/* PANEL IZQUIERDO */}
           <div className="col-span-12 lg:col-span-5 p-8 border-r border-white/5 flex flex-col gap-5 overflow-y-auto custom-scroll-minimal">
-
             {/* Terminal Status */}
             <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex justify-between items-center shrink-0">
               <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">
                 Estado de Terminal:
               </span>
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${caja?.id ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
-                <span className={`text-[10px] font-black uppercase tracking-widest ${caja?.id ? 'text-emerald-500' : 'text-red-500'}`}>
+                <div
+                  className={`w-2 h-2 rounded-full ${caja?.id ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}
+                />
+                <span
+                  className={`text-[10px] font-black uppercase tracking-widest ${caja?.id ? 'text-emerald-500' : 'text-red-500'}`}
+                >
                   {caja?.id ? 'Caja Abierta / Activa' : 'Caja Cerrada / Inactiva'}
                 </span>
               </div>
@@ -284,7 +295,9 @@ const TicketModal = ({
                 value={puntoVentaId}
                 onChange={(e) => setPuntoVentaId(e.target.value)}
               >
-                <option value="" disabled className="bg-[#111615] text-zinc-400 font-bold">SELECCIONAR UBICACIÓN...</option>
+                <option value="" disabled className="bg-[#111615] text-zinc-400 font-bold">
+                  SELECCIONAR UBICACIÓN...
+                </option>
                 {puntosVenta.map((p) => (
                   <option key={p.id} value={p.id} className="bg-[#111615] text-white font-bold">
                     {p.nombre.toUpperCase()}
@@ -304,7 +317,9 @@ const TicketModal = ({
                 value={sorteoId}
                 onChange={(e) => setSorteoId(e.target.value)}
               >
-                <option value="" disabled className="bg-[#111615] text-zinc-400 font-bold">SELECCIONAR SORTEO...</option>
+                <option value="" disabled className="bg-[#111615] text-zinc-400 font-bold">
+                  SELECCIONAR SORTEO...
+                </option>
                 {sorteos.map((s) => (
                   <option key={s.id} value={s.id} className="bg-[#111615] text-white font-bold">
                     {s.Catalogo?.nombre.toUpperCase()} ({s.Cifra?.cantidad} CIFRAS)
@@ -359,19 +374,21 @@ const TicketModal = ({
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => setMetodoPago('Efectivo')}
-                  className={`flex items-center justify-center gap-2 py-3.5 rounded-xl border transition-all text-[10px] font-black uppercase ${metodoPago === 'Efectivo'
-                    ? 'bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10'
-                    : 'bg-zinc-900/50 text-zinc-500 border-white/5'
-                    }`}
+                  className={`flex items-center justify-center gap-2 py-3.5 rounded-xl border transition-all text-[10px] font-black uppercase ${
+                    metodoPago === 'Efectivo'
+                      ? 'bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10'
+                      : 'bg-zinc-900/50 text-zinc-500 border-white/5'
+                  }`}
                 >
                   <LuBanknote size={15} /> Efectivo
                 </button>
                 <button
                   onClick={() => setMetodoPago('Transferencia')}
-                  className={`flex items-center justify-center gap-2 py-3.5 rounded-xl border transition-all text-[10px] font-black uppercase ${metodoPago === 'Transferencia'
-                    ? 'bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10'
-                    : 'bg-zinc-900/50 text-zinc-500 border-white/5'
-                    }`}
+                  className={`flex items-center justify-center gap-2 py-3.5 rounded-xl border transition-all text-[10px] font-black uppercase ${
+                    metodoPago === 'Transferencia'
+                      ? 'bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10'
+                      : 'bg-zinc-900/50 text-zinc-500 border-white/5'
+                  }`}
                 >
                   <LuCreditCard size={15} /> Transferencia
                 </button>
@@ -451,7 +468,11 @@ const TicketModal = ({
                 disabled={loading || !caja?.id}
                 className="w-full bg-luck-gold hover:bg-yellow-500 text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 uppercase text-[10px] tracking-widest transition-all shadow-lg disabled:opacity-20"
               >
-                {loading ? <LuLoader className="animate-spin" size={18} /> : <LuPlus size={18} strokeWidth={4} />}
+                {loading ? (
+                  <LuLoader className="animate-spin" size={18} />
+                ) : (
+                  <LuPlus size={18} strokeWidth={4} />
+                )}
                 Añadir Jugada
               </button>
             </div>
@@ -585,10 +606,11 @@ const TicketModal = ({
                     {jugadas.length} JUGADAS
                   </span>
                   <div
-                    className={`px-3 py-1 rounded-full border text-[8px] font-black uppercase ${metodoPago === 'Transferencia'
-                      ? 'bg-luck-gold/10 border-luck-gold/20 text-luck-gold'
-                      : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
-                      }`}
+                    className={`px-3 py-1 rounded-full border text-[8px] font-black uppercase ${
+                      metodoPago === 'Transferencia'
+                        ? 'bg-luck-gold/10 border-luck-gold/20 text-luck-gold'
+                        : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                    }`}
                   >
                     {metodoPago === 'Transferencia' ? 'Pago Digital' : 'Terminal Online'}
                   </div>

@@ -33,7 +33,6 @@ const usePuntoVenta = () => {
       setTicketTotalPages(resp.data.totalPages || 1)
       setTicketPage(resp.data.currentPage || 1)
     } catch (error) {
-      console.error('Error al cargar el historial de tickets:', error)
       const msg = error.response?.data?.message || 'No se pudo cargar el historial de tickets'
       Swal.fire({
         title: 'Error',

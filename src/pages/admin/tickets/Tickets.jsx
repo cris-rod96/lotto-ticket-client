@@ -118,15 +118,15 @@ const Tickets = () => {
       const response = await ticketAPI.listarTodos(params)
 
       setTickets(response.data?.tickets || [])
-      console.log('Tickets administrador:', response.data.tickets)
 
       setTotalItems(response.data?.totalItems || 0)
       setTotalPages(response.data?.totalPages || 1)
     } catch (error) {
-      console.error('Error al cargar tickets paginados:', error)
       Swal.fire({
         title: 'Error',
-        text: 'No se pudo sincronizar la información de tickets con el servidor',
+        text:
+          error.response?.data?.message ||
+          'No se pudo sincronizar la información de tickets con el servidor',
         icon: 'error',
       })
     } finally {
@@ -238,16 +238,15 @@ const Tickets = () => {
         Swal.close()
       }
     } catch (error) {
-      console.error('Error al imprimir ticket:', error)
       Swal.fire({
         title: 'Error de impresión',
         icon: 'error',
+        text: `Errpr al imprimir ticket: ${error.message}`,
       })
     }
   }
 
   const handlePrintComprobante = async (ticket) => {
-    console.log('Ticket Admin: ', ticket)
     try {
       Swal.fire({
         title: 'GENERANDO COMPROBANTE...',
@@ -281,10 +280,9 @@ const Tickets = () => {
         Swal.close()
       }
     } catch (error) {
-      console.error('Error al generar comprobante:', error)
       Swal.fire({
         title: 'Error de impresión',
-        text: 'No se pudo generar el comprobante de pago',
+        text: error.response?.data?.message || 'No se pudo generar el comprobante de pago',
         icon: 'error',
         confirmButtonColor: '#ef4444',
         customClass: { popup: 'rounded-[2rem]' },

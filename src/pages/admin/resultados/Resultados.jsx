@@ -72,7 +72,6 @@ const Resultados = () => {
   }
 
   const handlePrepareFlyer = (resultado) => {
-    console.log('Resultado admin antes de prepararla: ', resultado)
     const numSorteo = resultado.Sorteo?.numero
     const jornada = resultado.Sorteo?.jornada
     const nombreCatalogo = resultado.Sorteo?.Catalogo?.nombre

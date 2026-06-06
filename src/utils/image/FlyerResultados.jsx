@@ -1,6 +1,7 @@
 import { toPng } from 'html-to-image'
 import { useRef } from 'react'
 import { LuImage } from 'react-icons/lu'
+import Swal from 'sweetalert2'
 
 const FilaResultado = ({ index, numero, cantidad }) => {
   return (
@@ -60,7 +61,11 @@ const FlyerResultados = ({ data }) => {
       link.href = dataUrl
       link.click()
     } catch (err) {
-      console.error('Error al generar la imagen', err)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al generar la imagen',
+        text: err.message,
+      })
     }
   }
 

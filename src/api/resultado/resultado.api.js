@@ -8,7 +8,6 @@ const resultadoAPI = {
   },
 
   actualizar: async (data) => {
-    console.log(data)
     return instance.put(`/${model}/actualizar`, data)
   },
 

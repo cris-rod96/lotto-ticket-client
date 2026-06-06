@@ -16,6 +16,7 @@ import {
   LuRotateCcw,
   LuShuffle,
 } from 'react-icons/lu'
+import Swal from 'sweetalert2'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -71,10 +72,13 @@ const SorteosVendedor = () => {
       // LLAMADA AL ENDPOINT CORREGIDO
       const resp = await sorteoAPI.listarPorPunto(user.PuntoVentaId, params)
       setSorteos(resp.data?.sorteos || [])
-      console.log(resp.data?.sorteos)
       setTotalPages(resp.data?.totalPages || 1)
     } catch (error) {
-      console.error(error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en la carga',
+        text: error.response?.data?.message || 'Error en la carga de sorteos',
+      })
     }
   }
 

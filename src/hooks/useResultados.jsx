@@ -1,5 +1,6 @@
 import { resultadoAPI } from '@/api/index.api'
 import { useEffect, useState } from 'react'
+import Swal from 'sweetalert2'
 
 const useResultados = () => {
   const [showModal, setShowModal] = useState(false)
@@ -41,10 +42,13 @@ const useResultados = () => {
 
       const restData = resp.data || {}
       setResultados(restData.data || [])
-      console.log(resp.data)
       setTotalPages(restData.totalPages || 1)
     } catch (error) {
-      console.error(error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.message || 'Error al obtener la información',
+      })
     } finally {
       setLoading(false)
     }

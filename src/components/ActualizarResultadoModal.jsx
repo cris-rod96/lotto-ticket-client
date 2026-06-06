@@ -29,8 +29,6 @@ const ActualizarResultadoModal = ({ isOpen, onClose, fetchData, sorteoData }) =>
         numeroSorteado: dr.numeroGanador,
       }))
 
-      console.log(existentes)
-
       // Ordenar basándose en el nombre de la suerte
       existentes.sort((a, b) => {
         const nombreA = a.descripcion.split(' ')[0].toUpperCase()

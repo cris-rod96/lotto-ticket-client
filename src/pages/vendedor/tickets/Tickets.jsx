@@ -99,7 +99,6 @@ const Tickets = () => {
         estado: filterEstado !== 'Todos' ? filterEstado : undefined,
         codigo: debouncedCodigo,
       })
-      console.log('Tickets vendedor:', response.data.data)
       // Accedemos a la respuesta según la estructura que me pasaste:
       setTickets(response.data.data || []) // Los tickets están en response.data.data
       setTotalItems(response.data.pagination.totalItems || 0)
@@ -221,16 +220,16 @@ const Tickets = () => {
         Swal.close()
       }
     } catch (error) {
-      console.error('Error al imprimir ticket:', error)
+      const msg = error.response?.data?.message || 'Error al imprimir ticket'
       Swal.fire({
         title: 'Error de impresión',
         icon: 'error',
+        text: msg,
       })
     }
   }
 
   const handlePrintComprobante = async (ticket) => {
-    console.log('Ticket: ', ticket)
     try {
       Swal.fire({
         title: 'GENERANDO COMPROBANTE...',
@@ -264,10 +263,9 @@ const Tickets = () => {
         Swal.close()
       }
     } catch (error) {
-      console.error('Error al generar comprobante:', error)
       Swal.fire({
         title: 'Error de impresión',
-        text: 'No se pudo generar el comprobante de pago',
+        text: error.response?.data?.message || 'No se pudo generar el comprobante de pago',
         icon: 'error',
         confirmButtonColor: '#ef4444',
         customClass: { popup: 'rounded-[2rem]' },
@@ -310,7 +308,7 @@ const Tickets = () => {
         Swal.fire('Anulado', 'El ticket ha sido anulado correctamente', 'success')
         fetchTickets()
       } catch (error) {
-        Swal.fire('Error', 'No se pudo anular el ticket', 'error')
+        Swal.fire('Error', error.response?.data?.message || 'No se pudo anular el ticket', 'error')
       }
     }
   }

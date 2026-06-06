@@ -5,14 +5,15 @@ import {
   LuActivity,
   LuArrowDownRight,
   LuArrowUpRight,
+  LuChevronDown,
   LuChevronLeft,
   LuChevronRight,
-  LuChevronDown,
   LuFilter,
   LuInbox,
   LuWallet,
   LuX,
 } from 'react-icons/lu'
+import Swal from 'sweetalert2'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -46,7 +47,11 @@ const ActividadUsuarioModal = ({ isOpen, onClose, usuario }) => {
           setMovimientos(res.data?.movimientos || [])
         })
         .catch((err) => {
-          console.error('Error al recuperar movimientos de auditoría:', err)
+          Swal.fire({
+            icon: 'error',
+            title: 'Error al obtener información',
+            text: err.response?.data?.message || 'Error al recuperar movimientos de auditoría',
+          })
         })
         .finally(() => {
           setLoading(false)
@@ -119,7 +124,8 @@ const ActividadUsuarioModal = ({ isOpen, onClose, usuario }) => {
                   Auditoría General de Operaciones
                 </h3>
                 <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">
-                  Auditando a: <span className="text-luck-gold font-black">{usuario?.nombresCompletos}</span>
+                  Auditando a:{' '}
+                  <span className="text-luck-gold font-black">{usuario?.nombresCompletos}</span>
                 </p>
               </div>
             </div>
@@ -134,7 +140,6 @@ const ActividadUsuarioModal = ({ isOpen, onClose, usuario }) => {
 
           {/* CUERPO DEL MODAL */}
           <div className="p-6 overflow-y-auto max-h-[calc(100vh-140px)] space-y-6">
-
             {/* METRICAS */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-[#111615] border border-white/5 p-4 rounded-2xl flex items-center gap-3">
@@ -142,8 +147,12 @@ const ActividadUsuarioModal = ({ isOpen, onClose, usuario }) => {
                   <LuArrowUpRight size={18} />
                 </div>
                 <div>
-                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-wider">Total Ventas</p>
-                  <p className="text-lg font-black text-white font-mono">${metricas.totalVendido.toFixed(2)}</p>
+                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-wider">
+                    Total Ventas
+                  </p>
+                  <p className="text-lg font-black text-white font-mono">
+                    ${metricas.totalVendido.toFixed(2)}
+                  </p>
                 </div>
               </div>
 
@@ -152,8 +161,12 @@ const ActividadUsuarioModal = ({ isOpen, onClose, usuario }) => {
                   <LuArrowDownRight size={18} />
                 </div>
                 <div>
-                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-wider">Premios Liquidados</p>
-                  <p className="text-lg font-black text-white font-mono">${metricas.totalPremiosPagados.toFixed(2)}</p>
+                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-wider">
+                    Premios Liquidados
+                  </p>
+                  <p className="text-lg font-black text-white font-mono">
+                    ${metricas.totalPremiosPagados.toFixed(2)}
+                  </p>
                 </div>
               </div>
 
@@ -163,8 +176,12 @@ const ActividadUsuarioModal = ({ isOpen, onClose, usuario }) => {
                     <LuWallet size={16} />
                   </div>
                   <div>
-                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-wider">Balance Neto</p>
-                    <p className={`text-lg font-black font-mono ${metricas.balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-wider">
+                      Balance Neto
+                    </p>
+                    <p
+                      className={`text-lg font-black font-mono ${metricas.balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}
+                    >
                       ${metricas.balance.toFixed(2)}
                     </p>
                   </div>
@@ -174,10 +191,12 @@ const ActividadUsuarioModal = ({ isOpen, onClose, usuario }) => {
 
             {/* BARRA DE FILTROS ESTILIZADA DE CORRECCIÓN (Simétrica a tu módulo principal) */}
             <div className="bg-[#111615] border border-white/5 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-4">
-
               {/* SELECT 1: CATEGORÍAS */}
               <div className="relative w-full sm:w-64">
-                <LuFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold pointer-events-none" size={15} />
+                <LuFilter
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold pointer-events-none"
+                  size={15}
+                />
                 <select
                   value={catFilter}
                   onChange={(e) => setCatFilter(e.target.value)}
@@ -189,12 +208,18 @@ const ActividadUsuarioModal = ({ isOpen, onClose, usuario }) => {
                   <option value="Gasto Operativo">Gastos Operativos</option>
                   <option value="Ajuste de Caja">Ajustes de Caja</option>
                 </select>
-                <LuChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={14} />
+                <LuChevronDown
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
+                  size={14}
+                />
               </div>
 
               {/* SELECT 2: MÉTODOS DE PAGO */}
               <div className="relative w-full sm:w-64">
-                <LuWallet className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold pointer-events-none" size={15} />
+                <LuWallet
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold pointer-events-none"
+                  size={15}
+                />
                 <select
                   value={metodoFilter}
                   onChange={(e) => setMetodoFilter(e.target.value)}
@@ -204,7 +229,10 @@ const ActividadUsuarioModal = ({ isOpen, onClose, usuario }) => {
                   <option value="Efectivo">Efectivo</option>
                   <option value="Transferencia">Transferencia</option>
                 </select>
-                <LuChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={14} />
+                <LuChevronDown
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
+                  size={14}
+                />
               </div>
 
               {/* CONTADOR DE REGISTROS ALINEADO */}
@@ -238,7 +266,10 @@ const ActividadUsuarioModal = ({ isOpen, onClose, usuario }) => {
                     <AnimatePresence mode="popLayout" initial={false}>
                       {loading ? (
                         <tr>
-                          <td colSpan="5" className="p-12 text-center animate-pulse text-zinc-600 font-black text-xs tracking-wider uppercase">
+                          <td
+                            colSpan="5"
+                            className="p-12 text-center animate-pulse text-zinc-600 font-black text-xs tracking-wider uppercase"
+                          >
                             Cargando historial operativo...
                           </td>
                         </tr>
@@ -254,7 +285,12 @@ const ActividadUsuarioModal = ({ isOpen, onClose, usuario }) => {
                             >
                               <td className="p-4 pl-6">
                                 <div className="text-white font-mono text-xs font-bold">
-                                  {new Date(mov.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+                                  {new Date(mov.createdAt).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit',
+                                    hour12: false,
+                                  })}
                                 </div>
                                 <div className="text-[9px] text-zinc-500 font-mono mt-0.5">
                                   {new Date(mov.createdAt).toLocaleDateString()}
@@ -263,10 +299,15 @@ const ActividadUsuarioModal = ({ isOpen, onClose, usuario }) => {
 
                               <td className="p-4">
                                 <span
-                                  className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider ${esIngreso ? 'text-emerald-400' : 'text-red-400'
-                                    }`}
+                                  className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider ${
+                                    esIngreso ? 'text-emerald-400' : 'text-red-400'
+                                  }`}
                                 >
-                                  {esIngreso ? <LuArrowUpRight size={12} /> : <LuArrowDownRight size={12} />}
+                                  {esIngreso ? (
+                                    <LuArrowUpRight size={12} />
+                                  ) : (
+                                    <LuArrowDownRight size={12} />
+                                  )}
                                   {mov.categoria}
                                 </span>
                               </td>

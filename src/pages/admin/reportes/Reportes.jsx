@@ -27,7 +27,6 @@ const cardVariants = {
 const Reportes = () => {
   // ESTADOS DE FILTROS: Ahora fechas personalizadas
   const [fechaInicio, setFechaInicio] = useState(new Date().toLocaleDateString('en-CA'))
-  console.log(new Date().toLocaleDateString('en-CA'))
   const [fechaFin, setFechaFin] = useState(new Date().toLocaleDateString('en-CA'))
   const [puntoVentaFilter, setPuntoVentaFilter] = useState('Todos')
 
@@ -59,11 +58,8 @@ const Reportes = () => {
 
       const listaPV = respPuntos.data?.puntosVentas || []
       setPuntosVenta(listaPV)
-      console.log(respPuntos.data?.puntosVentas)
 
       if (respStats.data?.stats) {
-        console.log(respStats.data?.stats)
-
         setKpis({
           ventasTotales: respStats.data.stats.ventasTotales || 0,
           premiosPorPagar: respStats.data.stats.premiosPorPagar || 0,
@@ -73,10 +69,11 @@ const Reportes = () => {
 
       setSucursalesData(respStats.data?.sucursales || [])
     } catch (error) {
-      console.error('Error al cargar reportes operativos:', error)
       Swal.fire({
         title: 'Error',
-        text: 'No se pudo estructurar el desglose financiero del panel',
+        text:
+          error.response?.data?.message ||
+          'No se pudo estructurar el desglose financiero del panel',
         icon: 'error',
         background: '#111615',
         color: '#fff',

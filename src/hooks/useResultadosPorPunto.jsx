@@ -1,5 +1,6 @@
 import { resultadoAPI } from '@/api/index.api'
 import { useCallback, useEffect, useState } from 'react'
+import Swal from 'sweetalert2'
 
 const useResultadosPorPunto = (puntoVentaId) => {
   // Estados de UI y Modales
@@ -37,13 +38,16 @@ const useResultadosPorPunto = (puntoVentaId) => {
       })
 
       const restData = resp.data || {}
-      console.log(resp.data)
 
       // Asignamos la data y totalPages que vienen del backend
       setResultados(restData.data || [])
       setTotalPages(restData.totalPages || 1)
     } catch (error) {
-      console.error('Error al cargar resultados:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en la carga',
+        text: error.response?.data?.message || 'Error al cargar resultados',
+      })
       setResultados([])
       setTotalPages(1)
     } finally {
