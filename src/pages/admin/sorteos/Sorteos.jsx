@@ -255,7 +255,7 @@ const Sorteos = () => {
           <div className="relative w-full">
             <input
               type="text"
-              placeholder="Ej: TICKET-00123"
+              placeholder="Ej: 333"
               value={filterNUmero}
               onChange={(e) => setFilterNumero(e.target.value)} // El cambio activa el useEffect del debounce
               className="w-full bg-black/40 border border-white/5 text-white rounded-2xl py-4 px-6 text-sm font-medium focus:outline-none focus:border-luck-gold/30 transition-all placeholder:text-zinc-700 italic tracking-wide"
