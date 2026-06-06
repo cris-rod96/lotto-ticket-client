@@ -46,14 +46,12 @@ const Tickets = () => {
   const [showModal, setShowModal] = useState(false)
   const [isPayModalOpen, setIsPayModalOpen] = useState(false)
   const [ticketToPay, setTicketToPay] = useState(null)
-  const [selectedTicket, setSelectedTicket] = useState(null)
 
   // ESTADOS DE FILTRADO (Añadidos los nuevos)
   const [filterCodigo, setFilterCodigo] = useState('')
   const [filterFechaInicio, setFilterFechaInicio] = useState('')
   const [filterFechaFin, setFilterFechaFin] = useState('')
   const [filterPuntoVenta, setFilterPuntoVenta] = useState('Todos')
-  const [filterFecha, setFilterFecha] = useState('Todos')
   const [filterEstado, setFilterEstado] = useState('Todos')
 
   // Estado para el debounce del código
@@ -110,7 +108,6 @@ const Tickets = () => {
         page: currentPage,
         limit: itemsPerPage,
         PuntoVentaId: filterPuntoVenta,
-        fechaSorteo: filterFecha,
         estadoLiquidacion: filterEstado,
         // Usamos el valor con debounce para no saturar el servidor
         codigo: debouncedCodigo,
@@ -121,6 +118,8 @@ const Tickets = () => {
       const response = await ticketAPI.listarTodos(params)
 
       setTickets(response.data?.tickets || [])
+      console.log('Tickets administrador:', response.data.tickets)
+
       setTotalItems(response.data?.totalItems || 0)
       setTotalPages(response.data?.totalPages || 1)
     } catch (error) {
@@ -159,7 +158,6 @@ const Tickets = () => {
   }, [
     currentPage,
     filterPuntoVenta,
-    filterFecha,
     filterEstado,
     debouncedCodigo,
     filterFechaInicio,
@@ -169,14 +167,7 @@ const Tickets = () => {
   // Resetear a la página 1 en caso de alterar cualquier criterio de búsqueda
   useEffect(() => {
     setCurrentPage(1)
-  }, [
-    filterPuntoVenta,
-    filterFecha,
-    filterEstado,
-    debouncedCodigo,
-    filterFechaInicio,
-    filterFechaFin,
-  ])
+  }, [filterPuntoVenta, filterEstado, debouncedCodigo, filterFechaInicio, filterFechaFin])
 
   // ... (Handlers de Pago, Impresión, Anulación y Fechas Visuales existentes) ...
   const handleConfirmarPagoReal = async (ticketId, puntoVentaId, cajaId) => {
@@ -256,6 +247,7 @@ const Tickets = () => {
   }
 
   const handlePrintComprobante = async (ticket) => {
+    console.log('Ticket Admin: ', ticket)
     try {
       Swal.fire({
         title: 'GENERANDO COMPROBANTE...',
@@ -341,11 +333,6 @@ const Tickets = () => {
     }
   }
 
-  const fechasDisponibles = useMemo(() => {
-    const fechas = sorteos.map((s) => s.fechaSorteo).filter((fecha) => !!fecha)
-    return [...new Set(fechas)].sort().reverse()
-  }, [sorteos])
-
   const formatVisualFecha = (dateString) => {
     if (!dateString) return ''
     const [year, month, day] = dateString.split('-')
@@ -393,7 +380,7 @@ const Tickets = () => {
           whileHover={{ scale: 1.02, backgroundColor: '#EAB308' }}
           whileTap={{ scale: 0.98 }}
           onClick={() => {
-            setSelectedTicket(null)
+            setSelectedTicketDetails(null)
             setShowModal(true)
           }}
           className="bg-luck-gold text-black font-black py-4 px-8 rounded-2xl flex items-center gap-2 uppercase text-xs shadow-lg shadow-luck-gold/20 italic"

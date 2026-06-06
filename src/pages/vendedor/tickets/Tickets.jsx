@@ -4,13 +4,14 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   LuCalendar,
   LuCheck,
+  LuChevronDown,
   LuChevronLeft,
   LuChevronRight,
   LuEye,
-  LuFilter,
   LuInbox,
   LuPlus,
   LuReceipt,
+  LuSearch,
   LuStore,
   LuTicket,
   LuTrash2,
@@ -48,8 +49,12 @@ const Tickets = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [selectedTicketDetails, setSelectedTicketDetails] = useState(null)
 
-  const [filterFecha, setFilterFecha] = useState('Todos')
+  const [filterCodigo, setFilterCodigo] = useState('')
   const [filterEstado, setFilterEstado] = useState('Todos')
+  const [filterFechaInicio, setFilterFechaInicio] = useState('')
+  const [filterFechaFin, setFilterFechaFin] = useState('')
+
+  const [debouncedCodigo, setDebouncedCodigo] = useState('')
 
   const { user } = useAuthStore()
   const caja = useCajaStore((state) => state.caja)
@@ -89,10 +94,12 @@ const Tickets = () => {
         page: currentPage,
         limit: itemsPerPage,
         // ESTA ES LA CORRECCIÓN:
-        fecha: filterFecha !== 'Todos' ? filterFecha : undefined,
+        fechaInicio: filterFechaInicio,
+        fechaFin: filterFechaFin,
         estado: filterEstado !== 'Todos' ? filterEstado : undefined,
+        codigo: debouncedCodigo,
       })
-      console.log(response.data)
+      console.log('Tickets vendedor:', response.data.data)
       // Accedemos a la respuesta según la estructura que me pasaste:
       setTickets(response.data.data || []) // Los tickets están en response.data.data
       setTotalItems(response.data.pagination.totalItems || 0)
@@ -113,12 +120,22 @@ const Tickets = () => {
     if (user?.PuntoVentaId) {
       fetchTickets()
     }
-  }, [user, currentPage, filterEstado, filterFecha])
+  }, [user, currentPage, filterEstado, filterFechaFin, filterFechaInicio, debouncedCodigo])
 
   // Reset a página 1 si cambian filtros (cuando implementes filtrado avanzado)
   useEffect(() => {
     setCurrentPage(1)
-  }, [filterEstado, filterFecha])
+  }, [filterEstado, filterFechaInicio, filterFechaFin, debouncedCodigo])
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedCodigo(filterCodigo)
+    }, 500)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [filterCodigo])
 
   const renderPageNumbers = useMemo(() => {
     const pages = []
@@ -212,29 +229,8 @@ const Tickets = () => {
     }
   }
 
-  // const handlePrintComprobante = async (ticket) => {
-  //   try {
-  //     const doc = <ComprobantePagoTemplate ticket={ticket} user={user} />
-  //     const blob = await pdf(doc).toBlob()
-  //     const url = URL.createObjectURL(blob)
-  //     const iframe = document.createElement('iframe')
-  //     iframe.style.position = 'fixed'
-  //     iframe.style.width = '0'
-  //     iframe.style.height = '0'
-  //     iframe.src = url
-  //     document.body.appendChild(iframe)
-  //     iframe.onload = () => {
-  //       iframe.contentWindow.print()
-  //       document.body.removeChild(iframe)
-  //       URL.revokeObjectURL(url)
-  //     }
-  //   } catch (error) {
-  //     console.error(error)
-  //   }
-  // }
-
   const handlePrintComprobante = async (ticket) => {
-    console.log(ticket)
+    console.log('Ticket: ', ticket)
     try {
       Swal.fire({
         title: 'GENERANDO COMPROBANTE...',
@@ -279,16 +275,22 @@ const Tickets = () => {
     }
   }
 
+  const handleResetFiltros = () => {
+    setFilterCodigo('')
+    setFilterFechaInicio('')
+    setFilterFechaFin('')
+    setFilterEstado('Todos')
+    setFilterCodigo('')
+    setDebouncedCodigo('')
+    setCurrentPage(1) // Volvemos a la primera página
+    // Opcional: Esto disparará automáticamente la recarga gracias al useEffect
+  }
+
   const formatVisualFecha = (dateString) => {
     if (!dateString) return ''
     const [year, month, day] = dateString.split('-')
     return `${day}/${month}/${year}`
   }
-
-  const fechasDisponibles = useMemo(() => {
-    const fechas = sorteos.map((s) => s.fechaSorteo).filter((fecha) => !!fecha)
-    return [...new Set(fechas)].sort().reverse()
-  }, [sorteos])
 
   const handleAnularTicket = async (ticket) => {
     const result = await Swal.fire({
@@ -328,74 +330,107 @@ const Tickets = () => {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#111615] border border-white/5 p-4 rounded-3xl mb-8 shadow-xl flex flex-wrap items-end gap-6"
+        className="bg-[#111615] border border-white/5 p-5 rounded-3xl mb-8 flex flex-col  gap-5"
       >
-        {/* Selector de Fecha */}
-        <div className="relative w-full sm:w-64">
-          <label className="block text-[10px] font-black uppercase text-zinc-500 mb-2 ml-1 tracking-widest">
-            Filtrar por Fecha
+        <div className="flex flex-col gap-2">
+          <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider flex items-center gap-1">
+            <LuSearch size={10} /> Buscar por Código (Mín. 3 caracteres)
           </label>
-          <div className="relative">
-            <LuCalendar
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold pointer-events-none"
-              size={18}
+          <div className="relative w-full">
+            <input
+              type="text"
+              placeholder="Ej: TICKET-00123"
+              value={filterCodigo}
+              onChange={(e) => setFilterCodigo(e.target.value)} // El cambio activa el useEffect del debounce
+              className="w-full bg-black/40 border border-white/5 text-white rounded-2xl py-4 px-6 text-sm font-medium focus:outline-none focus:border-luck-gold/30 transition-all placeholder:text-zinc-700 italic tracking-wide"
             />
-            <select
-              value={filterFecha}
-              onChange={(e) => setFilterFecha(e.target.value)}
-              className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
-            >
-              <option value="Todos" className="bg-[#1a1f1e] text-white">
-                Todas las Fechas
-              </option>
-              {fechasDisponibles.map((fecha) => (
-                <option key={fecha} value={fecha} className="bg-[#1a1f1e] text-white">
-                  {formatVisualFecha(fecha)}
-                </option>
-              ))}
-            </select>
+            {loading && filterCodigo !== debouncedCodigo && (
+              <div className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-luck-gold/20 border-t-luck-gold rounded-full animate-spin"></div>
+            )}
           </div>
         </div>
 
-        {/* Selector de Estado */}
-        <div className="relative w-full sm:w-64">
-          <label className="block text-[10px] font-black uppercase text-zinc-500 mb-2 ml-1 tracking-widest">
-            Estado del Resultado
-          </label>
-          <div className="relative">
-            <LuFilter
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-luck-gold pointer-events-none"
-              size={18}
-            />
-            <select
-              value={filterEstado}
-              onChange={(e) => setFilterEstado(e.target.value)}
-              className="w-full bg-[#1a1f1e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-10 text-white focus:outline-none focus:border-luck-gold/50 transition-all text-sm appearance-none cursor-pointer uppercase font-bold"
-            >
-              <option value="Todos" className="bg-[#1a1f1e] text-white">
-                Todos los resultados
-              </option>
-              <option value="Pendiente" className="bg-[#1a1f1e] text-white">
-                Pendiente
-              </option>
-              <option value="Ganador_Pendiente" className="bg-[#1a1f1e] text-white">
-                Ganadores por Pagar
-              </option>
-              <option value="Ganador_Pagado" className="bg-[#1a1f1e] text-white">
-                Ganadores Ya Pagados
-              </option>
-              <option value="No Ganador" className="bg-[#1a1f1e] text-white">
-                No Ganador
-              </option>
-            </select>
+        <div className="flex flex-wrap items-end gap-4">
+          {/* Fecha Desde */}
+          <div className="flex-1 min-w-[150px] flex flex-col gap-2 relative">
+            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+              Desde
+            </label>
+            <div className="relative">
+              <input
+                type="date"
+                value={filterFechaInicio}
+                onChange={(e) => setFilterFechaInicio(e.target.value)}
+                className="w-full bg-black border border-white/10 text-white rounded-2xl py-3.5 px-4 text-xs focus:outline-none focus:border-luck-gold/50 transition-all cursor-pointer appearance-none"
+              />
+              <LuCalendar
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none"
+                size={14}
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Contador a la derecha */}
-        <div className="ml-auto hidden sm:flex items-center px-6 h-[50px] bg-white/[0.02] border border-white/5 rounded-2xl">
-          <span className="text-[10px] font-black text-luck-gold uppercase tracking-[0.2em]">
-            {totalItems} Coincidencias
-          </span>
+          {/* Fecha Hasta */}
+          <div className="flex-1 min-w-[150px] flex flex-col gap-2 relative">
+            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+              Hasta
+            </label>
+            <div className="relative">
+              <input
+                type="date"
+                value={filterFechaFin}
+                onChange={(e) => setFilterFechaFin(e.target.value)}
+                className="w-full bg-black border border-white/10 text-white rounded-2xl py-3.5 px-4 text-xs focus:outline-none focus:border-luck-gold/50 transition-all cursor-pointer appearance-none"
+              />
+              <LuCalendar
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none"
+                size={14}
+              />
+            </div>
+          </div>
+
+          {/* Estado */}
+          <div className="flex-1 min-w-[150px] flex flex-col gap-2 relative">
+            <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+              Estado
+            </label>
+            <div className="relative">
+              <select
+                value={filterEstado}
+                onChange={(e) => setFilterEstado(e.target.value)}
+                className="w-full bg-black border border-white/10 text-white rounded-2xl py-3.5 px-4 text-xs cursor-pointer focus:outline-none focus:border-luck-gold/50 appearance-none pr-10"
+              >
+                <option value="Todos">Todos</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Ganador_Pendiente">Ganadores por Pagar</option>
+                <option value="Ganador_Pagado">Ganadores Ya Pagados</option>
+                <option value="No Ganador">No Ganador</option>
+              </select>
+              <LuChevronDown
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none"
+                size={16}
+              />
+            </div>
+          </div>
+
+          {/* Contador */}
+          <div className="flex-none flex items-end gap-2">
+            {/* Botón de Reset - Ajustado a la misma altura que el contador */}
+            <button
+              onClick={handleResetFiltros}
+              className="h-[48px] px-5 flex items-center justify-center bg-zinc-900 border border-white/10 text-zinc-500 rounded-2xl hover:bg-red-500/20 hover:text-red-500 hover:border-red-500/30 transition-all"
+              title="Limpiar todos los filtros"
+            >
+              <LuTrash2 size={16} />
+            </button>
+
+            {/* Contador - Mismo h-[48px] para simetría total */}
+            <div className="h-[48px] px-6 flex items-center justify-center bg-luck-gold/10 border border-luck-gold/20 rounded-2xl whitespace-nowrap">
+              <span className="text-[10px] font-black text-luck-gold uppercase tracking-[0.2em]">
+                {totalItems} Coincidencias
+              </span>
+            </div>
+          </div>
         </div>
       </motion.div>
 

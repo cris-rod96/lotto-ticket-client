@@ -59,8 +59,11 @@ const Reportes = () => {
 
       const listaPV = respPuntos.data?.puntosVentas || []
       setPuntosVenta(listaPV)
+      console.log(respPuntos.data?.puntosVentas)
 
       if (respStats.data?.stats) {
+        console.log(respStats.data?.stats)
+
         setKpis({
           ventasTotales: respStats.data.stats.ventasTotales || 0,
           premiosPorPagar: respStats.data.stats.premiosPorPagar || 0,
