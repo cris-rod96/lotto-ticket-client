@@ -2,7 +2,14 @@ import { useEffect, useState } from 'react'
 import { LuDice5 } from 'react-icons/lu'
 import Modal from './Modal'
 
-const SorteoModal = ({ isOpen, onClose, initialData, catalogos, cifras, onSave }) => {
+const SorteoModal = ({
+  isOpen,
+  onClose,
+  initialData,
+  catalogos,
+  cifras,
+  onSave,
+}) => {
   // Estado inicial alineado con tu modelo de Sequelize
   const initialState = {
     numero: '',
@@ -14,6 +21,7 @@ const SorteoModal = ({ isOpen, onClose, initialData, catalogos, cifras, onSave }
     CatalogoId: '',
     CifraId: '',
     estado: 'Abierto',
+    ambasCifras: '',
   }
 
   const [formData, setFormData] = useState(initialState)
@@ -72,7 +80,9 @@ const SorteoModal = ({ isOpen, onClose, initialData, catalogos, cifras, onSave }
               className="w-full bg-zinc-900 border border-white/5 rounded-xl p-3 text-sm text-white focus:border-luck-gold/30 outline-none transition-all"
               placeholder="000"
               value={formData.numero}
-              onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, numero: e.target.value })
+              }
             />
           </div>
           <div className="space-y-1.5">
@@ -82,7 +92,9 @@ const SorteoModal = ({ isOpen, onClose, initialData, catalogos, cifras, onSave }
             <select
               className="w-full bg-zinc-900 border border-white/5 rounded-xl p-3 text-sm text-white focus:border-luck-gold/30 outline-none cursor-pointer"
               value={formData.jornada}
-              onChange={(e) => setFormData({ ...formData, jornada: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, jornada: e.target.value })
+              }
             >
               <option value="Matutina">MATUTINA</option>
               <option value="Vespertina">VESPERTINA</option>
@@ -159,7 +171,9 @@ const SorteoModal = ({ isOpen, onClose, initialData, catalogos, cifras, onSave }
               required
               className="w-full bg-zinc-900 border border-white/5 rounded-xl p-3 text-sm text-white focus:border-luck-gold/30 outline-none"
               value={formData.CatalogoId}
-              onChange={(e) => setFormData({ ...formData, CatalogoId: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, CatalogoId: e.target.value })
+              }
             >
               <option value="">SELECCIONAR...</option>
               {catalogos.map((c) => (
@@ -176,15 +190,33 @@ const SorteoModal = ({ isOpen, onClose, initialData, catalogos, cifras, onSave }
             <select
               required
               className="w-full bg-zinc-900 border border-white/5 rounded-xl p-3 text-sm text-white focus:border-luck-gold/30 outline-none"
-              value={formData.CifraId}
-              onChange={(e) => setFormData({ ...formData, CifraId: e.target.value })}
+              value={
+                formData.CifraId
+                  ? formData.CifraId
+                  : formData.ambasCifras == 'all'
+                    ? formData.ambasCifras
+                    : null
+              }
+              onChange={(e) => {
+                console.log(e.target.value)
+                if (e.target.value === 'all') {
+                  setFormData({ ...formData, CifraId: '', ambasCifras: true })
+                } else {
+                  setFormData({
+                    ...formData,
+                    CifraId: e.target.value,
+                    ambasCifras: false,
+                  })
+                }
+              }}
             >
               <option value="">SELECCIONAR...</option>
               {cifras.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.cantidad}
+                  {c.cantidad} Cifras
                 </option>
               ))}
+              <option value="all">Todas las cifras</option>
             </select>
           </div>
         </div>
