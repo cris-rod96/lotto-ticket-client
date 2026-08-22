@@ -38,26 +38,34 @@ const DashboardVendedor = () => {
 
       try {
         // 1. Peticiones paralelas para datos operativos esenciales
-        const [respStats, respSorteo, respCaja, respCajaAbierta, respMovimientos] =
-          await Promise.all([
-            statsAPI.listarVendedorEstadisticas(user.PuntoVentaId), // LLAMADA OPTIMIZADA
-            sorteoAPI.listarTodos(),
-            cajaAPI.listarPorPuntoVenta(user.PuntoVentaId),
-            cajaAPI.obtenerCajaAbierta(user.PuntoVentaId),
-            movimientoAPI.listarPorPuntoVenta(user.PuntoVentaId),
-          ])
+        const [
+          respStats,
+          respSorteo,
+          respCaja,
+          respCajaAbierta,
+          respMovimientos,
+        ] = await Promise.all([
+          statsAPI.listarVendedorEstadisticas(user.PuntoVentaId), // LLAMADA OPTIMIZADA
+          sorteoAPI.listarTodos(),
+          cajaAPI.listarPorPuntoVenta(user.PuntoVentaId),
+          cajaAPI.obtenerCajaAbierta(user.PuntoVentaId),
+          movimientoAPI.listarPorPuntoVenta(user.PuntoVentaId),
+        ])
 
         const s = respStats.data.stats // Datos ya procesados por el backend
         const sorteos = respSorteo.data.sorteos || []
         const movimientos = respMovimientos.data.movimientos || []
         const cajas = respCaja.data.cajas || []
 
-        setCajas(cajas)
+        //setCajas(cajas)
 
         const cajaActiva = respCajaAbierta.data?.caja
         if (cajaActiva) setCaja(cajaActiva)
 
-        const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+        const formatter = new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+        })
 
         // Mapeo directo al estado
         setStats({
@@ -91,11 +99,21 @@ const DashboardVendedor = () => {
 
     if (token && user?.PuntoVentaId) fetchVendedorData()
     return () => setIsLoading(false)
-  }, [token, user?.PuntoVentaId, setIsLoading, setLoadingMsg, setCaja, setCajas])
+  }, [
+    token,
+    user?.PuntoVentaId,
+    setIsLoading,
+    setLoadingMsg,
+    setCaja,
+    setCajas,
+  ])
 
   return (
     <div className="w-full pb-10">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: isLoading ? 0 : 1 }}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isLoading ? 0 : 1 }}
+      >
         <Title
           titulo="Punto de Venta"
           descripcion={`Bienvenido, ${user?.nombre || 'Vendedor'}. Gestiona tus ventas y sorteos.`}
@@ -111,7 +129,11 @@ const DashboardVendedor = () => {
             const data = stats[item.label]
 
             return (
-              <motion.div key={index} variants={itemVariants} whileHover={{ y: -8 }}>
+              <motion.div
+                key={index}
+                variants={itemVariants}
+                whileHover={{ y: -8 }}
+              >
                 <NavLink
                   to={item.path}
                   className="group relative bg-[#0d1110] border border-white/5 p-8 rounded-[2rem] min-h-[220px] flex flex-col justify-between transition-all duration-500 hover:border-luck-gold/40 shadow-xl overflow-hidden"
@@ -140,7 +162,9 @@ const DashboardVendedor = () => {
                   </div>
 
                   <div className="relative z-10 mt-4 pt-4 border-t border-white/[0.03]">
-                    <p className="text-xs text-zinc-500 font-medium">{item.desc}</p>
+                    <p className="text-xs text-zinc-500 font-medium">
+                      {item.desc}
+                    </p>
                     <p className="text-[10px] font-black mt-1 uppercase text-luck-gold">
                       {data?.s ?? 'Actualizando...'}
                     </p>
