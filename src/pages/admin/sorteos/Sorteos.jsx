@@ -116,7 +116,8 @@ const Sorteos = () => {
       setTotalPages(respSorteos.data?.totalPages || 1)
       setTotalItems(respSorteos.data?.totalItems || 0)
     } catch (error) {
-      const msg = error.response?.data?.message || 'Error al recuperar los sorteos'
+      const msg =
+        error.response?.data?.message || 'Error al recuperar los sorteos'
       Swal.fire({
         icon: 'error',
         title: 'Error en la consulta',
@@ -166,7 +167,14 @@ const Sorteos = () => {
   // Resetear a página 1 automáticamente cuando cambie cualquier filtro
   useEffect(() => {
     setCurrentPage(1)
-  }, [catalogoFilter, jornadaFilter, cifraFilter, statusFilter, dateFilter, debouncedNumero])
+  }, [
+    catalogoFilter,
+    jornadaFilter,
+    cifraFilter,
+    statusFilter,
+    dateFilter,
+    debouncedNumero,
+  ])
 
   const handleSave = async (formData) => {
     try {
@@ -282,7 +290,11 @@ const Sorteos = () => {
                   Todos los juegos
                 </option>
                 {catalogos.map((cat) => (
-                  <option key={cat.id} value={cat.id} className="bg-[#1a1f1e] text-white">
+                  <option
+                    key={cat.id}
+                    value={cat.id}
+                    className="bg-[#1a1f1e] text-white"
+                  >
                     {cat.nombre}
                   </option>
                 ))}
@@ -332,7 +344,11 @@ const Sorteos = () => {
                   Todas las cifras
                 </option>
                 {cifras.map((cif) => (
-                  <option key={cif.id} value={cif.id} className="bg-[#1a1f1e] text-white">
+                  <option
+                    key={cif.id}
+                    value={cif.id}
+                    className="bg-[#1a1f1e] text-white"
+                  >
                     {cif.cantidad} Cifras
                   </option>
                 ))}
@@ -463,7 +479,8 @@ const Sorteos = () => {
                       <td className="p-7">
                         <div className="flex flex-col gap-1.5">
                           <div className="flex items-center gap-2 text-[12px] text-zinc-200 font-bold">
-                            <LuCalendar size={14} className="text-luck-gold" /> {sorteo.fechaSorteo}
+                            <LuCalendar size={14} className="text-luck-gold" />{' '}
+                            {sorteo.fechaSorteo}
                           </div>
                           <div className="flex items-center gap-2 text-[11px] text-zinc-500 font-mono">
                             <LuClock size={14} /> {sorteo.horaSorteo}
@@ -487,7 +504,11 @@ const Sorteos = () => {
                       <td className="p-7 text-center">
                         <div className="flex flex-col items-center">
                           <span className="text-white font-black text-lg">
-                            {sorteo?.Tickets?.length || 0}
+                            {sorteo?.Tickets?.filter(
+                              (ticket) =>
+                                ticket.estado === 'Pendiente' ||
+                                ticket.estado === 'Pagado',
+                            ).length || 0}
                           </span>
                           <span className="text-[9px] text-zinc-500 uppercase font-black tracking-widest">
                             Vendidos
@@ -513,7 +534,8 @@ const Sorteos = () => {
                           className={`${sorteo.montoRecaudado - calcularTotalPremios(sorteo.Tickets) >= 0 ? 'text-green-400' : 'text-red-400'} font-black text-sm font-mono`}
                         >
                           {formatCurrency(
-                            sorteo.montoRecaudado - calcularTotalPremios(sorteo.Tickets)
+                            sorteo.montoRecaudado -
+                              calcularTotalPremios(sorteo.Tickets),
                           )}
                         </span>
                       </td>
@@ -521,7 +543,10 @@ const Sorteos = () => {
                       <td className="p-7">
                         <div className="flex justify-end gap-3">
                           <motion.button
-                            whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.05)' }}
+                            whileHover={{
+                              scale: 1.1,
+                              backgroundColor: 'rgba(255,255,255,0.05)',
+                            }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleEdit(sorteo)}
                             className="p-3 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-luck-gold transition-colors"
@@ -529,7 +554,10 @@ const Sorteos = () => {
                             <LuPencil size={18} />
                           </motion.button>
                           <motion.button
-                            whileHover={{ scale: 1.1, backgroundColor: 'rgba(239,68,68,0.1)' }}
+                            whileHover={{
+                              scale: 1.1,
+                              backgroundColor: 'rgba(239,68,68,0.1)',
+                            }}
                             whileTap={{ scale: 0.9 }}
                             className="p-3 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-red-500 transition-colors"
                             onClick={() => handleDelete(sorteo.id)}

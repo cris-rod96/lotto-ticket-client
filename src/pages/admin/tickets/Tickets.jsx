@@ -19,7 +19,12 @@ import {
 } from 'react-icons/lu'
 import Swal from 'sweetalert2'
 
-import { puntosVentaAPI, sorteoAPI, suerteAPI, ticketAPI } from '@/api/index.api'
+import {
+  puntosVentaAPI,
+  sorteoAPI,
+  suerteAPI,
+  ticketAPI,
+} from '@/api/index.api'
 import DetalleJugadasModal from '@/components/DetalleJugadasModal'
 import ModalPagoTicket from '@/components/ModalPagoTicket'
 import TicketModal from '@/components/TicketModal'
@@ -167,7 +172,13 @@ const Tickets = () => {
   // Resetear a la página 1 en caso de alterar cualquier criterio de búsqueda
   useEffect(() => {
     setCurrentPage(1)
-  }, [filterPuntoVenta, filterEstado, debouncedCodigo, filterFechaInicio, filterFechaFin])
+  }, [
+    filterPuntoVenta,
+    filterEstado,
+    debouncedCodigo,
+    filterFechaInicio,
+    filterFechaFin,
+  ])
 
   // ... (Handlers de Pago, Impresión, Anulación y Fechas Visuales existentes) ...
   const handleConfirmarPagoReal = async (ticketId, puntoVentaId, cajaId) => {
@@ -186,7 +197,10 @@ const Tickets = () => {
         setIsPayModalOpen(false)
         await Swal.fire({
           title: '¡PAGO EXITOSO!',
-          text: response.data?.message || response.message || 'Cobro procesado con éxito.',
+          text:
+            response.data?.message ||
+            response.message ||
+            'Cobro procesado con éxito.',
           icon: 'success',
           confirmButtonColor: '#EAB308',
           customClass: { popup: 'rounded-[2rem]' },
@@ -282,7 +296,9 @@ const Tickets = () => {
     } catch (error) {
       Swal.fire({
         title: 'Error de impresión',
-        text: error.response?.data?.message || 'No se pudo generar el comprobante de pago',
+        text:
+          error.response?.data?.message ||
+          'No se pudo generar el comprobante de pago',
         icon: 'error',
         confirmButtonColor: '#ef4444',
         customClass: { popup: 'rounded-[2rem]' },
@@ -552,148 +568,163 @@ const Tickets = () => {
                     </td>
                   </tr>
                 ) : tickets.length > 0 ? (
-                  tickets.map((ticket) => (
-                    <motion.tr
-                      key={ticket.id}
-                      variants={rowVariants}
-                      layout
-                      className="group hover:bg-white/[0.01] transition-colors"
-                    >
-                      <td className="p-7 pl-10">
-                        <div className="flex flex-col">
-                          <span className="text-white font-black text-sm tracking-tighter italic">
-                            #{ticket.codigo}
-                          </span>
-                          <span className="text-[9px] text-luck-gold font-black uppercase mt-0.5">
-                            {ticket?.Sorteo?.Catalogo?.nombre}
-                          </span>
-                        </div>
-                      </td>
-
-                      <td className="p-7">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-zinc-300 font-bold text-[12px] uppercase">
-                            {ticket?.Sorteo?.jornada}
-                          </span>
-                          <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-mono">
-                            <LuCalendar size={12} />{' '}
-                            {formatVisualFecha(ticket?.Sorteo?.fechaSorteo)}
+                  tickets.map((ticket) => {
+                    const esTicketInvalido =
+                      ticket.estado === 'Anulado' ||
+                      ticket.estado === 'Expirado'
+                    return (
+                      <motion.tr
+                        key={ticket.id}
+                        variants={rowVariants}
+                        layout
+                        className={
+                          esTicketInvalido
+                            ? 'bg-zinc-950/40 opacity-40 transition-colors'
+                            : 'group hover:bg-white/[0.01] transition-colors'
+                        }
+                      >
+                        <td className="p-7 pl-10">
+                          <div className="flex flex-col">
+                            <span className="text-white font-black text-sm tracking-tighter italic">
+                              #{ticket.codigo}
+                            </span>
+                            <span className="text-[9px] text-luck-gold font-black uppercase mt-0.5">
+                              {ticket?.Sorteo?.Catalogo?.nombre}
+                            </span>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className="p-7">
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2 text-zinc-300 font-bold text-[11px] uppercase">
-                            <LuStore size={14} className="text-zinc-600" />
-                            {ticket?.PuntosVentum?.nombre ||
-                              ticket?.PuntosVenta?.nombre ||
-                              'Matriz'}
+                        <td className="p-7">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-zinc-300 font-bold text-[12px] uppercase">
+                              {ticket?.Sorteo?.jornada}
+                            </span>
+                            <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-mono">
+                              <LuCalendar size={12} />{' '}
+                              {formatVisualFecha(ticket?.Sorteo?.fechaSorteo)}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-bold">
-                            <LuUser size={12} /> {ticket?.Cliente?.nombre || 'Consumidor Final'}
+                        </td>
+
+                        <td className="p-7">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2 text-zinc-300 font-bold text-[11px] uppercase">
+                              <LuStore size={14} className="text-zinc-600" />
+                              {ticket?.PuntosVentum?.nombre ||
+                                ticket?.PuntosVenta?.nombre ||
+                                'Matriz'}
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-bold">
+                              <LuUser size={12} />{' '}
+                              {ticket?.Cliente?.nombre || 'Consumidor Final'}
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className="p-7">
-                        <span
-                          className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
-                            ticket.resultado === 'Ganador'
-                              ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                              : ticket.resultado === 'No Ganador'
-                                ? 'bg-zinc-900 text-zinc-600 border-white/5'
-                                : 'bg-blue-500/5 text-blue-400 border-blue-500/10'
-                          }`}
-                        >
-                          {ticket.resultado}
-                        </span>
-                      </td>
-
-                      <td className="p-7">
-                        <div
-                          className={`flex items-center font-black ${ticket.resultado === 'Ganador' ? 'text-white' : 'text-zinc-700'}`}
-                        >
-                          <span className="text-base tracking-tighter">
-                            $ {parseFloat(ticket.montoTotalPremio).toFixed(2)}
-                          </span>
-                        </div>
-                      </td>
-
-                      <td className="p-7">
-                        <span
-                          className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${
-                            ticket.estado === 'Pagado'
-                              ? 'bg-zinc-900 text-emerald-500 border-emerald-500/30'
-                              : ticket.estado === 'Anulado'
-                                ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                                : 'bg-zinc-950 text-zinc-600 border-white/5'
-                          }`}
-                        >
-                          {ticket.estado}
-                        </span>
-                      </td>
-
-                      <td className="p-7 pr-10">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => {
-                              setSelectedTicketDetails(ticket)
-                              setIsDetailsOpen(true)
-                            }}
-                            className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-white transition-colors flex items-center justify-center"
-                            title="Ver números apostados"
+                        <td className="p-7">
+                          <span
+                            className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                              ticket.resultado === 'Ganador'
+                                ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                : ticket.resultado === 'No Ganador'
+                                  ? 'bg-zinc-900 text-zinc-600 border-white/5'
+                                  : 'bg-blue-500/5 text-blue-400 border-blue-500/10'
+                            }`}
                           >
-                            <LuEye size={16} />
-                          </button>
+                            {ticket.resultado}
+                          </span>
+                        </td>
 
-                          {ticket.resultado === 'Ganador' &&
-                            (ticket.estado === 'Pending' || ticket.estado === 'Pendiente') && (
-                              <motion.button
-                                whileHover={{
-                                  scale: 1.05,
-                                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                }}
-                                whileTap={{ scale: 0.95 }}
+                        <td className="p-7">
+                          <div
+                            className={`flex items-center font-black ${ticket.resultado === 'Ganador' ? 'text-white' : 'text-zinc-700'}`}
+                          >
+                            <span className="text-base tracking-tighter">
+                              $ {parseFloat(ticket.montoTotalPremio).toFixed(2)}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td className="p-7">
+                          <span
+                            className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${
+                              ticket.estado === 'Pagado'
+                                ? 'bg-zinc-900 text-emerald-500 border-emerald-500/30'
+                                : ticket.estado === 'Anulado'
+                                  ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                                  : 'bg-zinc-950 text-zinc-600 border-white/5'
+                            }`}
+                          >
+                            {ticket.estado}
+                          </span>
+                        </td>
+                        {!esTicketInvalido ? (
+                          <td className="p-7 pr-10">
+                            <div className="flex justify-end gap-2">
+                              <button
                                 onClick={() => {
-                                  setTicketToPay(ticket)
-                                  setIsPayModalOpen(true)
+                                  setSelectedTicketDetails(ticket)
+                                  setIsDetailsOpen(true)
                                 }}
-                                className="flex items-center gap-2 px-4 py-2 border border-emerald-500/50 text-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-white transition-colors flex items-center justify-center"
+                                title="Ver números apostados"
                               >
-                                <LuCheck size={14} /> PAGAR
-                              </motion.button>
-                            )}
+                                <LuEye size={16} />
+                              </button>
 
-                          {ticket.estado === 'Pagado' && (
-                            <button
-                              onClick={() => handlePrintComprobante(ticket)}
-                              className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-emerald-500 hover:bg-emerald-500 hover:text-black transition-all"
-                              title="Imprimir Comprobante"
-                            >
-                              <LuReceipt size={16} />
-                            </button>
-                          )}
+                              {ticket.resultado === 'Ganador' &&
+                                (ticket.estado === 'Pending' ||
+                                  ticket.estado === 'Pendiente') && (
+                                  <motion.button
+                                    whileHover={{
+                                      scale: 1.05,
+                                      backgroundColor:
+                                        'rgba(16, 185, 129, 0.1)',
+                                    }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => {
+                                      setTicketToPay(ticket)
+                                      setIsPayModalOpen(true)
+                                    }}
+                                    className="flex items-center gap-2 px-4 py-2 border border-emerald-500/50 text-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                  >
+                                    <LuCheck size={14} /> PAGAR
+                                  </motion.button>
+                                )}
 
-                          <button
-                            onClick={() => handlePrintTicket(ticket)}
-                            className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-luck-gold transition-colors"
-                            title="Re-imprimir Ticket"
-                          >
-                            <LuTicket size={16} />
-                          </button>
+                              {ticket.estado === 'Pagado' && (
+                                <button
+                                  onClick={() => handlePrintComprobante(ticket)}
+                                  className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-emerald-500 hover:bg-emerald-500 hover:text-black transition-all"
+                                  title="Imprimir Comprobante"
+                                >
+                                  <LuReceipt size={16} />
+                                </button>
+                              )}
 
-                          <button
-                            className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-600 hover:text-red-500 transition-colors"
-                            onClick={() => handleAnularTicket(ticket)}
-                            title="Anular Ticket"
-                          >
-                            <LuTrash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))
+                              <button
+                                onClick={() => handlePrintTicket(ticket)}
+                                className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-400 hover:text-luck-gold transition-colors"
+                                title="Re-imprimir Ticket"
+                              >
+                                <LuTicket size={16} />
+                              </button>
+
+                              <button
+                                className="p-2.5 bg-zinc-900/50 border border-white/5 rounded-xl text-zinc-600 hover:text-red-500 transition-colors"
+                                onClick={() => handleAnularTicket(ticket)}
+                                title="Anular Ticket"
+                              >
+                                <LuTrash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        ) : (
+                          <td></td>
+                        )}
+                      </motion.tr>
+                    )
+                  })
                 ) : (
                   <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     <td colSpan="7" className="p-32 text-center">
