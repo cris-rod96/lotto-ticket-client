@@ -23,8 +23,7 @@ import {
 } from 'react-icons/lu'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
-const Sidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false)
+const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [countdown, setCountdown] = useState(5)
 
@@ -32,27 +31,99 @@ const Sidebar = () => {
   const navigate = useNavigate()
 
   // Traemos el estado de administración de tu store
-  const esAdministrador = useAuthStore((state) => state.esAdministrador ?? false)
+  const esAdministrador = useAuthStore(
+    (state) => state.esAdministrador ?? false,
+  )
   const logout = useAuthStore((state) => state.logout)
   const clearCaja = useCajaStore((state) => state.clearCaja)
 
   // Mapeo completo actualizado
   const menuItems = [
-    { title: 'Dashboard', icon: <LuLayoutDashboard />, path: '/dashboard', soloAdmin: true },
-    { title: 'Gestión de Tickets', icon: <LuTicket />, path: '/tickets', soloAdmin: false },
-    { title: 'Gestión de Suertes', icon: <LuClover />, path: '/suertes', soloAdmin: true },
-    { title: 'Catálogo de Juegos', icon: <LuLibrary />, path: '/catalogo', soloAdmin: true },
-    { title: 'Gestión de Sorteos', icon: <LuDice5 />, path: '/sorteos', soloAdmin: true },
-    { title: 'Resultados de Sorteos', icon: <LuTrophy />, path: '/resultados', soloAdmin: true },
-    { title: 'Gestión de Cifras', icon: <LuBinary />, path: '/cifras', soloAdmin: true },
-    { title: 'Gestión de Cajas', icon: <LuWallet />, path: '/cajas', soloAdmin: false },
-    { title: 'Reportes', icon: <LuTrendingUp />, path: '/reportes', soloAdmin: true },
+    {
+      title: 'Dashboard',
+      icon: <LuLayoutDashboard />,
+      path: '/dashboard',
+      soloAdmin: true,
+    },
+    {
+      title: 'Gestión de Tickets',
+      icon: <LuTicket />,
+      path: '/tickets',
+      soloAdmin: false,
+    },
+    {
+      title: 'Gestión de Suertes',
+      icon: <LuClover />,
+      path: '/suertes',
+      soloAdmin: true,
+    },
+    {
+      title: 'Catálogo de Juegos',
+      icon: <LuLibrary />,
+      path: '/catalogo',
+      soloAdmin: true,
+    },
+    {
+      title: 'Gestión de Sorteos',
+      icon: <LuDice5 />,
+      path: '/sorteos',
+      soloAdmin: true,
+    },
+    {
+      title: 'Resultados de Sorteos',
+      icon: <LuTrophy />,
+      path: '/resultados',
+      soloAdmin: true,
+    },
+    {
+      title: 'Gestión de Cifras',
+      icon: <LuBinary />,
+      path: '/cifras',
+      soloAdmin: true,
+    },
+    {
+      title: 'Gestión de Cajas',
+      icon: <LuWallet />,
+      path: '/cajas',
+      soloAdmin: false,
+    },
+    {
+      title: 'Reportes',
+      icon: <LuTrendingUp />,
+      path: '/reportes',
+      soloAdmin: true,
+    },
     // NUEVA OPCIÓN: Respaldos de base de datos (Exclusivo para Administradores)
-    { title: 'Respaldos', icon: <LuDatabaseBackup />, path: '/respaldos', soloAdmin: true },
-    { title: 'Puntos de Venta', icon: <LuStore />, path: '/puntos-venta', soloAdmin: true },
-    { title: 'Gestión de Usuarios', icon: <LuUsers />, path: '/usuarios', soloAdmin: true },
-    { title: 'Gestión de Roles', icon: <LuShieldCheck />, path: '/roles', soloAdmin: true },
-    { title: 'Configuración', icon: <LuSettings />, path: '/configuracion', soloAdmin: true },
+    {
+      title: 'Respaldos',
+      icon: <LuDatabaseBackup />,
+      path: '/respaldos',
+      soloAdmin: true,
+    },
+    {
+      title: 'Puntos de Venta',
+      icon: <LuStore />,
+      path: '/puntos-venta',
+      soloAdmin: true,
+    },
+    {
+      title: 'Gestión de Usuarios',
+      icon: <LuUsers />,
+      path: '/usuarios',
+      soloAdmin: true,
+    },
+    {
+      title: 'Gestión de Roles',
+      icon: <LuShieldCheck />,
+      path: '/roles',
+      soloAdmin: true,
+    },
+    {
+      title: 'Configuración',
+      icon: <LuSettings />,
+      path: '/configuracion',
+      soloAdmin: true,
+    },
   ]
 
   // Lógica del Cierre Seguro
@@ -74,8 +145,14 @@ const Sidebar = () => {
       {isLoggingOut && (
         <div className="fixed inset-0 z-[100] bg-[#000d0a]/95 backdrop-blur-2xl flex flex-col items-center justify-center">
           <div className="relative flex items-center justify-center">
-            <LuLoader className="text-[#D4AF37] animate-spin" size={100} strokeWidth={1.5} />
-            <span className="absolute text-3xl font-black text-white">{countdown}</span>
+            <LuLoader
+              className="text-[#D4AF37] animate-spin"
+              size={100}
+              strokeWidth={1.5}
+            />
+            <span className="absolute text-3xl font-black text-white">
+              {countdown}
+            </span>
           </div>
           <h2 className="mt-8 text-white font-black uppercase tracking-[0.4em] text-sm italic">
             Cerrando Sesión de Forma Segura
@@ -88,9 +165,8 @@ const Sidebar = () => {
 
       {/* CONTENEDOR PRINCIPAL DEL SIDEBAR */}
       <div
-        className={`h-screen sticky top-0 left-0 z-50 transition-all duration-500 ease-in-out flex flex-col shadow-[10px_0_50px_rgba(0,0,0,1)] overflow-x-hidden ${
-          isCollapsed ? 'w-20' : 'w-72'
-        }`}
+        className={`h-screen sticky top-0 left-0 z-50 transition-all duration-500 ease-in-out flex flex-col shadow-[10px_0_50px_rgba(0,0,0,1)] overflow-x-hidden 
+    ${isCollapsed ? 'hidden md:flex md:w-20' : 'flex w-72'}`}
       >
         {/* Fondo con imagen de fichas y overlay */}
         <div className="absolute inset-0 z-[-1] pointer-events-none">
@@ -163,7 +239,9 @@ const Sidebar = () => {
                   {/* Texto del ítem */}
                   <div
                     className={`transition-all duration-500 ease-in-out overflow-hidden whitespace-nowrap ${
-                      isCollapsed ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
+                      isCollapsed
+                        ? 'max-w-0 opacity-0'
+                        : 'max-w-[200px] opacity-100'
                     }`}
                   >
                     <span className="text-[11px] font-bold uppercase tracking-[0.15em]">
