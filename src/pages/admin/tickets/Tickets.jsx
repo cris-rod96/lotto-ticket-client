@@ -385,7 +385,7 @@ const Tickets = () => {
 
   return (
     <motion.div initial="hidden" animate="visible" className="w-full pb-10">
-      <div className="flex justify-between items-center mb-10">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-4 md:gap-0">
         <Title
           titulo="Gestión de Tickets"
           descripcion="Auditoría, venta y control financiero de emisiones"
@@ -397,7 +397,7 @@ const Tickets = () => {
             setSelectedTicketDetails(null)
             setShowModal(true)
           }}
-          className="bg-luck-gold text-black font-black py-4 px-8 rounded-2xl flex items-center gap-2 uppercase text-xs shadow-lg shadow-luck-gold/20 italic"
+          className="bg-luck-gold text-black font-black py-4 px-8 rounded-2xl flex items-center justify-center gap-2 uppercase text-xs shadow-lg shadow-luck-gold/20 italic "
         >
           <LuPlus size={20} strokeWidth={4} /> Vender Nuevo Ticket
         </motion.button>
@@ -518,14 +518,17 @@ const Tickets = () => {
           </div>
 
           {/* Contador */}
-          <div className="flex-none flex items-end gap-2">
+          <div className="flex-none flex flex-col md:flex-row md:items-end gap-2 w-full lg:w-auto">
             {/* Botón de Reset - Ajustado a la misma altura que el contador */}
             <button
               onClick={handleResetFiltros}
-              className="h-[48px] px-5 flex items-center justify-center bg-zinc-900 border border-white/10 text-zinc-500 rounded-2xl hover:bg-red-500/20 hover:text-red-500 hover:border-red-500/30 transition-all"
+              className="h-[48px] px-5 flex gap-2 md:gap-0 items-center justify-center bg-zinc-900 border border-white/10 text-zinc-500 rounded-2xl hover:bg-red-500/20 hover:text-red-500 hover:border-red-500/30 transition-all "
               title="Limpiar todos los filtros"
             >
               <LuTrash2 size={16} />
+              <span className="block md:hidden text-[14px]">
+                Limpiar filtros
+              </span>
             </button>
 
             {/* Contador - Mismo h-[48px] para simetría total */}
