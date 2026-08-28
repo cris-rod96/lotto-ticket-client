@@ -66,7 +66,7 @@ const Tickets = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [selectedTicketDetails, setSelectedTicketDetails] = useState(null)
   const { user } = useAuthStore()
-  const { caja, setCaja } = useCajaStore()
+  const { setCaja } = useCajaStore()
   const [sorteos, setSorteos] = useState([])
   const [suertes, setSuertes] = useState([])
   const [puntosVenta, setPuntosVenta] = useState([])
@@ -86,6 +86,7 @@ const Tickets = () => {
         puntosVentaAPI.listarTodos(),
         suerteAPI.listarTodas(),
       ])
+
       setSorteos(respSorteos.data?.sorteos || [])
       setPuntosVenta(respPuntosVenta.data.puntosVentas || [])
       setSuertes(respSuertes.data.suertes || [])
@@ -123,6 +124,7 @@ const Tickets = () => {
       const response = await ticketAPI.listarTodos(params)
 
       setTickets(response.data?.tickets || [])
+      console.log(response.data?.tickets)
 
       setTotalItems(response.data?.totalItems || 0)
       setTotalPages(response.data?.totalPages || 1)
@@ -541,7 +543,6 @@ const Tickets = () => {
         </div>
       </motion.div>
 
-      {/* ... (Todo el resto de tu tabla, modales y paginación SIN CAMBIOS) ... */}
       <motion.div
         variants={containerVariants}
         className="bg-[#111615] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
