@@ -5,6 +5,9 @@ const cifraAPI = {
   listarTodas: async () => {
     return instance.get(`/${model}/listar/todas`)
   },
+  listarActivas: async () => {
+    return instance.get(`/${model}/listar/activas`)
+  },
 
   agregar: async (data) => {
     return instance.post(`/${model}/agregar`, data)
@@ -20,8 +23,7 @@ const cifraAPI = {
 
   recuperar: async (id) => {
     return instance.patch(`/${model}/recuperar/${id}`)
-
-  }
+  },
 }
 
 export default cifraAPI

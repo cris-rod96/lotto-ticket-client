@@ -20,13 +20,15 @@ const useSuertes = () => {
       // Ahora traemos también los puntos de venta
       const [respSuertes, respCifras, respPuntos] = await Promise.all([
         suerteAPI.listarTodas(),
-        cifraAPI.listarTodas(),
+        cifraAPI.listarActivas(),
         puntosVentaAPI.listarTodos(), // Nueva API para obtener locales
       ])
 
       setSuertes(respSuertes.data?.suertes || [])
 
-      const sortedCifras = (respCifras.data?.cifras || []).sort((a, b) => a.cantidad - b.cantidad)
+      const sortedCifras = (respCifras.data?.cifras || []).sort(
+        (a, b) => a.cantidad - b.cantidad,
+      )
       setCifras(sortedCifras)
 
       const puntos = respPuntos.data?.puntosVentas || []
@@ -50,7 +52,9 @@ const useSuertes = () => {
       .filter((s) => s.Cifra?.cantidad === activeTab)
       .map((s) => {
         // Buscamos el detalle que corresponde al punto de venta seleccionado
-        const detalle = s.DetallesSuertes?.find((d) => d.PuntoVentaId === selectedPuntoId)
+        const detalle = s.DetallesSuertes?.find(
+          (d) => d.PuntoVentaId === selectedPuntoId,
+        )
         return {
           ...s,
           // El premio ahora viene del detalle, si no hay, ponemos 0

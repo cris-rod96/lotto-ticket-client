@@ -133,7 +133,7 @@ const Sorteos = () => {
     try {
       const [respCatalogos, respCifras] = await Promise.all([
         catalogoAPI.listarTodos(),
-        cifraAPI.listarTodas(),
+        cifraAPI.listarActivas(),
       ])
       setCatalogos(respCatalogos.data?.catalogos || [])
       setCifras(respCifras.data?.cifras || [])
