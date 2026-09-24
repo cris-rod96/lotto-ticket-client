@@ -30,6 +30,7 @@ html,
 body {
   scrollbar-width: thin;
   scrollbar-color: rgba(251, 191, 36, 0.2) #021a14;
+  user-select: none;
 }
 
 /* Chrome, Safari, Edge, Brave: Afecta solo a la barra del navegador principal */
