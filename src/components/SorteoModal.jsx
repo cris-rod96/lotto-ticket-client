@@ -13,7 +13,7 @@ const SorteoModal = ({
   // Estado inicial alineado con tu modelo de Sequelize
   const initialState = {
     numero: '',
-    jornada: 'Matutina',
+    jornada: 'Mañanera',
     fechaSorteo: '',
     horaSorteo: '',
     fechaCierre: '',
@@ -96,6 +96,7 @@ const SorteoModal = ({
                 setFormData({ ...formData, jornada: e.target.value })
               }
             >
+              <option value="Mañanera">MAÑANERA</option>
               <option value="Matutina">MATUTINA</option>
               <option value="Vespertina">VESPERTINA</option>
               <option value="Nocturna">NOCTURNA</option>

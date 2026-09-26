@@ -30,6 +30,10 @@ const sorteoAPI = {
   eliminar: async (id) => {
     return instance.delete(`/${model}/eliminar/${id}`)
   },
+
+  listarParaVenderTickets: async () => {
+    return instance.get(`/${model}/listar/para-tickets`)
+  }
 }
 
 export default sorteoAPI

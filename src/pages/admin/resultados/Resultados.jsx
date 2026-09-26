@@ -76,6 +76,7 @@ const Resultados = () => {
     const jornada = resultado.Sorteo?.jornada
     const nombreCatalogo = resultado.Sorteo?.Catalogo?.nombre
 
+
     // Filtra sobre los resultados de la página actual
     const registrosRelacionados = resultados.filter(
       (r) =>

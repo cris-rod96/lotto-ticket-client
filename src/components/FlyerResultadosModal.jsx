@@ -3,6 +3,7 @@ import { useMemo, useRef } from 'react'
 import { LuCalendar, LuDownload, LuTicket, LuTrophy, LuX } from 'react-icons/lu'
 
 const FlyerResultadosModal = ({ isOpen, onClose, data }) => {
+  console.log("data: ", data)
   const flyerRef = useRef(null)
 
   // Lógica para formatear la fecha con el día de la semana

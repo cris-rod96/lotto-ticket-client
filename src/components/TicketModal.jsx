@@ -322,7 +322,7 @@ const TicketModal = ({
                 </option>
                 {sorteos.map((s) => (
                   <option key={s.id} value={s.id} className="bg-[#111615] text-white font-bold">
-                    {s.Catalogo?.nombre.toUpperCase()} ({s.Cifra?.cantidad} CIFRAS)
+                    {s.Catalogo?.nombre.toUpperCase()} ({s.Cifra?.cantidad} CIFRAS <span className="font-extrabold">{s.jornada?.toUpperCase()}</span>) 
                   </option>
                 ))}
               </select>
@@ -374,21 +374,19 @@ const TicketModal = ({
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => setMetodoPago('Efectivo')}
-                  className={`flex items-center justify-center gap-2 py-3.5 rounded-xl border transition-all text-[10px] font-black uppercase ${
-                    metodoPago === 'Efectivo'
-                      ? 'bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10'
-                      : 'bg-zinc-900/50 text-zinc-500 border-white/5'
-                  }`}
+                  className={`flex items-center justify-center gap-2 py-3.5 rounded-xl border transition-all text-[10px] font-black uppercase ${metodoPago === 'Efectivo'
+                    ? 'bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10'
+                    : 'bg-zinc-900/50 text-zinc-500 border-white/5'
+                    }`}
                 >
                   <LuBanknote size={15} /> Efectivo
                 </button>
                 <button
                   onClick={() => setMetodoPago('Transferencia')}
-                  className={`flex items-center justify-center gap-2 py-3.5 rounded-xl border transition-all text-[10px] font-black uppercase ${
-                    metodoPago === 'Transferencia'
-                      ? 'bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10'
-                      : 'bg-zinc-900/50 text-zinc-500 border-white/5'
-                  }`}
+                  className={`flex items-center justify-center gap-2 py-3.5 rounded-xl border transition-all text-[10px] font-black uppercase ${metodoPago === 'Transferencia'
+                    ? 'bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10'
+                    : 'bg-zinc-900/50 text-zinc-500 border-white/5'
+                    }`}
                 >
                   <LuCreditCard size={15} /> Transferencia
                 </button>
@@ -606,11 +604,10 @@ const TicketModal = ({
                     {jugadas.length} JUGADAS
                   </span>
                   <div
-                    className={`px-3 py-1 rounded-full border text-[8px] font-black uppercase ${
-                      metodoPago === 'Transferencia'
-                        ? 'bg-luck-gold/10 border-luck-gold/20 text-luck-gold'
-                        : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
-                    }`}
+                    className={`px-3 py-1 rounded-full border text-[8px] font-black uppercase ${metodoPago === 'Transferencia'
+                      ? 'bg-luck-gold/10 border-luck-gold/20 text-luck-gold'
+                      : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                      }`}
                   >
                     {metodoPago === 'Transferencia' ? 'Pago Digital' : 'Terminal Online'}
                   </div>

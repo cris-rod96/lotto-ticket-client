@@ -316,6 +316,9 @@ const Sorteos = () => {
                 <option value="Todos" className="bg-[#1a1f1e] text-white">
                   Todas las jornadas
                 </option>
+                <option value="Mañanera" className="bg-[#1a1f1e] text-white">
+                  Mañanera
+                </option>
                 <option value="Matutina" className="bg-[#1a1f1e] text-white">
                   Matutina
                 </option>
@@ -489,13 +492,12 @@ const Sorteos = () => {
                       </td>
                       <td className="p-7 text-center">
                         <span
-                          className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${
-                            sorteo.estado === 'Abierto'
-                              ? 'bg-green-500/5 text-green-500 border-green-500/20'
-                              : sorteo.estado === 'Cerrado'
-                                ? 'bg-orange-500/5 text-orange-500 border-orange-500/20'
-                                : 'bg-red-500/5 text-red-500 border-red-500/20'
-                          }`}
+                          className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${sorteo.estado === 'Abierto'
+                            ? 'bg-green-500/5 text-green-500 border-green-500/20'
+                            : sorteo.estado === 'Cerrado'
+                              ? 'bg-orange-500/5 text-orange-500 border-orange-500/20'
+                              : 'bg-red-500/5 text-red-500 border-red-500/20'
+                            }`}
                         >
                           {sorteo.estado}
                         </span>
@@ -535,7 +537,7 @@ const Sorteos = () => {
                         >
                           {formatCurrency(
                             sorteo.montoRecaudado -
-                              calcularTotalPremios(sorteo.Tickets),
+                            calcularTotalPremios(sorteo.Tickets),
                           )}
                         </span>
                       </td>
@@ -570,7 +572,7 @@ const Sorteos = () => {
                   ))
                 ) : (
                   <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <td colSpan="9" className="p-32 text-center">
+                    <td colSpan="10" className="p-32 text-center">
                       <div className="flex flex-col items-center justify-center opacity-20">
                         <LuInbox size={60} className="mb-4 text-luck-gold" />
                         <p className="text-xs font-black uppercase tracking-[0.4em] text-white">
@@ -616,11 +618,10 @@ const Sorteos = () => {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
-                        currentPage === page
-                          ? 'bg-luck-gold text-black'
-                          : 'text-zinc-500 hover:bg-white/5'
-                      }`}
+                      className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all cursor-pointer ${currentPage === page
+                        ? 'bg-luck-gold text-black'
+                        : 'text-zinc-500 hover:bg-white/5'
+                        }`}
                     >
                       {page}
                     </button>

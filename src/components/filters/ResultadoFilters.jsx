@@ -24,6 +24,9 @@ const ResultadoFilters = ({
           <option value="Todos" className="bg-[#1a1f1e] text-white">
             Todas las jornadas
           </option>
+          <option value="Mañanera" className="bg-[#1a1f1e] text-white">
+            Mañanera
+          </option>
           <option value="Matutina" className="bg-[#1a1f1e] text-white">
             Matutina
           </option>

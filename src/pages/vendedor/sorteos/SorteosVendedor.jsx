@@ -149,6 +149,7 @@ const SorteosVendedor = () => {
             val: jornadaFilter,
             set: setJornadaFilter,
             opts: [
+              { v: "Mañanera", l: "Mañanera" },
               { v: 'Matutina', l: 'Matutina' },
               { v: 'Vespertina', l: 'Vespertina' },
               { v: 'Nocturna', l: 'Nocturna' },

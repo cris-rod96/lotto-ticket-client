@@ -6,6 +6,7 @@ import {
   LuClipboard,
   LuCloudDownload,
   LuDatabase,
+  LuInbox,
 } from 'react-icons/lu'
 
 const RespaldoTable = ({
@@ -75,11 +76,10 @@ const RespaldoTable = ({
                     </td>
                     <td className="p-5 text-center">
                       <span
-                        className={`text-[9px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${
-                          backup.entorno === 'production'
-                            ? 'bg-red-500/10 text-red-400 border-red-500/20'
-                            : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                        }`}
+                        className={`text-[9px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${backup.entorno === 'production'
+                          ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                          : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                          }`}
                       >
                         {backup.entorno === 'development' ? 'Desarrollo' : 'Producción'}
                       </span>
@@ -110,21 +110,18 @@ const RespaldoTable = ({
                   </motion.tr>
                 ))
               ) : (
-                <motion.tr
-                  key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <td colSpan="4" className="p-16 text-center">
-                    <div className="flex flex-col items-center justify-center">
-                      <LuDatabase size={32} className="text-zinc-800 mb-4" />
-                      <h3 className="text-white font-black text-xs uppercase tracking-widest">
-                        Sin registros
-                      </h3>
+
+                <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <td colSpan="4" className="p-32 text-center">
+                    <div className="flex flex-col items-center justify-center opacity-20">
+                      <LuInbox size={60} className="mb-4 text-luck-gold" />
+                      <p className="text-xs font-black uppercase tracking-[0.4em] text-white">
+                        No se encontraron respaldos
+                      </p>
                     </div>
                   </td>
                 </motion.tr>
+
               )}
             </AnimatePresence>
           </tbody>
@@ -151,11 +148,10 @@ const RespaldoTable = ({
                 onClick={() =>
                   page !== 'ellipsis-left' && page !== 'ellipsis-right' && setCurrentPage(page)
                 }
-                className={`w-8 h-8 rounded-lg text-[10px] font-bold transition-all ${
-                  currentPage === page
-                    ? 'bg-luck-gold text-black'
-                    : 'text-zinc-600 hover:bg-white/5'
-                }`}
+                className={`w-8 h-8 rounded-lg text-[10px] font-bold transition-all ${currentPage === page
+                  ? 'bg-luck-gold text-black'
+                  : 'text-zinc-600 hover:bg-white/5'
+                  }`}
               >
                 {typeof page === 'number' ? page : '...'}
               </button>
