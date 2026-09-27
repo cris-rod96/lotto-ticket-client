@@ -12,12 +12,14 @@ import Sorteos from './sorteos/Sorteos'
 import Suertes from './suertes/Suertes'
 import Tickets from './tickets/Tickets'
 import Usuarios from './usuarios/Usuarios'
+import ConfiguracionCupos from "./configuracion-cupos/ConfiguracionCupos"
 
 export {
   Cajas,
   Catalogo,
   Cifras,
   Configuracion,
+  ConfiguracionCupos,
   DashboardAdmin,
   PuntosVentas,
   Reportes,

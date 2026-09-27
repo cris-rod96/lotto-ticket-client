@@ -10,6 +10,7 @@ import {
   Catalogo,
   Cifras,
   Configuracion,
+  ConfiguracionCupos,
   DashboardAdmin,
   DashboardVendedor,
   Login,
@@ -63,6 +64,7 @@ const AppRouter = () => {
               <Route path="/suertes" element={<Suertes />} />
               <Route path="/resultados" element={<Resultados />} />
               <Route path="/respaldos" element={<Respaldos />} />
+              <Route path="/configuracion-cupos" element={<ConfiguracionCupos />} />
               {/* Redirección interna por si un admin intenta entrar a rutas de vendedor */}
               <Route path="/mis-sorteos" element={<Navigate to="/sorteos" replace />} />
             </Route>
