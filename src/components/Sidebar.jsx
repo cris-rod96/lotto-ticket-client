@@ -20,6 +20,7 @@ import {
   LuTrophy,
   LuUsers,
   LuWallet,
+  LuSlidersHorizontal
 } from 'react-icons/lu'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
@@ -79,6 +80,12 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
       title: 'Gestión de Cifras',
       icon: <LuBinary />,
       path: '/cifras',
+      soloAdmin: true,
+    },
+    {
+      title: 'Gestión de Cupos',
+      icon: <LuSlidersHorizontal />, 
+      path: '/configuracion-cupos',
       soloAdmin: true,
     },
     {
@@ -181,9 +188,8 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
         {/* Header del Sidebar */}
         <div className="relative p-6 mb-2 flex items-center justify-between border-b border-white/5 bg-black/40">
           <div
-            className={`transition-all duration-500 overflow-hidden ${
-              isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
-            }`}
+            className={`transition-all duration-500 overflow-hidden ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+              }`}
           >
             <img
               src="/logo_principal.png"
@@ -214,35 +220,32 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                 key={item.path}
                 to={isBlocked ? '#' : item.path}
                 tabIndex={isBlocked ? -1 : 0}
-                className={`flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-300 group ${
-                  isBlocked
+                className={`flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-300 group ${isBlocked
                     ? 'opacity-30 cursor-not-allowed pointer-events-none select-none bg-black/5'
                     : isActive
                       ? 'bg-[#D4AF37] text-[#001a14] font-black shadow-[0_4px_20px_rgba(212,175,55,0.25)]'
                       : 'text-gray-300 hover:bg-white/[0.05] hover:text-[#D4AF37]'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-4">
                   {/* Icono del ítem */}
                   <span
-                    className={`text-xl flex-shrink-0 transition-colors ${
-                      isBlocked
+                    className={`text-xl flex-shrink-0 transition-colors ${isBlocked
                         ? 'text-gray-500'
                         : isActive
                           ? 'text-[#001a14]'
                           : 'text-[#D4AF37]/80 group-hover:text-[#D4AF37]'
-                    }`}
+                      }`}
                   >
                     {item.icon}
                   </span>
 
                   {/* Texto del ítem */}
                   <div
-                    className={`transition-all duration-500 ease-in-out overflow-hidden whitespace-nowrap ${
-                      isCollapsed
+                    className={`transition-all duration-500 ease-in-out overflow-hidden whitespace-nowrap ${isCollapsed
                         ? 'max-w-0 opacity-0'
                         : 'max-w-[200px] opacity-100'
-                    }`}
+                      }`}
                   >
                     <span className="text-[11px] font-bold uppercase tracking-[0.15em]">
                       {item.title}
@@ -267,9 +270,8 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
           >
             <LuLogOut size={18} />
             <div
-              className={`transition-all duration-500 overflow-hidden ${
-                isCollapsed ? 'max-w-0 opacity-0' : 'max-w-[150px] opacity-100'
-              }`}
+              className={`transition-all duration-500 overflow-hidden ${isCollapsed ? 'max-w-0 opacity-0' : 'max-w-[150px] opacity-100'
+                }`}
             >
               <span className="whitespace-nowrap pl-1">Cerrar Sesión</span>
             </div>
