@@ -1,66 +1,66 @@
-import { cifraAPI } from '@/api/index.api'
-import { useEffect, useState } from 'react'
-import { LuBinary } from 'react-icons/lu'
-import Swal from 'sweetalert2'
-import Modal from './Modal'
+import { cifraAPI } from "@/api/index.api";
+import { useEffect, useState } from "react";
+import { LuBinary } from "react-icons/lu";
+import Swal from "sweetalert2";
+import Modal from "./Modal";
 
 const CifraModal = ({ isOpen, onClose, initialData, fetchData }) => {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const initialState = {
-    cantidad: '',
-    cupoMaximoPorNumero: '',
-    valorMinimoTicket: '',
+    cantidad: "",
+    cupoMaximoPorNumero: "",
+    valorMinimoTicket: "",
     estado: true,
-  }
-  const [formData, setFormData] = useState(initialState)
+  };
+  const [formData, setFormData] = useState(initialState);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
     try {
       if (initialData) {
-        await cifraAPI.actualizarCupo(initialData.id, formData)
+        await cifraAPI.actualizarCupo(initialData.id, formData);
         Swal.fire({
-          icon: 'success',
-          title: 'Cifra actualizada con éxito',
-          text: '',
-        })
+          icon: "success",
+          title: "Cifra actualizada con éxito",
+          text: "",
+        });
       } else {
-        await cifraAPI.agregar(formData)
+        await cifraAPI.agregar(formData);
         Swal.fire({
-          icon: 'success',
-          title: 'Cifra agregada con éxito',
-          text: '',
-        })
+          icon: "success",
+          title: "Cifra agregada con éxito",
+          text: "",
+        });
       }
 
-      fetchData()
-      onClose()
+      fetchData();
+      onClose();
     } catch (error) {
-      const msg = error.response?.data?.message || 'Error al procesar la cifra'
+      const msg = error.response?.data?.message || "Error al procesar la cifra";
       Swal.fire({
-        icon: 'error',
-        title: 'Error al procesar la cifra',
+        icon: "error",
+        title: "Error al procesar la cifra",
         text: msg,
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData)
+      setFormData(initialData);
     } else {
-      setFormData(initialState)
+      setFormData(initialState);
     }
-  }, [isOpen, initialData])
+  }, [isOpen, initialData]);
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      titulo={initialData ? 'Editar Cifra' : 'Nueva Cifra'}
+      titulo={initialData ? "Editar Cifra" : "Nueva Cifra"}
       icon={LuBinary}
     >
       <form className="space-y-6" onSubmit={handleSubmit}>
@@ -75,7 +75,9 @@ const CifraModal = ({ isOpen, onClose, initialData, fetchData }) => {
               min="2"
               placeholder="0"
               value={formData?.cantidad}
-              onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, cantidad: e.target.value })
+              }
               className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-4 text-white focus:border-luck-gold/50 outline-none transition-all"
             />
           </div>
@@ -86,7 +88,9 @@ const CifraModal = ({ isOpen, onClose, initialData, fetchData }) => {
             <select
               className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-4 text-white focus:border-luck-gold/50 outline-none transition-all"
               value={formData?.estado}
-              onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, estado: e.target.value })
+              }
             >
               <option value="true">Activo</option>
               <option value="false">Inactivo</option>
@@ -103,7 +107,9 @@ const CifraModal = ({ isOpen, onClose, initialData, fetchData }) => {
             type="number"
             step="0.01"
             value={formData?.cupoMaximoPorNumero}
-            onChange={(e) => setFormData({ ...formData, cupoMaximoPorNumero: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, cupoMaximoPorNumero: e.target.value })
+            }
             className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-4 text-white focus:border-luck-gold/50 outline-none transition-all font-mono"
             placeholder="0.00"
           />
@@ -119,7 +125,9 @@ const CifraModal = ({ isOpen, onClose, initialData, fetchData }) => {
             step="0.01"
             min={0.01}
             value={formData?.valorMinimoTicket}
-            onChange={(e) => setFormData({ ...formData, valorMinimoTicket: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, valorMinimoTicket: e.target.value })
+            }
             className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-4 text-white focus:border-luck-gold/50 outline-none transition-all font-mono"
             placeholder="0.00"
           />
@@ -138,12 +146,12 @@ const CifraModal = ({ isOpen, onClose, initialData, fetchData }) => {
             type="submit"
             className="flex-1 bg-luck-gold hover:bg-yellow-600 text-black font-black py-4 rounded-2xl transition-all active:scale-95 uppercase text-xs tracking-widest shadow-lg shadow-luck-gold/10"
           >
-            {loading ? 'Guardando...' : 'Confirmar'}
+            {loading ? "Guardando..." : "Confirmar"}
           </button>
         </div>
       </form>
     </Modal>
-  )
-}
+  );
+};
 
-export default CifraModal
+export default CifraModal;

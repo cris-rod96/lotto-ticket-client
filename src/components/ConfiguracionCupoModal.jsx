@@ -1,72 +1,80 @@
-import { configuracionCupoAPI } from '@/api/index.api' // Ajusta según tu archivo de rutas API
-import { useEffect, useState } from 'react'
-import { LuSlidersHorizontal } from 'react-icons/lu'
-import Swal from 'sweetalert2'
-import Modal from './Modal'
+import { configuracionCupoAPI } from "@/api/index.api"; // Ajusta según tu archivo de rutas API
+import { useEffect, useState } from "react";
+import { LuSlidersHorizontal } from "react-icons/lu";
+import Swal from "sweetalert2";
+import Modal from "./Modal";
 
-const ConfiguracionCupoModal = ({ isOpen, onClose, initialData, fetchData, catalogos = [], cifras = [] }) => {
-  const [loading, setLoading] = useState(false)
+const ConfiguracionCupoModal = ({
+  isOpen,
+  onClose,
+  initialData,
+  fetchData,
+  catalogos = [],
+  cifras = [],
+}) => {
+  const [loading, setLoading] = useState(false);
 
   const initialState = {
-    CatalogoId: '',
-    CifraId: '',
-    jornada: 'Mañanera',
-    cupoMaximoDefault: '',
-  }
-  
-  const [formData, setFormData] = useState(initialState)
+    CatalogoId: "",
+    CifraId: "",
+    jornada: "Mañanera",
+    cupoMaximo: "",
+  };
+
+  const [formData, setFormData] = useState(initialState);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
     try {
       if (initialData) {
-        await configuracionCupoAPI.actualizar(initialData.id, formData)
+        await configuracionCupoAPI.actualizar(initialData.id, formData);
         Swal.fire({
-          icon: 'success',
-          title: 'Configuración actualizada con éxito',
-          text: '',
-        })
+          icon: "success",
+          title: "Configuración actualizada con éxito",
+          text: "",
+        });
       } else {
-        await configuracionCupoAPI.agregar(formData)
+        await configuracionCupoAPI.registrarConfiguracion(formData);
         Swal.fire({
-          icon: 'success',
-          title: 'Configuración de cupo agregada con éxito',
-          text: '',
-        })
+          icon: "success",
+          title: "Configuración de cupo agregada con éxito",
+          text: "",
+        });
       }
 
-      fetchData()
-      onClose()
+      fetchData();
+      onClose();
     } catch (error) {
-      const msg = error.response?.data?.error || 'Error al procesar la configuración de cupo'
+      const msg =
+        error.response?.data?.message ||
+        "Error al procesar la configuración de cupo";
       Swal.fire({
-        icon: 'error',
-        title: 'Error al procesar la solicitud',
+        icon: "error",
+        title: "Error al procesar la solicitud",
         text: msg,
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData)
+      setFormData(initialData);
     } else {
-      setFormData(initialState)
+      setFormData(initialState);
     }
-  }, [isOpen, initialData])
+  }, [isOpen, initialData]);
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      titulo={initialData ? 'Editar Configuración de Cupo' : 'Configuración de Cupo'}
+      titulo={initialData ? "Editar Configuración" : "Configuración de Cupo"}
       icon={LuSlidersHorizontal}
     >
       <form className="space-y-6" onSubmit={handleSubmit}>
-        
         {/* Selector de Catálogo / Lotería */}
         <div className="space-y-2">
           <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-1">
@@ -74,15 +82,18 @@ const ConfiguracionCupoModal = ({ isOpen, onClose, initialData, fetchData, catal
           </label>
           <select
             name="CatalogoId"
-            className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-4 text-white focus:border-luck-gold/50 outline-none transition-all"
+            className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-4 text-white focus:border-luck-gold/50 outline-none transition-all disabled:opacity-40"
             value={formData?.CatalogoId}
-            onChange={(e) => setFormData({ ...formData, CatalogoId: e.target.value })}
+            disabled={initialData !== null}
+            onChange={(e) =>
+              setFormData({ ...formData, CatalogoId: e.target.value })
+            }
             required
           >
             <option value="">Seleccione una lotería</option>
             {catalogos.map((cat) => (
               <option key={cat.id} value={cat.id}>
-                {cat.nombre || cat.descripcion || cat.pais || 'Lotería'}
+                {cat.nombre || cat.descripcion || cat.pais || "Lotería"}
               </option>
             ))}
           </select>
@@ -96,9 +107,12 @@ const ConfiguracionCupoModal = ({ isOpen, onClose, initialData, fetchData, catal
             </label>
             <select
               name="CifraId"
-              className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-4 text-white focus:border-luck-gold/50 outline-none transition-all"
+              className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-4 text-white focus:border-luck-gold/50 outline-none transition-all disabled:opacity-40"
               value={formData?.CifraId}
-              onChange={(e) => setFormData({ ...formData, CifraId: e.target.value })}
+              disabled={initialData !== null}
+              onChange={(e) =>
+                setFormData({ ...formData, CifraId: e.target.value })
+              }
               required
             >
               <option value="">Seleccione cifra</option>
@@ -116,9 +130,12 @@ const ConfiguracionCupoModal = ({ isOpen, onClose, initialData, fetchData, catal
             </label>
             <select
               name="jornada"
-              className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-4 text-white focus:border-luck-gold/50 outline-none transition-all"
+              className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-4 text-white focus:border-luck-gold/50 outline-none transition-all disabled:opacity-40"
               value={formData?.jornada}
-              onChange={(e) => setFormData({ ...formData, jornada: e.target.value })}
+              disabled={initialData !== null}
+              onChange={(e) =>
+                setFormData({ ...formData, jornada: e.target.value })
+              }
               required
             >
               <option value="Mañanera">Mañanera</option>
@@ -129,18 +146,20 @@ const ConfiguracionCupoModal = ({ isOpen, onClose, initialData, fetchData, catal
           </div>
         </div>
 
-        {/* Input de Cupo Máximo Default */}
+        {/* Input de Cupo Máximo */}
         <div className="space-y-2">
           <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-1">
-            Cupo Máximo por Defecto
+            Cupo Máximo
           </label>
           <input
-            name="cupoMaximoDefault"
+            name="cupoMaximo"
             type="number"
             step="0.01"
             min="0"
-            value={formData?.cupoMaximoDefault}
-            onChange={(e) => setFormData({ ...formData, cupoMaximoDefault: e.target.value })}
+            value={formData?.cupoMaximo}
+            onChange={(e) =>
+              setFormData({ ...formData, cupoMaximo: e.target.value })
+            }
             className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-4 text-white focus:border-luck-gold/50 outline-none transition-all font-mono"
             placeholder="0.00"
             required
@@ -161,12 +180,12 @@ const ConfiguracionCupoModal = ({ isOpen, onClose, initialData, fetchData, catal
             disabled={loading}
             className="flex-1 bg-luck-gold hover:bg-yellow-600 text-black font-black py-4 rounded-2xl transition-all active:scale-95 uppercase text-xs tracking-widest shadow-lg shadow-luck-gold/10 disabled:opacity-50"
           >
-            {loading ? 'Guardando...' : 'Confirmar'}
+            {loading ? "Guardando..." : "Confirmar"}
           </button>
         </div>
       </form>
     </Modal>
-  )
-}
+  );
+};
 
-export default ConfiguracionCupoModal
+export default ConfiguracionCupoModal;

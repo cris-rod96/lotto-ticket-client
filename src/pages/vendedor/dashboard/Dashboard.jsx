@@ -1,11 +1,11 @@
-import { cajaAPI, movimientoAPI, sorteoAPI, statsAPI } from '@/api/index.api' // Añadí statsAPI
-import Title from '@/components/Titlte'
-import { VENDEDOR_DASHBOARD_ITEMS } from '@/data/Items'
-import { useAuthStore } from '@/store/useAuthStore'
-import { useCajaStore } from '@/store/useCajaStore'
-import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
-import { NavLink, useOutletContext } from 'react-router-dom'
+import { cajaAPI, movimientoAPI, sorteoAPI, statsAPI } from "@/api/index.api"; // Añadí statsAPI
+import Title from "@/components/Titlte";
+import { VENDEDOR_DASHBOARD_ITEMS } from "@/data/Items";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useCajaStore } from "@/store/useCajaStore";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { NavLink, useOutletContext } from "react-router-dom";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -13,7 +13,7 @@ const containerVariants = {
     opacity: 1,
     transition: { staggerChildren: 0.1, delayChildren: 0.2 },
   },
-}
+};
 
 const itemVariants = {
   hidden: { y: 20, opacity: 0 },
@@ -22,19 +22,19 @@ const itemVariants = {
     opacity: 1,
     transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
   },
-}
+};
 
 const DashboardVendedor = () => {
-  const token = useAuthStore((store) => store.token)
-  const user = useAuthStore((state) => state.user)
-  const { setCaja, setCajas } = useCajaStore()
-  const { setIsLoading, setLoadingMsg, isLoading } = useOutletContext()
-  const [stats, setStats] = useState({})
+  const token = useAuthStore((store) => store.token);
+  const user = useAuthStore((state) => state.user);
+  const { setCaja, setCajas } = useCajaStore();
+  const { setIsLoading, setLoadingMsg, isLoading } = useOutletContext();
+  const [stats, setStats] = useState({});
 
   useEffect(() => {
     const fetchVendedorData = async () => {
-      setIsLoading(true)
-      setLoadingMsg('Sincronizando tu terminal...')
+      setIsLoading(true);
+      setLoadingMsg("Sincronizando tu terminal...");
 
       try {
         // 1. Peticiones paralelas para datos operativos esenciales
@@ -50,55 +50,55 @@ const DashboardVendedor = () => {
           cajaAPI.listarPorPuntoVenta(user.PuntoVentaId),
           cajaAPI.obtenerCajaAbierta(user.PuntoVentaId),
           movimientoAPI.listarPorPuntoVenta(user.PuntoVentaId),
-        ])
+        ]);
 
-        const s = respStats.data.stats // Datos ya procesados por el backend
-        const sorteos = respSorteo.data.sorteos || []
-        const movimientos = respMovimientos.data.movimientos || []
-        const cajas = respCaja.data.cajas || []
+        const s = respStats.data.stats; // Datos ya procesados por el backend
+        const sorteos = respSorteo.data.sorteos || [];
+        const movimientos = respMovimientos.data.movimientos || [];
+        const cajas = respCaja.data.cajas || [];
 
         //setCajas(cajas)
 
-        const cajaActiva = respCajaAbierta.data?.caja
-        if (cajaActiva) setCaja(cajaActiva)
+        const cajaActiva = respCajaAbierta.data?.caja;
+        if (cajaActiva) setCaja(cajaActiva);
 
-        const formatter = new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD',
-        })
+        const formatter = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        });
 
         // Mapeo directo al estado
         setStats({
-          'Vender Ticket': {
+          "Vender Ticket": {
             p: formatter.format(s.ventasHoy || 0),
             s: `${s.ticketsHoy || 0} tickets emitidos hoy`,
           },
-          'Mis Sorteos': {
-            p: sorteos.filter((s) => s.estado === 'Activo').length,
-            s: 'Sorteos disponibles',
+          "Mis Sorteos": {
+            p: sorteos.filter((s) => s.estado === "Abierto").length,
+            s: "Sorteos disponibles",
           },
-          'Mi Caja': {
-            p: cajaActiva?.estado || 'Cerrada',
+          "Mi Caja": {
+            p: cajaActiva?.estado || "Cerrada",
             s: `Saldo: ${formatter.format(cajaActiva?.saldoActual || 0)}`,
           },
           Movimientos: {
             p: movimientos.length,
-            s: 'Transacciones hoy',
+            s: "Transacciones hoy",
           },
           Resultados: {
-            p: 'Premios',
-            s: 'Consultar ganadores',
+            p: "Premios",
+            s: "Consultar ganadores",
           },
-        })
+        });
       } catch (err) {
-        console.error('Error Vendedor Dashboard:', err)
+        console.error("Error Vendedor Dashboard:", err);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    if (token && user?.PuntoVentaId) fetchVendedorData()
-    return () => setIsLoading(false)
+    if (token && user?.PuntoVentaId) fetchVendedorData();
+    return () => setIsLoading(false);
   }, [
     token,
     user?.PuntoVentaId,
@@ -106,7 +106,7 @@ const DashboardVendedor = () => {
     setLoadingMsg,
     setCaja,
     setCajas,
-  ])
+  ]);
 
   return (
     <div className="w-full pb-10">
@@ -116,7 +116,7 @@ const DashboardVendedor = () => {
       >
         <Title
           titulo="Punto de Venta"
-          descripcion={`Bienvenido, ${user?.nombre || 'Vendedor'}. Gestiona tus ventas y sorteos.`}
+          descripcion={`Bienvenido, ${user?.nombre || "Vendedor"}. Gestiona tus ventas y sorteos.`}
         />
 
         <motion.div
@@ -126,7 +126,7 @@ const DashboardVendedor = () => {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {VENDEDOR_DASHBOARD_ITEMS.map((item, index) => {
-            const data = stats[item.label]
+            const data = stats[item.label];
 
             return (
               <motion.div
@@ -156,7 +156,7 @@ const DashboardVendedor = () => {
                         {item.label}
                       </p>
                       <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
-                        {data?.p ?? '--'}
+                        {data?.p ?? "--"}
                       </h2>
                     </div>
                   </div>
@@ -166,17 +166,17 @@ const DashboardVendedor = () => {
                       {item.desc}
                     </p>
                     <p className="text-[10px] font-black mt-1 uppercase text-luck-gold">
-                      {data?.s ?? 'Actualizando...'}
+                      {data?.s ?? "Actualizando..."}
                     </p>
                   </div>
                 </NavLink>
               </motion.div>
-            )
+            );
           })}
         </motion.div>
       </motion.div>
     </div>
-  )
-}
+  );
+};
 
-export default DashboardVendedor
+export default DashboardVendedor;

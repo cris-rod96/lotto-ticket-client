@@ -1,6 +1,6 @@
-import { pdf } from '@react-pdf/renderer'
-import { AnimatePresence, motion } from 'framer-motion'
-import { useEffect, useMemo, useState } from 'react'
+import { pdf } from "@react-pdf/renderer";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 import {
   LuBanknote,
   LuCircleAlert,
@@ -11,38 +11,45 @@ import {
   LuTrash2,
   LuUserPlus,
   LuX,
-} from 'react-icons/lu'
-import Swal from 'sweetalert2'
+} from "react-icons/lu";
+import Swal from "sweetalert2";
 
-import { cajaAPI, ticketAPI } from '@/api/index.api'
-import TicketTemplate from '@/templates/TicketTemplate'
+import { cajaAPI, ticketAPI } from "@/api/index.api";
+import TicketTemplate from "@/templates/TicketTemplate";
 
-const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, suertes = [] }) => {
-  const puntoVentaId = usuario?.PuntoVentaId
+const TicketModalVendedor = ({
+  isOpen,
+  onClose,
+  sorteos,
+  usuario,
+  fetchData,
+  suertes = [],
+}) => {
+  const puntoVentaId = usuario?.PuntoVentaId;
 
-  const [sorteoId, setSorteoId] = useState('')
-  const [jugadas, setJugadas] = useState([])
-  const [tempNumero, setTempNumero] = useState('')
-  const [tempMonto, setTempMonto] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [caja, setCaja] = useState(null)
+  const [sorteoId, setSorteoId] = useState("");
+  const [jugadas, setJugadas] = useState([]);
+  const [tempNumero, setTempNumero] = useState("");
+  const [tempMonto, setTempMonto] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [caja, setCaja] = useState(null);
 
   // Estados de pago
-  const [metodoPago, setMetodoPago] = useState('Efectivo')
-  const [referenciaPago, setReferenciaPago] = useState('')
+  const [metodoPago, setMetodoPago] = useState("Efectivo");
+  const [referenciaPago, setReferenciaPago] = useState("");
 
   // Estados opcionales del Cliente
-  const [clienteNombres, setClienteNombres] = useState('')
-  const [clienteCedula, setClienteCedula] = useState('')
-  const [clienteWhatsapp, setClienteWhatsapp] = useState('')
+  const [clienteNombres, setClienteNombres] = useState("");
+  const [clienteCedula, setClienteCedula] = useState("");
+  const [clienteWhatsapp, setClienteWhatsapp] = useState("");
 
   const sorteoSeleccionado = useMemo(
     () => sorteos.find((s) => s.id === sorteoId),
-    [sorteoId, sorteos]
-  )
+    [sorteoId, sorteos],
+  );
 
-  const numCifras = sorteoSeleccionado?.Cifra?.cantidad || 2
+  const numCifras = sorteoSeleccionado?.Cifra?.cantidad || 2;
 
   // Carga automática de la caja asignada al vendedor al abrir el modal
   useEffect(() => {
@@ -50,164 +57,181 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
       cajaAPI
         .obtenerCajaAbierta(puntoVentaId)
         .then((res) => {
-          const { caja: cajaAbierta } = res.data
-          setCaja(cajaAbierta)
-          setError('')
+          const { caja: cajaAbierta } = res.data;
+          setCaja(cajaAbierta);
+          setError("");
         })
         .catch(() => {
-          setCaja(null)
-          setError('TU PUNTO DE VENTA NO TIENE UNA CAJA ABIERTA EN ESTE TURNO')
-        })
+          setCaja(null);
+          setError("TU PUNTO DE VENTA NO TIENE UNA CAJA ABIERTA EN ESTE TURNO");
+        });
     }
-  }, [isOpen, puntoVentaId])
+  }, [isOpen, puntoVentaId]);
 
   // Desvanecer el error automáticamente tras 3 segundos
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => {
-        setError('')
-      }, 3200)
-      return () => clearTimeout(timer)
+        setError("");
+      }, 3200);
+      return () => clearTimeout(timer);
     }
-  }, [error])
+  }, [error]);
 
   useEffect(() => {
-    setTempNumero('')
-    setTempMonto('')
-    setError('')
-  }, [sorteoId, numCifras])
+    setTempNumero("");
+    setTempMonto("");
+    setError("");
+  }, [sorteoId, numCifras]);
 
   const agregarJugada = async () => {
-    if (!tempNumero || !tempMonto) return
-    if (!sorteoId) return setError('SELECCIONE UN SORTEO')
-    if (tempNumero.length !== numCifras) return setError(`REQUERIDO: ${numCifras} CIFRAS`)
+    if (!tempNumero || !tempMonto) return;
+    if (!sorteoId) return setError("SELECCIONE UN SORTEO");
+    if (tempNumero.length !== numCifras)
+      return setError(`REQUERIDO: ${numCifras} CIFRAS`);
 
-    const yaExiste = jugadas.some((j) => j.numero === tempNumero)
-    if (yaExiste) return setError(`EL NÚMERO ${tempNumero} YA ESTÁ EN EL TICKET`)
+    const yaExiste = jugadas.some((j) => j.numero === tempNumero);
+    if (yaExiste)
+      return setError(`EL NÚMERO ${tempNumero} YA ESTÁ EN EL TICKET`);
 
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
 
     try {
-      const response = await ticketAPI.verificarCupo(sorteoId, tempNumero, parseFloat(tempMonto))
+      const response = await ticketAPI.verificarCupo(
+        sorteoId,
+        tempNumero,
+        parseFloat(tempMonto),
+      );
       if (response.status !== 200) {
-        setError(response.data.message || 'SIN CUPO DISPONIBLE')
-        return
+        setError(response.data.message || "SIN CUPO DISPONIBLE");
+        return;
       }
 
       setJugadas([
-        { id: crypto.randomUUID(), numero: tempNumero, monto: parseFloat(tempMonto) },
+        {
+          id: crypto.randomUUID(),
+          numero: tempNumero,
+          monto: parseFloat(tempMonto),
+        },
         ...jugadas,
-      ])
-      setTempNumero('')
-      setTempMonto('')
+      ]);
+      setTempNumero("");
+      setTempMonto("");
     } catch (err) {
-      setError(err.response?.data?.message || 'ERROR DE DISPONIBILIDAD')
+      setError(err.response?.data?.message || "ERROR DE DISPONIBILIDAD");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handlePrintAutomatico = async (ticketCreado) => {
     try {
-      const suertesParaImprimir = suertes && suertes.length > 0 ? suertes : []
+      const suertesParaImprimir = suertes && suertes.length > 0 ? suertes : [];
 
-      const doc = <TicketTemplate ticket={ticketCreado} suertes={suertesParaImprimir} />
-      const blob = await pdf(doc).toBlob()
-      const url = URL.createObjectURL(blob)
+      const doc = (
+        <TicketTemplate ticket={ticketCreado} suertes={suertesParaImprimir} />
+      );
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
 
-      const iframe = document.createElement('iframe')
-      iframe.style.position = 'fixed'
-      iframe.style.right = '0'
-      iframe.style.bottom = '0'
-      iframe.style.width = '0'
-      iframe.style.height = '0'
-      iframe.style.border = '0'
-      iframe.src = url
+      const iframe = document.createElement("iframe");
+      iframe.style.position = "fixed";
+      iframe.style.right = "0";
+      iframe.style.bottom = "0";
+      iframe.style.width = "0";
+      iframe.style.height = "0";
+      iframe.style.border = "0";
+      iframe.src = url;
 
-      document.body.appendChild(iframe)
+      document.body.appendChild(iframe);
 
       setTimeout(() => {
         try {
-          iframe.contentWindow.focus()
-          iframe.contentWindow.print()
+          iframe.contentWindow.focus();
+          iframe.contentWindow.print();
         } catch (printError) {
-          console.error('Fallo al invocar print() en el iframe:', printError)
+          console.error("Fallo al invocar print() en el iframe:", printError);
         }
 
         setTimeout(() => {
-          document.body.removeChild(iframe)
-          URL.revokeObjectURL(url)
-        }, 3000)
-      }, 600)
+          document.body.removeChild(iframe);
+          URL.revokeObjectURL(url);
+        }, 3000);
+      }, 600);
     } catch (error) {
-      console.error('Error en la generación del búfer de impresión:', error)
+      console.error("Error en la generación del búfer de impresión:", error);
     }
-  }
+  };
 
   const emitirTicket = async () => {
-    if (jugadas.length === 0) return
-    if (!puntoVentaId) return setError('ERROR DE CONFIGURACIÓN: SIN SUCURSAL ASIGNADA')
-    if (!caja?.id) return setError('OPERACIÓN DETENIDA: NO HAY UNA CAJA ABIERTA')
+    if (jugadas.length === 0) return;
+    if (!puntoVentaId)
+      return setError("ERROR DE CONFIGURACIÓN: SIN SUCURSAL ASIGNADA");
+    if (!caja?.id)
+      return setError("OPERACIÓN DETENIDA: NO HAY UNA CAJA ABIERTA");
 
-    if (metodoPago === 'Transferencia' && !referenciaPago) {
-      return setError('DEBE INGRESAR LA REFERENCIA DE PAGO')
+    if (metodoPago === "Transferencia" && !referenciaPago) {
+      return setError("DEBE INGRESAR LA REFERENCIA DE PAGO");
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
       const payload = {
         SorteoId: sorteoId,
         PuntoVentaId: puntoVentaId,
         UsuarioId: usuario?.id,
         CajaId: caja?.id,
-        detalles: jugadas.map((j) => ({ numeroJugado: j.numero, montoApostado: j.monto })),
+        detalles: jugadas.map((j) => ({
+          numeroJugado: j.numero,
+          montoApostado: j.monto,
+        })),
         metodoPago,
-        referenciaPago: metodoPago === 'Transferencia' ? referenciaPago : null,
+        referenciaPago: metodoPago === "Transferencia" ? referenciaPago : null,
         clienteNombres: clienteNombres.trim() || null,
         clienteCedula: clienteCedula.trim() || null,
         clienteWhatsapp: clienteWhatsapp.trim() || null,
-      }
+      };
 
-      const response = await ticketAPI.vender(payload)
+      const response = await ticketAPI.vender(payload);
       if (response.status === 201) {
-        const ticketCreado = response.data?.data?.ticket
+        const ticketCreado = response.data?.data?.ticket;
 
         if (ticketCreado) {
-          await handlePrintAutomatico(ticketCreado)
+          await handlePrintAutomatico(ticketCreado);
         }
 
         Swal.fire({
-          title: 'ÉXITO',
-          text: 'Ticket generado correctamente',
-          icon: 'success',
-          background: '#ffffff',
-          color: '#111615',
-          confirmButtonColor: '#EAB308',
-          customClass: { popup: 'rounded-[2rem] border border-black/5' },
-        })
-        setJugadas([])
-        setReferenciaPago('')
-        setMetodoPago('Efectivo')
-        setClienteNombres('')
-        setClienteCedula('')
-        setClienteWhatsapp('')
-        onClose()
-        if (fetchData) fetchData()
+          title: "ÉXITO",
+          text: "Ticket generado correctamente",
+          icon: "success",
+          background: "#ffffff",
+          color: "#111615",
+          confirmButtonColor: "#EAB308",
+          customClass: { popup: "rounded-[2rem] border border-black/5" },
+        });
+        setJugadas([]);
+        setReferenciaPago("");
+        setMetodoPago("Efectivo");
+        setClienteNombres("");
+        setClienteCedula("");
+        setClienteWhatsapp("");
+        onClose();
+        if (fetchData) fetchData();
       }
     } catch (err) {
-      setError(`VENTA RECHAZADA: ${err.response?.data?.message || 'ERROR'}`)
+      setError(`VENTA RECHAZADA: ${err.response?.data?.message || "ERROR"}`);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const totalTicket = jugadas.reduce((acc, curr) => acc + curr.monto, 0)
+  const totalTicket = jugadas.reduce((acc, curr) => acc + curr.monto, 0);
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   // Variable de control para desactivar todo el formulario si no hay caja activa
-  const esFormularioBloqueado = !caja?.id
+  const esFormularioBloqueado = !caja?.id;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
@@ -234,7 +258,7 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                 Nueva Emisión de Ticket
               </h2>
               <p className="text-luck-gold text-[9px] font-bold uppercase tracking-[0.2em]">
-                Punto de Venta: {usuario?.PuntoVenta?.nombre || 'Mi Sucursal'}
+                Punto de Venta: {usuario?.PuntoVenta?.nombre || "Mi Sucursal"}
               </p>
             </div>
           </div>
@@ -257,12 +281,14 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
               </span>
               <div className="flex items-center gap-2">
                 <div
-                  className={`w-2 h-2 rounded-full animate-pulse ${caja?.id ? 'bg-emerald-500' : 'bg-red-500'}`}
+                  className={`w-2 h-2 rounded-full animate-pulse ${caja?.id ? "bg-emerald-500" : "bg-red-500"}`}
                 />
                 <span
-                  className={`text-[10px] font-black uppercase tracking-widest ${caja?.id ? 'text-emerald-500' : 'text-red-500'}`}
+                  className={`text-[10px] font-black uppercase tracking-widest ${caja?.id ? "text-emerald-500" : "text-red-500"}`}
                 >
-                  {caja?.id ? 'Caja Abierta / Activa' : 'Caja Cerrada / Inactiva'}
+                  {caja?.id
+                    ? "Caja Abierta / Activa"
+                    : "Caja Cerrada / Inactiva"}
                 </span>
               </div>
             </div>
@@ -278,12 +304,25 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                 value={sorteoId}
                 onChange={(e) => setSorteoId(e.target.value)}
               >
-                <option value="" disabled className="bg-[#0c0d0d] text-zinc-500">
+                <option
+                  value=""
+                  disabled
+                  className="bg-[#0c0d0d] text-zinc-500"
+                >
                   SELECCIONAR SORTEO...
                 </option>
                 {sorteos.map((s) => (
-                  <option key={s.id} value={s.id} className="bg-[#0c0d0d] text-white">
-                    {s.Catalogo?.nombre} ({s.Cifra?.cantidad} Cifras)
+                  <option
+                    key={s.id}
+                    value={s.id}
+                    className="bg-[#111615] text-white font-bold"
+                  >
+                    {s.Catalogo?.nombre.toUpperCase()} ({s.Cifra?.cantidad}{" "}
+                    CIFRAS{" "}
+                    <span className="font-extrabold">
+                      {s.jornada?.toUpperCase()}
+                    </span>
+                    )
                   </option>
                 ))}
               </select>
@@ -315,7 +354,9 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                     placeholder="CÉDULA / RUC"
                     className="w-full bg-zinc-900/40 border border-white/5 rounded-xl p-3 text-xs text-white placeholder:text-zinc-700 outline-none focus:border-luck-gold/30 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
                     value={clienteCedula}
-                    onChange={(e) => setClienteCedula(e.target.value.replace(/\D/g, ''))}
+                    onChange={(e) =>
+                      setClienteCedula(e.target.value.replace(/\D/g, ""))
+                    }
                   />
                   <input
                     type="text"
@@ -324,7 +365,9 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                     placeholder="Nº WHATSAPP"
                     className="w-full bg-zinc-900/40 border border-white/5 rounded-xl p-3 text-xs text-white placeholder:text-zinc-700 outline-none focus:border-luck-gold/30 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
                     value={clienteWhatsapp}
-                    onChange={(e) => setClienteWhatsapp(e.target.value.replace(/\D/g, ''))}
+                    onChange={(e) =>
+                      setClienteWhatsapp(e.target.value.replace(/\D/g, ""))
+                    }
                   />
                 </div>
               </div>
@@ -338,22 +381,22 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
               <div className="grid grid-cols-2 gap-3">
                 <button
                   disabled={esFormularioBloqueado}
-                  onClick={() => setMetodoPago('Efectivo')}
+                  onClick={() => setMetodoPago("Efectivo")}
                   className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all text-[10px] font-black uppercase disabled:opacity-20 disabled:cursor-not-allowed ${
-                    metodoPago === 'Efectivo' && !esFormularioBloqueado
-                      ? 'bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10'
-                      : 'bg-zinc-900/50 text-zinc-500 border-white/5'
+                    metodoPago === "Efectivo" && !esFormularioBloqueado
+                      ? "bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10"
+                      : "bg-zinc-900/50 text-zinc-500 border-white/5"
                   }`}
                 >
                   <LuBanknote size={15} /> Efectivo
                 </button>
                 <button
                   disabled={esFormularioBloqueado}
-                  onClick={() => setMetodoPago('Transferencia')}
+                  onClick={() => setMetodoPago("Transferencia")}
                   className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all text-[10px] font-black uppercase disabled:opacity-20 disabled:cursor-not-allowed ${
-                    metodoPago === 'Transferencia' && !esFormularioBloqueado
-                      ? 'bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10'
-                      : 'bg-zinc-900/50 text-zinc-500 border-white/5'
+                    metodoPago === "Transferencia" && !esFormularioBloqueado
+                      ? "bg-luck-gold text-black border-luck-gold shadow-lg shadow-luck-gold/10"
+                      : "bg-zinc-900/50 text-zinc-500 border-white/5"
                   }`}
                 >
                   <LuCreditCard size={15} /> Transferencia
@@ -363,10 +406,10 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
 
             {/* Referencia Digital */}
             <AnimatePresence>
-              {metodoPago === 'Transferencia' && !esFormularioBloqueado && (
+              {metodoPago === "Transferencia" && !esFormularioBloqueado && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
+                  animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   className="overflow-hidden"
                 >
@@ -376,7 +419,9 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                     placeholder="Nº COMPROBANTE DE TRANSFERENCIA"
                     className="w-full bg-luck-gold/5 border border-luck-gold/20 rounded-xl p-3 text-xs text-white placeholder:text-luck-gold/30 outline-none focus:border-luck-gold transition-all disabled:opacity-20 disabled:cursor-not-allowed"
                     value={referenciaPago}
-                    onChange={(e) => setReferenciaPago(e.target.value.toUpperCase())}
+                    onChange={(e) =>
+                      setReferenciaPago(e.target.value.toUpperCase())
+                    }
                   />
                 </motion.div>
               )}
@@ -406,8 +451,8 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                     className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-3.5 text-center text-3xl font-black text-white focus:border-luck-gold outline-none transition-all disabled:opacity-20 disabled:cursor-not-allowed"
                     value={tempNumero}
                     onChange={(e) => {
-                      setError('')
-                      setTempNumero(e.target.value.replace(/\D/g, ''))
+                      setError("");
+                      setTempNumero(e.target.value.replace(/\D/g, ""));
                     }}
                   />
                 </div>
@@ -422,8 +467,8 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                     className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-3.5 text-center text-3xl font-black text-white focus:border-luck-gold outline-none transition-all disabled:opacity-20 disabled:cursor-not-allowed"
                     value={tempMonto}
                     onChange={(e) => {
-                      setError('')
-                      setTempMonto(e.target.value)
+                      setError("");
+                      setTempMonto(e.target.value);
                     }}
                   />
                 </div>
@@ -489,7 +534,9 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                             <p className="text-zinc-500 text-[8px] font-black uppercase tracking-tighter">
                               Número Jugado
                             </p>
-                            <p className="text-white text-[10px] font-bold">Validado</p>
+                            <p className="text-white text-[10px] font-bold">
+                              Validado
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-6">
@@ -497,7 +544,11 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                             ${j.monto.toFixed(2)}
                           </span>
                           <button
-                            onClick={() => setJugadas(jugadas.filter((item) => item.id !== j.id))}
+                            onClick={() =>
+                              setJugadas(
+                                jugadas.filter((item) => item.id !== j.id),
+                              )
+                            }
                             className="p-2 text-zinc-700 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                           >
                             <LuTrash2 size={16} />
@@ -542,7 +593,7 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                       </p>
                     </div>
                     <button
-                      onClick={() => setError('')}
+                      onClick={() => setError("")}
                       className="text-zinc-500 hover:text-white text-[10px] font-black uppercase px-2 py-1 bg-white/5 rounded-md transition-all"
                     >
                       OK
@@ -569,21 +620,23 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
                   </span>
                   <div
                     className={`px-3 py-1 rounded-full border text-[8px] font-black uppercase ${
-                      metodoPago === 'Transferencia' && !esFormularioBloqueado
-                        ? 'bg-luck-gold/10 border-luck-gold/20 text-luck-gold'
-                        : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                      metodoPago === "Transferencia" && !esFormularioBloqueado
+                        ? "bg-luck-gold/10 border-luck-gold/20 text-luck-gold"
+                        : "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
                     }`}
                   >
                     {esFormularioBloqueado
-                      ? 'Terminal Inactiva'
-                      : metodoPago === 'Transferencia'
-                        ? 'Pago Digital'
-                        : 'Terminal Online'}
+                      ? "Terminal Inactiva"
+                      : metodoPago === "Transferencia"
+                        ? "Pago Digital"
+                        : "Terminal Online"}
                   </div>
                 </div>
               </div>
               <button
-                disabled={jugadas.length === 0 || loading || esFormularioBloqueado}
+                disabled={
+                  jugadas.length === 0 || loading || esFormularioBloqueado
+                }
                 onClick={emitirTicket}
                 className="w-full bg-white hover:bg-zinc-200 text-black font-black py-4 rounded-2xl uppercase text-[10px] tracking-[0.2em] transition-all disabled:opacity-20 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2 shadow-xl"
               >
@@ -595,7 +648,7 @@ const TicketModalVendedor = ({ isOpen, onClose, sorteos, usuario, fetchData, sue
         </div>
       </motion.div>
     </div>
-  )
-}
+  );
+};
 
-export default TicketModalVendedor
+export default TicketModalVendedor;
