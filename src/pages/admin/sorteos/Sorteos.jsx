@@ -508,8 +508,7 @@ const Sorteos = () => {
                           <span className="text-white font-black text-lg">
                             {sorteo?.Tickets?.filter(
                               (ticket) =>
-                                ticket.estado === 'Pendiente' ||
-                                ticket.estado === 'Pagado',
+                                ticket.estado !== "Anulado" 
                             ).length || 0}
                           </span>
                           <span className="text-[9px] text-zinc-500 uppercase font-black tracking-widest">
