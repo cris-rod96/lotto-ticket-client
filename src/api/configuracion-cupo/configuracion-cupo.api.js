@@ -1,22 +1,17 @@
-import { instance } from '../base.api'
-const model = 'configuracion-cupo'
+import { instance } from "../base.api";
+const model = "cupo-jornadas";
 
 const configuracionCupoAPI = {
+  registrarConfiguracion: (data) => {
+    return instance.post(`/${model}/registrar`, data);
+  },
+  actualizar: (id, data) => {
+    return instance.patch(`/${model}/actualizar/${id}`, data);
+  },
+
   listarTodos: () => {
-    return instance.get(`/${model}/listar/todas`)
+    return instance.get(`/${model}/listar/todos`);
   },
+};
 
-  listarPorCaja: (id) => {
-    return instance.get(`/${model}/listar/caja/${id}`)
-  },
-
-  listarPorUsuario: (id) => {
-    return instance.get(`/${model}/listar/usuario/${id}`)
-  },
-
-  listarPorPuntoVenta: (id) => {
-    return instance.get(`/${model}/listar/punto-venta/${id}`)
-  },
-}
-
-export default configuracionCupoAPI
+export default configuracionCupoAPI;
