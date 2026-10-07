@@ -16,6 +16,8 @@ import Swal from "sweetalert2";
 
 import { cajaAPI, ticketAPI } from "@/api/index.api";
 import TicketTemplate from "@/templates/TicketTemplate";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useCajaStore } from "@/store/useCajaStore";
 
 const TicketModalVendedor = ({
   isOpen,
@@ -33,7 +35,9 @@ const TicketModalVendedor = ({
   const [tempMonto, setTempMonto] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [caja, setCaja] = useState(null);
+  const { caja, setCaja } = useCajaStore();
+
+  const user = useAuthStore((state) => state.user);
 
   // Estados de pago
   const [metodoPago, setMetodoPago] = useState("Efectivo");
@@ -199,6 +203,10 @@ const TicketModalVendedor = ({
 
         if (ticketCreado) {
           await handlePrintAutomatico(ticketCreado);
+          const respCaja = await cajaAPI.obtenerCajaAbierta(user.PuntoVentaId);
+          if (respCaja.data?.caja) {
+            setCaja(respCaja.data?.caja);
+          }
         }
 
         Swal.fire({
