@@ -9,8 +9,7 @@ const CifraModal = ({ isOpen, onClose, initialData, fetchData }) => {
 
   const initialState = {
     cantidad: "",
-    cupoMaximoPorNumero: "",
-    valorMinimoTicket: "",
+    valorMinimoTicket: "0.25",
     estado: true,
   };
   const [formData, setFormData] = useState(initialState);
@@ -96,23 +95,6 @@ const CifraModal = ({ isOpen, onClose, initialData, fetchData }) => {
               <option value="false">Inactivo</option>
             </select>
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest ml-1">
-            Cupo Máximo por Número
-          </label>
-          <input
-            name="cupoMaximoPorNumero"
-            type="number"
-            step="0.01"
-            value={formData?.cupoMaximoPorNumero}
-            onChange={(e) =>
-              setFormData({ ...formData, cupoMaximoPorNumero: e.target.value })
-            }
-            className="w-full bg-zinc-900 border border-white/10 rounded-2xl p-4 text-white focus:border-luck-gold/50 outline-none transition-all font-mono"
-            placeholder="0.00"
-          />
         </div>
 
         <div className="space-y-2">

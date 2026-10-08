@@ -2,17 +2,13 @@ import { cifraAPI } from "@/api/index.api";
 import CifraModal from "@/components/CifraModal";
 import CifraFilters from "@/components/filters/CifraFilters";
 import CifraHeader from "@/components/headers/CifraHeader";
-import Title from "@/components/Titlte";
 import useCifras from "@/hooks/useCifras";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   LuChevronLeft,
   LuChevronRight,
-  LuFilter,
-  LuHash,
   LuInbox,
   LuPencil,
-  LuPlus,
   LuTrash2,
   LuRefreshCw,
 } from "react-icons/lu";
@@ -128,7 +124,6 @@ const Cifras = () => {
             <thead>
               <tr className="bg-white/[0.02] text-zinc-500 uppercase text-[10px] font-black tracking-[0.18em] border-b border-white/5">
                 <th className="p-5 pl-8">Cantidad</th>
-                <th className="p-5">Cupo Máximo</th>
                 <th className="p-5">Valor Mín. Ticket</th>
                 <th className="p-5 text-center">Estado</th>
                 <th className="p-5 text-right pr-8">Acciones</th>
@@ -163,9 +158,7 @@ const Cifras = () => {
                           </span>
                         </div>
                       </td>
-                      <td className="p-5 font-mono text-zinc-400">
-                        ${parseFloat(cifra.cupoMaximoPorNumero).toFixed(2)}
-                      </td>
+
                       <td className="p-5 font-mono text-zinc-400">
                         ${parseFloat(cifra.valorMinimoTicket).toFixed(2)}
                       </td>
@@ -214,7 +207,7 @@ const Cifras = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="p-24 text-center">
+                    <td colSpan="4" className="p-24 text-center">
                       <LuInbox
                         size={50}
                         className="mx-auto text-luck-gold opacity-30"

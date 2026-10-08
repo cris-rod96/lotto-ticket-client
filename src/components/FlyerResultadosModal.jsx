@@ -1,29 +1,36 @@
-import { toPng } from 'html-to-image'
-import { useMemo, useRef } from 'react'
-import { LuCalendar, LuDownload, LuTicket, LuTrophy, LuX } from 'react-icons/lu'
+import { toPng } from "html-to-image";
+import { useMemo, useRef } from "react";
+import {
+  LuCalendar,
+  LuDownload,
+  LuTicket,
+  LuTrophy,
+  LuX,
+} from "react-icons/lu";
 
 const FlyerResultadosModal = ({ isOpen, onClose, data }) => {
-  console.log("data: ", data)
-  const flyerRef = useRef(null)
+  const flyerRef = useRef(null);
 
   // Lógica para formatear la fecha con el día de la semana
   const fechaFormateada = useMemo(() => {
-    if (!data?.Sorteo?.fechaSorteo) return ''
+    if (!data?.Sorteo?.fechaSorteo) return "";
     try {
-      const fechaObj = new Date(data.Sorteo.fechaSorteo + 'T12:00:00')
-      return new Intl.DateTimeFormat('es-ES', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      }).format(fechaObj)
+      const fechaObj = new Date(data.Sorteo.fechaSorteo + "T12:00:00");
+      return new Intl.DateTimeFormat("es-ES", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(fechaObj);
     } catch (e) {
-      return data.Sorteo.fechaSorteo
+      return data.Sorteo.fechaSorteo;
     }
-  }, [data])
+  }, [data]);
 
-  const { resultados3, resultados2, maxFilas } = useMemo(() => {
-    if (!data?.DetallesResultados) return { resultados3: [], resultados2: [], maxFilas: 0 }
+  // Lógica adaptada para separar entre 2, 3 y 4 cifras
+  const { resultados4, resultados3, resultados2, maxFilas } = useMemo(() => {
+    if (!data?.DetallesResultados)
+      return { resultados4: [], resultados3: [], resultados2: [], maxFilas: 0 };
 
     // Diccionario de orden
     const orden = {
@@ -35,60 +42,60 @@ const FlyerResultadosModal = ({ isOpen, onClose, data }) => {
       SEXTA: 5,
       SEPTIMA: 6,
       OCTAVA: 7,
-    }
+    };
 
-    // Función para obtener el índice de orden
     const getOrden = (str) => {
-      const palabra = str?.toUpperCase().split(' ')[0]
-      return orden[palabra] ?? 99
-    }
+      const palabra = str?.toUpperCase().split(" ")[0];
+      return orden[palabra] ?? 99;
+    };
 
-    // Filtramos y ordenamos basándonos en la descripción de la suerte, NO en la longitud
     const ordenados = [...data.DetallesResultados].sort(
-      (a, b) => getOrden(a.Suerte?.descripcion) - getOrden(b.Suerte?.descripcion)
-    )
+      (a, b) =>
+        getOrden(a.Suerte?.descripcion) - getOrden(b.Suerte?.descripcion),
+    );
 
-    const resultados2 = ordenados.filter((d) => d.numeroGanador?.length === 2)
-    const resultados3 = ordenados.filter((d) => d.numeroGanador?.length === 3)
+    const resultados2 = ordenados.filter((d) => d.numeroGanador?.length === 2);
+    const resultados3 = ordenados.filter((d) => d.numeroGanador?.length === 3);
+    const resultados4 = ordenados.filter((d) => d.numeroGanador?.length === 4);
 
-    return { resultados3, resultados2, maxFilas: 8 }
-  }, [data])
+    return { resultados4, resultados3, resultados2, maxFilas: 8 };
+  }, [data]);
 
-  if (!isOpen || !data) return null
+  if (!isOpen || !data) return null;
 
-  const catalogo = data.Sorteo?.Catalogo || {}
-  const codigoPais = catalogo.pais?.toLowerCase() || 'ec'
+  const catalogo = data.Sorteo?.Catalogo || {};
+  const codigoPais = catalogo.pais?.toLowerCase() || "ec";
 
   const descargarFlyer = async () => {
-    if (!flyerRef.current) return
+    if (!flyerRef.current) return;
     try {
       const dataUrl = await toPng(flyerRef.current, {
         pixelRatio: 3,
         cacheBust: true,
-        backgroundColor: '#0c0c0c',
-      })
-      const link = document.createElement('a')
-      link.download = `Flyer-${catalogo.nombre}-Sorteo-${data.Sorteo?.numero}.png`
-      link.href = dataUrl
-      link.click()
+        backgroundColor: "#0c0c0c",
+      });
+      const link = document.createElement("a");
+      link.download = `Flyer-${catalogo.nombre}-Sorteo-${data.Sorteo?.numero}.png`;
+      link.href = dataUrl;
+      link.click();
     } catch (err) {
-      console.error(err)
+      console.error(err);
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-      <div className="bg-[#111615] border border-white/10 w-full max-w-5xl rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col md:flex-row h-[85vh]">
-        {/* LADO IZQUIERDO: FLYER */}
+      <div className="bg-[#111615] border border-white/10 w-full max-w-6xl rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col md:flex-row h-[85vh]">
+        {/* LADO IZQUIERDO: FLYER (Ancho ajustado a 560px para dar espacio a las 3 columnas) */}
         <div className="flex-1 bg-zinc-950 p-6 flex items-center justify-center border-r border-white/5 overflow-y-auto no-scrollbar">
-          <div className="scale-[0.5] lg:scale-[0.65] origin-center shadow-2xl">
+          <div className="scale-[0.45] lg:scale-[0.6] origin-center shadow-2xl">
             <div
               ref={flyerRef}
-              className="w-[500px] min-h-[850px] bg-[#0c0c0c] p-12 text-white relative overflow-hidden"
+              className="w-[560px] min-h-[850px] bg-[#0c0c0c] p-10 text-white relative overflow-hidden"
               style={{
                 backgroundImage: `linear-gradient(to bottom, rgba(12, 12, 12, 0.8), rgba(12, 12, 12, 1)), url('https://flagcdn.com/w1280/${codigoPais}.png')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
+                backgroundSize: "cover",
+                backgroundPosition: "center",
               }}
             >
               <div className="relative z-10 text-center mb-6">
@@ -98,46 +105,57 @@ const FlyerResultadosModal = ({ isOpen, onClose, data }) => {
                   className="w-36 mx-auto mb-4 drop-shadow-2xl"
                 />
                 <h2 className="text-luck-gold text-5xl font-black italic tracking-widest uppercase">
-                  {catalogo.nombre || 'LOTTO'}
+                  {catalogo.nombre || "LOTTO"}
                 </h2>
 
-                {/* FECHA MÁS GRANDE Y CON DÍA */}
                 <div className="bg-white text-black px-6 py-2 rounded-full inline-block mt-4 font-black text-xs uppercase tracking-wider shadow-lg">
                   {fechaFormateada}
                 </div>
               </div>
 
-              {/* TÍTULO NÚMEROS GANADORES */}
               <div className="relative z-10 text-center mb-6">
                 <h3 className="text-white text-2xl font-black italic uppercase tracking-tighter border-b-2 border-luck-gold/50 inline-block pb-1">
                   Números Ganadores
                 </h3>
               </div>
 
-              <div className="relative z-10 grid grid-cols-[60px_1fr_1fr] gap-4 mb-4 px-2 text-[10px] font-black text-zinc-500 uppercase text-center tracking-widest">
+              {/* Cabeceras de la Grilla (Suerte | 2 Dígitos | 3 Dígitos | 4 Dígitos) */}
+              <div className="relative z-10 grid grid-cols-[50px_1fr_1fr_1.2fr] gap-2 mb-3 px-1 text-[9px] font-black text-zinc-500 uppercase text-center tracking-wider">
                 <span>Suerte</span>
-                <span className="text-luck-gold">2 Dígitos</span>
-                <span className="text-emerald-400">3 Dígitos</span>
+                <span className="text-luck-gold">2 Cifras</span>
+                <span className="text-emerald-400">3 Cifras</span>
+                <span className="text-cyan-400">4 Cifras</span>
               </div>
 
-              <div className="relative z-10 space-y-2.5">
+              {/* Filas de Resultados */}
+              <div className="relative z-10 space-y-2">
                 {Array.from({ length: maxFilas }).map((_, i) => (
-                  <div key={i} className="grid grid-cols-[60px_1fr_1fr] gap-4 items-center">
-                    <div className="bg-zinc-900/60 h-12 flex items-center justify-center rounded-xl border border-white/5 text-xl font-black italic text-zinc-600">
+                  <div
+                    key={i}
+                    className="grid grid-cols-[50px_1fr_1fr_1.2fr] gap-2 items-center"
+                  >
+                    {/* Número de Suerte */}
+                    <div className="bg-zinc-900/60 h-12 flex items-center justify-center rounded-xl border border-white/5 text-lg font-black italic text-zinc-600">
                       {i + 1}
                     </div>
-                    <div className="bg-luck-gold h-12 rounded-xl flex items-center justify-center text-black text-2xl font-black tracking-widest shadow-lg">
-                      {resultados2[i]?.numeroGanador || '--'}
+                    {/* 2 Dígitos */}
+                    <div className="bg-luck-gold h-12 rounded-xl flex items-center justify-center text-black text-xl font-black tracking-wider shadow-lg">
+                      {resultados2[i]?.numeroGanador || "--"}
                     </div>
-                    <div className="bg-emerald-700/80 h-12 rounded-xl flex items-center justify-center text-2xl font-black tracking-widest border-y border-white/10 shadow-lg">
-                      {resultados3[i]?.numeroGanador || '---'}
+                    {/* 3 Dígitos */}
+                    <div className="bg-emerald-700/80 h-12 rounded-xl flex items-center justify-center text-xl font-black tracking-wider border-y border-white/10 shadow-lg">
+                      {resultados3[i]?.numeroGanador || "---"}
+                    </div>
+                    {/* 4 Dígitos */}
+                    <div className="bg-cyan-700/80 h-12 rounded-xl flex items-center justify-center text-xl font-black tracking-wider border-y border-white/10 shadow-lg">
+                      {resultados4[i]?.numeroGanador || "----"}
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="relative z-10 mt-10 pt-6 border-t border-white/10 text-center">
-                <p className="text-2xl text-luck-gold mb-4 font-black italic uppercase tracking-tighter">
+              <div className="relative z-10 mt-8 pt-5 border-t border-white/10 text-center">
+                <p className="text-2xl text-luck-gold mb-3 font-black italic uppercase tracking-tighter">
                   Valor 0.25 Ctvs.
                 </p>
                 <div className="flex justify-between px-4 text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
@@ -152,8 +170,13 @@ const FlyerResultadosModal = ({ isOpen, onClose, data }) => {
         {/* LADO DERECHO: PANEL DE INFORMACIÓN */}
         <div className="w-full md:w-80 p-8 flex flex-col bg-[#111615]">
           <div className="flex justify-between items-start mb-8">
-            <h3 className="text-white font-black text-xl uppercase italic">Arte Generado</h3>
-            <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
+            <h3 className="text-white font-black text-xl uppercase italic">
+              Arte Generado
+            </h3>
+            <button
+              onClick={onClose}
+              className="text-zinc-500 hover:text-white transition-colors"
+            >
               <LuX size={28} />
             </button>
           </div>
@@ -164,7 +187,9 @@ const FlyerResultadosModal = ({ isOpen, onClose, data }) => {
                 <LuTrophy size={20} />
               </div>
               <div>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase">Registros</p>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase">
+                  Registros
+                </p>
                 <p className="text-white font-black text-lg leading-none">
                   {data.DetallesResultados?.length}
                 </p>
@@ -176,7 +201,9 @@ const FlyerResultadosModal = ({ isOpen, onClose, data }) => {
                 <LuCalendar size={20} />
               </div>
               <div>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase">Sorteo №</p>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase">
+                  Sorteo №
+                </p>
                 <p className="text-white font-black text-sm uppercase leading-none">
                   {data.Sorteo?.numero}
                 </p>
@@ -188,7 +215,9 @@ const FlyerResultadosModal = ({ isOpen, onClose, data }) => {
                 <LuTicket size={20} />
               </div>
               <div>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase">País</p>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase">
+                  País
+                </p>
                 <p className="text-white font-black text-xs uppercase leading-none">
                   {codigoPais.toUpperCase()}
                 </p>
@@ -215,7 +244,7 @@ const FlyerResultadosModal = ({ isOpen, onClose, data }) => {
         }
       `}</style>
     </div>
-  )
-}
+  );
+};
 
-export default FlyerResultadosModal
+export default FlyerResultadosModal;
